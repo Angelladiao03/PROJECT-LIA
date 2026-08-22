@@ -284,6 +284,7 @@ body {
 .action-buttons {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .btn-action {
@@ -304,6 +305,16 @@ body {
 .btn-view:hover {
     background-color: #cbd5e0;
 }
+
+.btn-message {
+    background-color: #2f855a;
+    color: #ffffff;
+    border: 1px solid #276749;
+}
+
+.btn-message:hover { background-color: #276749; }
+
+.btn-delete { margin-left: 0.75rem; }
 
 .btn-delete {
     background-color: #fff5f5;

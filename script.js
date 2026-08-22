@@ -190,6 +190,7 @@ function handleRegistration(event) {
     localStorage.setItem(registeredStudentsKey, JSON.stringify(pendingStudents));
     localStorage.removeItem(`${loginDraftKey}-registration`);
     form.reset();
+    document.getElementById('pageLoader')?.classList.add('loaded');
     showPopup('Registration Completed! Please wait for admin approval to access our website.', 'Registration Completed', () => {
         showForm('studentLoginSection');
     });

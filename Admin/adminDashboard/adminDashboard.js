@@ -21,6 +21,9 @@ function loadDashboardData() {
 
     const sosBody = document.getElementById('dashboardSosBody');
     sosBody.innerHTML = '';
+    if (!alerts.length) {
+        sosBody.innerHTML = '<tr class="empty-record-row"><td colspan="5">No emergency SOS cases found.</td></tr>';
+    }
     alerts.slice(0, 5).forEach(alert => {
         const row = document.createElement('tr');
         row.innerHTML = `<td>${new Date(alert.createdAt).toLocaleString()}</td><td>${alert.lrn} (${alert.username})</td><td>${alert.location}</td><td>${alert.description || 'No description provided.'}</td><td><span class="badge badge-danger">${alert.status}</span></td>`;

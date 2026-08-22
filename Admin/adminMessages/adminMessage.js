@@ -12,12 +12,14 @@ function getMessageRecipients() {
     const recipients = new Map(getStudentMessages().map(message => [message.username, message]));
     const approvedStudents = JSON.parse(localStorage.getItem('lagroInActionApprovedStudents') || '[]');
     approvedStudents.forEach(student => {
-        if (student.username) recipients.set(student.username, {
-            username: student.username,
-            fullName: student.fullName,
-            time: '',
-            text: 'No messages yet.'
-        });
+        if (student.username && !recipients.has(student.username)) {
+            recipients.set(student.username, {
+                username: student.username,
+                fullName: student.fullName,
+                time: '',
+                text: 'No messages yet.'
+            });
+        }
     });
     return [...recipients.values()];
 }

@@ -8,6 +8,9 @@ function loadLocalRegistrations() {
     const tableBody = document.getElementById('requestsTableBody');
 
     tableBody.innerHTML = '';
+    if (!registrations.length) {
+        tableBody.innerHTML = '<tr class="empty-record-row"><td colspan="4">No pending registration requests.</td></tr>';
+    }
     registrations.forEach((student, index) => {
         const id = `local-${index}`;
         studentsData[id] = student;
@@ -26,7 +29,7 @@ function loadLocalRegistrations() {
             </tr>`);
     });
 
-    currentPendingCount += registrations.length;
+    currentPendingCount = registrations.length;
     document.getElementById('pendingCount').textContent = currentPendingCount;
 }
 

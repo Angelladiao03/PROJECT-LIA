@@ -16,7 +16,7 @@ function loadStoredRecords() {
     resolvedReports.forEach(report => {
         const row = document.createElement('tr');
         row.id = `row-${report.id}`;
-        row.innerHTML = `<td class="case-id">#${report.id}</td><td><div class="student-name">${report.fullName}</div><div class="student-sub">LRN: ${report.lrn}</div></td><td>${report.category}</td><td>${new Date(report.dateTime).toLocaleDateString()}</td><td><span class="badge badge-success">Resolved</span></td><td><div class="action-buttons"><button class="btn-action btn-view" onclick="viewStoredRecord('${report.id}')">Scan Details</button><button class="btn-action btn-delete" onclick="deleteRecord('row-${report.id}', '#${report.id}')">Delete</button></div></td>`;
+        row.innerHTML = `<td class="case-id">#${report.id}</td><td><div class="student-name">${report.fullName}</div><div class="student-sub">LRN: ${report.lrn}</div></td><td>${report.category}</td><td>${new Date(report.dateTime).toLocaleDateString()}</td><td><span class="badge badge-success">Resolved</span></td><td><div class="action-buttons"><button class="btn-action btn-view" onclick="viewStoredRecord('${report.id}')">Scan Details</button>${report.username === 'Anonymous' ? '' : `<button class="btn-action btn-message" onclick="messageRecordOwner('${encodeURIComponent(report.username)}')">Message</button>`}<button class="btn-action btn-delete" onclick="deleteRecord('row-${report.id}', '#${report.id}')">Delete</button></div></td>`;
         tableBody.appendChild(row);
     });
 }
@@ -44,7 +44,9 @@ function filterRecords() {
         const dateResolved = row.children[3].textContent;
 
         const matchesSearch = text.includes(searchValue);
-        const matchesCategory = (categoryValue === 'ALL' || category === categoryValue);
+        const matchesCategory = categoryValue === 'ALL'
+            || category === categoryValue
+            || (categoryValue === 'Others' && category.startsWith('Others ('));
         const matchesYear = (yearValue === 'ALL' || dateResolved.includes(yearValue));
 
         if (matchesSearch && matchesCategory && matchesYear) {
@@ -93,4 +95,8 @@ function deleteRecord(rowId, caseId) {
             localDatabase.write(localDatabase.reportsKey, reports.filter(item => item.id !== caseId.replace('#', '')));
         }
     }
+}
+
+function messageRecordOwner(username) {
+    window.location.href = `../adminMessages/adminMessage.html?username=${username}`;
 }

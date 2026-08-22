@@ -5,7 +5,15 @@ const localDatabase = {
 
     read(key) {
         try {
-            return JSON.parse(localStorage.getItem(key)) || [];
+            const records = JSON.parse(localStorage.getItem(key)) || [];
+            if (key === this.sosKey) {
+                const cutoff = new Date();
+                cutoff.setMonth(cutoff.getMonth() - 1);
+                const recentAlerts = records.filter(alert => new Date(alert.createdAt) >= cutoff);
+                if (recentAlerts.length !== records.length) this.write(key, recentAlerts);
+                return recentAlerts;
+            }
+            return records;
         } catch (error) {
             return [];
         }
@@ -17,7 +25,15 @@ const localDatabase = {
 
     addReport(report) {
         const reports = this.read(this.reportsKey);
-        reports.unshift({ ...report, id: report.id || `REP-${Date.now()}`, createdAt: new Date().toISOString() });
+        const now = new Date();
+        const startYear = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+        const academicYear = `${String(startYear).slice(-2)}${String(startYear + 1).slice(-2)}`;
+        const nextNumber = reports.reduce((highest, item) => {
+            const match = String(item.id || '').match(new RegExp(`^REP-${academicYear}-(\\d+)$`));
+            return match ? Math.max(highest, Number(match[1])) : highest;
+        }, 0) + 1;
+        const id = report.id || `REP-${academicYear}-${String(nextNumber).padStart(5, '0')}`;
+        reports.unshift({ ...report, id, createdAt: report.createdAt || now.toISOString() });
         this.write(this.reportsKey, reports);
         return reports[0];
     },
