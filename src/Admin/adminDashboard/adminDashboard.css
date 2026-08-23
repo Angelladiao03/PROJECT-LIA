@@ -159,9 +159,9 @@ body {
 
 .metric-card {
     background: #ffffff;
-    padding: 20px;
+    padding: 14px 16px;
     border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+    box-shadow: none;
     border-top: 4px solid #1e4620;
 }
 
@@ -173,9 +173,9 @@ body {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.metric-card-link:hover .metric-card {
+.metric-card-link:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+    box-shadow: none;
 }
 
 .metric-card.border-purple { border-top-color: #94A3B8; }
@@ -292,10 +292,11 @@ body {
         gap: 10px;
     }
     .metric-card {
-        padding: 14px;
+        padding: 10px 12px;
     }
     .metric-value {
-        font-size: 1.7rem;
+        font-size: 1.5rem;
+        margin: 4px 0;
     }
     .charts-grid { grid-template-columns: minmax(0, 1fr); }
     .chart-body { height: 220px; }

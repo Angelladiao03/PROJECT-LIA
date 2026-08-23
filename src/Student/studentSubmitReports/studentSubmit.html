@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LagroInAction - Submit Report</title>
-    <link rel="icon" href="../../LIALogo.ico" type="image/x-icon">
+    <link rel="icon" href="../../assets/LIALogo.ico" type="image/x-icon">
     <link rel="stylesheet" href="studentSubmit.css">
     <link rel="stylesheet" href="../../pageEnhancements.css">
     <script src="../../pageEnhancements.js" defer></script>
@@ -183,12 +183,12 @@
 
             <form onsubmit="handleSosSubmit(event)" class="modal-body">
                 <div class="field-group">
-                    <label>Your exact location right now:</label>
+                    <label for="sosLocation">Your exact location right now:</label>
                     <input type="text" id="sosLocation" required placeholder="e.g. Near Gate 2, Grade 8 & 7 Building">
                 </div>
 
                 <div class="field-group">
-                    <label>Brief Description / Threats (OPTIONAL):</label>
+                    <label for="sosDescription">Brief Description / Threats (OPTIONAL):</label>
                     <textarea id="sosDescription" rows="3" placeholder="e.g. Cornered by 5 students, threatening physical violence"></textarea>
                 </div>
 

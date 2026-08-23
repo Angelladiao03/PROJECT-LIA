@@ -222,10 +222,14 @@ body .sidebar.open {
 .main-content {
   min-height: calc(100vh - 60px);
 }
+.main-content > .metrics-grid {
+  background: transparent !important;
+  box-shadow: none !important;
+}
 .sos-container {
   position: relative;
   z-index: 1;
-  padding: 0 0 1.25rem !important;
+  padding: 0 0 1rem !important;
   margin: 0 !important;
 }
 .sidebar .sos-btn {
@@ -359,6 +363,7 @@ body:has(#sosModal) .modal-overlay {
 }
 body:has(#sosModal) .modal-box {
   width: min(100%, 450px);
+  padding: 0;
   max-height: calc(100vh - 2rem);
   overflow: auto;
   border-radius: 8px;
@@ -388,8 +393,8 @@ body:has(#sosModal) .close-modal-btn {
   color: #fff;
 }
 body:has(#sosModal) .modal-body {
-  padding: 1.25rem;
-  gap: 1rem;
+  padding: 2rem;
+  gap: 1.25rem;
 }
 body:has(#sosModal) .modal-actions {
   display: flex;

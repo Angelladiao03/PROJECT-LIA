@@ -98,7 +98,7 @@ function updateStatus(btn, targetStatus) {
 function dispatchSOS(btn) {
     const row = btn.closest('tr');
     const badge = row.querySelector('.badge');
-    if (badge.textContent.trim() === 'DISPATCHED') {
+    if (badge.textContent.trim() === 'DISPATCHED' || badge.textContent.trim() === 'RESPONDED') {
         showPagePopup('Guard is already dispatched.', 'Dispatch Update');
         return;
     }
@@ -254,9 +254,11 @@ function loadSavedReportsAndAlerts() {
         const row = document.createElement('tr');
         row.dataset.alertId = alertData.id;
         const isAnonymous = alertData.username === 'Anonymous student' || alertData.username === 'Anonymous';
-        const dispatchButton = alertData.status === 'DISPATCHED' ? 'Guard Dispatched' : 'Dispatch Guard';
+        const dispatchAction = alertData.status === 'DISPATCHED' || alertData.status === 'RESPONDED'
+            ? '<span class="text-muted completed-action">Guard Dispatched</span>'
+            : '<button class="btn btn-more" onclick="dispatchSOS(this)">Dispatch Guard</button>';
         const responseAction = alertData.status === 'RESPONDED' ? '<span class="text-muted">Completed</span>' : '<button class="btn btn-scan" onclick="respondSOS(this)">Mark Responded</button>';
-        row.innerHTML = `<td>${new Date(alertData.createdAt).toLocaleTimeString()}</td><td>${alertData.lrn} (${alertData.username})</td><td>${alertData.location}</td><td>${alertData.description || 'No description provided.'}</td><td><span class="badge ${alertData.status === 'RESPONDED' ? 'badge-success' : 'badge-danger'}">${alertData.status}</span></td><td><div class="action-buttons"><button class="btn btn-more" onclick="dispatchSOS(this)">${dispatchButton}</button>${isAnonymous ? '' : `<button class="btn btn-message" onclick="messageReporter('${encodeURIComponent(alertData.username)}')">Message Student</button>`}${responseAction}</div></td>`;
+        row.innerHTML = `<td>${new Date(alertData.createdAt).toLocaleTimeString()}</td><td>${alertData.lrn} (${alertData.username})</td><td>${alertData.location}</td><td>${alertData.description || 'No description provided.'}</td><td><span class="badge ${alertData.status === 'RESPONDED' ? 'badge-success' : 'badge-danger'}">${alertData.status}</span></td><td><div class="action-buttons">${dispatchAction}${isAnonymous ? '' : `<button class="btn btn-message" onclick="messageReporter('${encodeURIComponent(alertData.username)}')">Message Student</button>`}${responseAction}</div></td>`;
         sosAlertsBody?.prepend(row);
     });
     addEmptyState(sosAlertsBody, 'No emergency SOS cases found.', 6);

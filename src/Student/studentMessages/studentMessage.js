@@ -6,26 +6,6 @@ function toggleSidebar() {
     }
 }
 
-function handleSosSubmit(e) {
-    e.preventDefault();
-    const location = document.getElementById('sosLocation').value;
-    const description = document.getElementById('sosDescription').value;
-    const activeUser = JSON.parse(localStorage.getItem('lagroInActionActiveUser') || 'null');
-    window.showPageLoading?.('Sending SOS...');
-    setTimeout(() => {
-    localDatabase.addSos({
-        username: activeUser?.username || 'Anonymous student',
-        lrn: activeUser?.lrn || 'Anonymous',
-        location,
-        description,
-        status: 'UNVERIFIED'
-    });
-    window.hidePageLoading?.();
-    showPagePopup(`Location: ${location}. Guidance Office has been notified immediately.`, 'SOS Dispatched');
-    closeSosModal();
-    }, 350);
-}
-
 // Chat Functionality
 function handleSendMessage(event) {
     event.preventDefault();

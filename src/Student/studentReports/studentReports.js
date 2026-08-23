@@ -57,24 +57,6 @@ function loadSubmittedReports() {
 }
 
 loadSubmittedReports();
-function handleSosSubmit(e) {
-    e.preventDefault();
-    const activeUser = JSON.parse(localStorage.getItem('lagroInActionActiveUser') || 'null');
-    window.showPageLoading?.('Sending SOS...');
-    setTimeout(() => {
-    localDatabase.addSos({
-        username: activeUser?.username || 'Anonymous student',
-        lrn: activeUser?.lrn || 'Anonymous',
-        location: document.getElementById('sosLocation').value,
-        description: document.getElementById('sosDescription').value,
-        status: 'UNVERIFIED'
-    });
-    window.hidePageLoading?.();
-    showPagePopup('The guidance office has been notified immediately.', 'SOS Sent');
-    closeSosModal();
-    }, 350);
-}
-
 // Filter Table Reports
 function filterReports(status, buttonElement) {
     const buttons = document.querySelectorAll('.tab-btn');

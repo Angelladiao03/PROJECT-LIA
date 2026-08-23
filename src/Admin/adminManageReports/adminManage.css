@@ -223,6 +223,11 @@ body {
     font-weight: 600;
 }
 
+.completed-action {
+    padding: 6px 0;
+    white-space: nowrap;
+}
+
 
 /* ==========================================================================
    6. CLEAN & NEAT BUTTONS

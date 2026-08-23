@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LagroInAction - My Account</title>
-    <link rel="icon" href="../../LIALogo.ico" type="image/x-icon">
+    <link rel="icon" href="../../assets/LIALogo.ico" type="image/x-icon">
     <link rel="stylesheet" href="studentReports.css">
     <link rel="stylesheet" href="../../pageEnhancements.css">
     <script src="../../pageEnhancements.js" defer></script>
@@ -198,18 +198,19 @@
     <!-- SOS MODAL -->
     <div id="sosModal" class="modal-overlay hidden">
         <div class="modal-box">
-            <div class="modal-header sos-header">
+            <div class="modal-header">
                 <h3>Confirm SOS Dispatch</h3>
+                <p>This will trigger an immediate emergency alert to the guidance office.</p>
                 <button onclick="closeSosModal()" class="close-modal-btn">✕</button>
             </div>
             <form onsubmit="handleSosSubmit(event)" class="modal-body">
                 <div class="field-group">
                     <label for="sosLocation">Your exact location right now:</label>
-                    <input type="text" id="sosLocation" required placeholder="e.g. Near Gate 2">
+                    <input type="text" id="sosLocation" required placeholder="e.g. Near Gate 2, Grade 8 & 7 Building">
                 </div>
                 <div class="field-group">
-                    <label for="sosDescription">Description (Optional):</label>
-                    <textarea id="sosDescription" rows="3"></textarea>
+                    <label for="sosDescription">Brief Description / Threats (OPTIONAL):</label>
+                    <textarea id="sosDescription" rows="3" placeholder="e.g. Cornered by 5 students, threatening physical violence"></textarea>
                 </div>
                 <div class="modal-actions">
                     <button type="submit" class="btn-send-sos">Send SOS</button>

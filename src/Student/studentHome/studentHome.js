@@ -9,7 +9,7 @@ function toggleSidebar() {
 }
 
 // Handle SOS Emergency Form Submission
-function handleSosSubmit(e) {
+function handleHomeSosSubmit(e) {
     e.preventDefault();
     const locationInput = document.getElementById('sosLocation');
     const descriptionInput = document.getElementById('sosDescription');

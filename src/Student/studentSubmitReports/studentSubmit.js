@@ -4,19 +4,6 @@ function toggleSidebar() {
     sidebar.classList.toggle('closed');
 }
 
-// Handle SOS Emergency Form Submission
-function handleSosSubmit(e) {
-    e.preventDefault();
-    const location = document.getElementById('sosLocation').value;
-    const description = document.getElementById('sosDescription').value;
-    const activeUser = JSON.parse(localStorage.getItem('lagroInActionActiveUser') || 'null');
-    localDatabase.addSos({ username: activeUser?.username || 'Anonymous student', lrn: activeUser?.lrn || 'Anonymous', location, description, status: 'UNVERIFIED' });
-
-    showPagePopup(`Location: ${location}. Details: ${description || 'None provided'}. Guidance Counselor has been alerted immediately.`, 'SOS Sent');
-    
-    closeSosModal();
-}
-
 // ================= REPORT FORM LOGIC ================= //
 
 // Toggle Full Name & Grade/Section fields depending on Anonymity radio selection
