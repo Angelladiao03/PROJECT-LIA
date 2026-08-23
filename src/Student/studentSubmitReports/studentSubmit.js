@@ -4,16 +4,6 @@ function toggleSidebar() {
     sidebar.classList.toggle('closed');
 }
 
-// SOS Modal Open / Close Functions
-function openSosModal() {
-    window.closeAllSidebars?.();
-    document.getElementById('sosModal').classList.remove('hidden');
-}
-
-function closeSosModal() {
-    document.getElementById('sosModal').classList.add('hidden');
-}
-
 // Handle SOS Emergency Form Submission
 function handleSosSubmit(e) {
     e.preventDefault();

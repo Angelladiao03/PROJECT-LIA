@@ -4,12 +4,6 @@ function toggleSidebar() {
     sidebar.classList.toggle('collapsed');
 }
 
-// SOS Modal Functions
-function openSosModal() {
-    window.closeAllSidebars?.();
-    document.getElementById('sosModal').classList.remove('hidden');
-}
-
 function loadActiveStudent() {
     const activeUser = JSON.parse(localStorage.getItem('lagroInActionActiveUser') || 'null');
     if (!activeUser || activeUser.role !== 'student') return;
@@ -63,10 +57,6 @@ function loadSubmittedReports() {
 }
 
 loadSubmittedReports();
-function closeSosModal() {
-    document.getElementById('sosModal').classList.add('hidden');
-}
-
 function handleSosSubmit(e) {
     e.preventDefault();
     const activeUser = JSON.parse(localStorage.getItem('lagroInActionActiveUser') || 'null');

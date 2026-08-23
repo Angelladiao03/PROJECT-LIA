@@ -6,18 +6,6 @@ function toggleSidebar() {
     }
 }
 
-// SOS Modal Handlers
-function openSosModal() {
-    window.closeAllSidebars?.();
-    const modal = document.getElementById('sosModal');
-    if (modal) modal.classList.remove('hidden');
-}
-
-function closeSosModal() {
-    const modal = document.getElementById('sosModal');
-    if (modal) modal.classList.add('hidden');
-}
-
 function handleSosSubmit(e) {
     e.preventDefault();
     const location = document.getElementById('sosLocation').value;

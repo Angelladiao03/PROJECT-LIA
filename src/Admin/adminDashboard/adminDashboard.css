@@ -153,7 +153,7 @@ body {
 /* METRICS CARDS */
 .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 20px;
 }
 
@@ -230,6 +230,10 @@ body {
     height: 260px;
 }
 
+.chart-body canvas {
+    max-width: 100% !important;
+}
+
 /* TABLES */
 .table-card {
     background: #ffffff;
@@ -284,7 +288,7 @@ body {
         font-size: 1.2rem;
     }
     .metrics-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: 1fr;
         gap: 10px;
     }
     .metric-card {
@@ -297,6 +301,11 @@ body {
     .chart-body { height: 220px; }
     .table-card {
         padding: 14px;
+        min-width: 0;
+        max-width: 100%;
         overflow-x: auto;
+    }
+    .table-card .data-table {
+        min-width: 0;
     }
 }

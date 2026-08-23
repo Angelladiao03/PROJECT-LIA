@@ -8,22 +8,6 @@ function toggleSidebar() {
     }
 }
 
-// SOS Modal Open / Close Functions
-function openSosModal() {
-    window.closeAllSidebars?.();
-    const modal = document.getElementById('sosModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-    }
-}
-
-function closeSosModal() {
-    const modal = document.getElementById('sosModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
-}
-
 // Handle SOS Emergency Form Submission
 function handleSosSubmit(e) {
     e.preventDefault();

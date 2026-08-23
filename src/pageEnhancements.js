@@ -166,7 +166,8 @@
             const accountItem = links.find(link => link.textContent.trim() === 'My Account')?.closest('.nav-item');
             if (messageItem && accountItem) accountItem.parentElement.insertBefore(messageItem, accountItem);
 
-            if (activeUser?.role === 'admin' && !sidebar.querySelector('.sidebar-bottom')) {
+            const isAdminPage = window.location.pathname.includes('/Admin/');
+            if ((activeUser?.role === 'admin' || isAdminPage) && !sidebar.querySelector('.sidebar-bottom')) {
                 sidebar.insertAdjacentHTML('beforeend', '<div class="sidebar-bottom"><button type="button" class="sidebar-logout" onclick="handlePageLogout()">Log Out</button></div>');
             }
 
