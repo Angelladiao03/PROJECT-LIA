@@ -32,7 +32,7 @@ function loadSubmittedReports() {
     if (!tableBody) return;
 
     const activeUser = JSON.parse(localStorage.getItem('lagroInActionActiveUser') || 'null');
-    const studentReports = reports.filter(report => report.username !== 'Anonymous' && activeUser && report.username === activeUser.username);
+    const studentReports = reports.filter(report => activeUser && (report.username === activeUser.username || report.submittedBy === activeUser.username));
     const counts = { requested: 0, pending: 0, submitted: 0, resolved: 0 };
     studentReports.forEach(report => {
         const status = report.status === 'investigation' ? 'submitted' : report.status;

@@ -348,6 +348,7 @@ body {
 
 .message {
     display: flex;
+    flex-direction: column;
     width: 100%;
 }
 
@@ -356,7 +357,15 @@ body {
 }
 
 .msg-outgoing {
-    justify-content: flex-end;
+    align-items: flex-end;
+}
+
+.message-time {
+    display: block;
+    margin-top: 4px;
+    padding: 0 4px;
+    color: #888888;
+    font-size: 0.68rem;
 }
 
 .msg-bubble {

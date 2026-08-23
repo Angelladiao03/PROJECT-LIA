@@ -26,7 +26,9 @@ loadStoredRecords();
 function viewStoredRecord(reportId) {
     const report = localDatabase.read(localDatabase.reportsKey).find(item => item.id === reportId);
     if (!report) return;
-    viewRecord({ caseId: `#${report.id}`, fullName: report.fullName, gradeSection: report.gradeSection || '-', username: report.username, adviser: '-', lrn: report.lrn, email: '-', category: report.category, dateTime: report.dateTime, location: report.location, description: report.description });
+    const student = [...JSON.parse(localStorage.getItem('lagroInActionApprovedStudents') || '[]'), ...JSON.parse(localStorage.getItem('lagroInActionRegisteredStudents') || '[]')]
+        .find(item => item.username === report.username);
+    viewRecord({ caseId: `#${report.id}`, fullName: report.fullName, gradeSection: report.gradeSection || student?.gradeSection || '-', username: report.username, adviser: report.adviser || student?.adviser || '-', lrn: report.lrn, email: report.email || student?.email || '-', category: report.category, dateTime: report.dateTime, location: report.location, description: report.description });
 }
 
 // Filter Records in Archive
@@ -87,14 +89,14 @@ function deleteRecord(rowId, caseId) {
     const anonymousNotice = report?.username === 'Anonymous'
         ? ' This anonymous report will be permanently deleted now that the case is resolved, so your data will not be stored.'
         : '';
-    const confirmed = confirm(`Are you sure you want to delete record ${caseId}? This action cannot be undone.${anonymousNotice}`);
-    if (confirmed) {
+    showPageConfirmation(`Are you sure you want to delete record ${caseId}? This action cannot be undone.${anonymousNotice}`, 'Confirm Report Deletion', () => {
         const targetRow = document.getElementById(rowId);
         if (targetRow) {
             targetRow.remove();
             localDatabase.write(localDatabase.reportsKey, reports.filter(item => item.id !== caseId.replace('#', '')));
+            showPagePopup(`Report case ${caseId} was deleted successfully.`, 'Report Deleted');
         }
-    }
+    });
 }
 
 function messageRecordOwner(username) {

@@ -342,8 +342,12 @@ body .sidebar.open {
 }
 
 .sidebar-bottom {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   margin-top: auto;
-  padding: 1rem;
+  padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), #f3fbf5 1rem);
 }
 .sidebar-logout {
   width: 100%;
@@ -360,6 +364,12 @@ body .sidebar.open {
 body:has(#sosModal) .modal-overlay {
   background: rgba(15, 23, 42, 0.58);
   padding: 1rem;
+}
+body:has(#sosModal) .modal-overlay.closing {
+  animation: lia-modal-fade-out 0.2s ease both;
+}
+body:has(#sosModal) .modal-overlay.closing .modal-box {
+  animation: lia-modal-pop-out 0.2s ease both;
 }
 body:has(#sosModal) .modal-box {
   width: min(100%, 450px);
@@ -508,6 +518,14 @@ a:active {
 @keyframes lia-modal-pop {
     from { opacity: 0; transform: scale(.85) translateY(14px); }
     to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes lia-modal-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes lia-modal-pop-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 0; transform: scale(.94) translateY(10px); }
 }
 
 @keyframes lia-spin {

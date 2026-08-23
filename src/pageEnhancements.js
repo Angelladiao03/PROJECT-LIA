@@ -36,6 +36,23 @@
         okayButton.focus();
     };
 
+    window.showPageConfirmation = function showPageConfirmation(message, title, onConfirm) {
+        window.showPagePopup(message, title);
+        const popup = document.getElementById('liaPopup');
+        const okayButton = popup.querySelector('button');
+        const noButton = document.createElement('button');
+        noButton.type = 'button';
+        noButton.className = 'popup-no-button';
+        noButton.textContent = 'Cancel';
+        okayButton.textContent = 'Delete';
+        okayButton.insertAdjacentElement('afterend', noButton);
+        noButton.onclick = () => popup.classList.add('hidden');
+        okayButton.onclick = () => {
+            popup.classList.add('hidden');
+            onConfirm();
+        };
+    };
+
     window.handlePageLogout = function handlePageLogout() {
         let popup = document.getElementById('liaPopup');
         if (!popup) window.showPagePopup('', '');

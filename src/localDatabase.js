@@ -6,6 +6,13 @@ const localDatabase = {
     read(key) {
         try {
             const records = JSON.parse(localStorage.getItem(key)) || [];
+            if (key === this.reportsKey) {
+                const cutoff = new Date();
+                cutoff.setDate(cutoff.getDate() - 7);
+                const retainedReports = records.filter(report => report.username !== 'Anonymous' || new Date(report.createdAt) >= cutoff);
+                if (retainedReports.length !== records.length) this.write(key, retainedReports);
+                return retainedReports;
+            }
             if (key === this.sosKey) {
                 const cutoff = new Date();
                 cutoff.setMonth(cutoff.getMonth() - 1);

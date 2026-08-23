@@ -62,7 +62,11 @@ function renderMessages() {
         const messageElement = document.createElement('div');
         messageElement.className = `message msg-${message.sender === 'admin' ? 'outgoing' : 'incoming'}`;
         messageElement.innerHTML = '<div class="msg-bubble"></div>';
-        messageElement.querySelector('.msg-bubble').textContent = `${message.text} ${message.time}`;
+        messageElement.querySelector('.msg-bubble').textContent = message.text;
+        const messageTime = document.createElement('span');
+        messageTime.className = 'message-time';
+        messageTime.textContent = message.time;
+        messageElement.appendChild(messageTime);
         container.appendChild(messageElement);
     });
     container.scrollTop = container.scrollHeight;

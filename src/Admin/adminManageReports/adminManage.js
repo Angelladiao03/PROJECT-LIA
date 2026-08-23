@@ -73,6 +73,7 @@ function updateStatus(btn, targetStatus) {
         badge.className = 'badge badge-orange';
         badge.textContent = 'IN INVESTIGATION';
         localDatabase.write(localDatabase.reportsKey, reports);
+        loadSavedReportsAndAlerts();
         showPagePopup('Case updated to In Investigation.', 'Case Updated');
     } else if (targetStatus === 'Resolved') {
         if (report) {
@@ -105,7 +106,7 @@ function dispatchSOS(btn) {
     badge.className = 'badge badge-danger';
     badge.textContent = 'DISPATCHED';
     updateStoredAlert(row, 'DISPATCHED');
-    showPagePopup('Security has been dispatched to the reported location.', 'Security Dispatched');
+    window.location.reload();
 }
 
 // SOS Alert Respond
@@ -115,8 +116,7 @@ function respondSOS(btn) {
     badge.className = 'badge badge-success';
     badge.textContent = 'RESPONDED';
     updateStoredAlert(row, 'RESPONDED');
-    const actionCell = btn.closest('td');
-    actionCell.innerHTML = '<span class="text-muted">Completed</span>';
+    window.location.reload();
 }
 
 function updateStoredAlert(row, status) {
@@ -171,15 +171,17 @@ function openReportModal(type) {
 function openStoredReport(reportId) {
     const report = localDatabase.read(localDatabase.reportsKey).find(item => item.id === reportId);
     if (!report) return;
+    const student = [...JSON.parse(localStorage.getItem('lagroInActionApprovedStudents') || '[]'), ...JSON.parse(localStorage.getItem('lagroInActionRegisteredStudents') || '[]')]
+        .find(item => item.username === report.username);
     document.getElementById('modalCaseNo').textContent = `REPORT CASE NO. #${report.id}`;
     document.getElementById('accountInfoSection').style.display = report.username === 'Anonymous' ? 'none' : 'block';
     document.getElementById('modalDivider').style.display = report.username === 'Anonymous' ? 'none' : 'block';
     document.getElementById('accFullName').textContent = report.fullName;
     document.getElementById('accGradeSec').textContent = report.gradeSection || '-';
     document.getElementById('accUsername').textContent = report.username;
-    document.getElementById('accAdviser').textContent = '-';
+    document.getElementById('accAdviser').textContent = report.adviser || student?.adviser || '-';
     document.getElementById('accLRN').textContent = report.lrn || '-';
-    document.getElementById('accEmail').textContent = '-';
+    document.getElementById('accEmail').textContent = report.email || student?.email || '-';
     document.getElementById('repCategory').textContent = report.category;
     document.getElementById('repDateTime').textContent = report.dateTime;
     document.getElementById('repLocation').textContent = report.location;
@@ -244,7 +246,8 @@ function loadSavedReportsAndAlerts() {
         row.dataset.reportId = report.id;
         const badgeClass = report.status === 'investigation' ? 'badge-orange' : 'badge-warning';
         const label = report.status === 'investigation' ? 'IN INVESTIGATION' : 'PENDING';
-        row.innerHTML = `<td>#${report.id}</td><td>${report.fullName} (${report.lrn})</td><td>${report.category}</td><td><span class="badge ${badgeClass}">${label}</span></td><td><div class="action-buttons"><button class="btn btn-scan" onclick="openStoredReport('${report.id}')">Scan Details</button><button class="btn btn-more" onclick="updateStatus(this, 'Investigation')">Mark Investigating</button><button class="btn btn-more" onclick="updateStatus(this, 'Resolved')">Mark Resolved</button><button class="btn btn-message" onclick="messageReporter('${encodeURIComponent(report.username || '')}')">Message Student</button></div></td>`;
+        const investigateAction = report.status === 'pending' ? `<button class="btn btn-more" onclick="updateStatus(this, 'Investigation')">Mark Investigating</button>` : '';
+        row.innerHTML = `<td>#${report.id}</td><td>${report.fullName} (${report.lrn})</td><td>${report.category}</td><td><span class="badge ${badgeClass}">${label}</span></td><td><div class="action-buttons"><button class="btn btn-scan" onclick="openStoredReport('${report.id}')">Scan Details</button>${investigateAction}<button class="btn btn-more" onclick="updateStatus(this, 'Resolved')">Mark Resolved</button><button class="btn btn-message" onclick="messageReporter('${encodeURIComponent(report.username || '')}')">Message Student</button></div></td>`;
         activeReportsBody?.prepend(row);
     });
     addEmptyState(newReportsBody, 'No new report requests.', 6);
@@ -254,11 +257,10 @@ function loadSavedReportsAndAlerts() {
         const row = document.createElement('tr');
         row.dataset.alertId = alertData.id;
         const isAnonymous = alertData.username === 'Anonymous student' || alertData.username === 'Anonymous';
-        const dispatchAction = alertData.status === 'DISPATCHED' || alertData.status === 'RESPONDED'
-            ? '<span class="text-muted completed-action">Guard Dispatched</span>'
-            : '<button class="btn btn-more" onclick="dispatchSOS(this)">Dispatch Guard</button>';
-        const responseAction = alertData.status === 'RESPONDED' ? '<span class="text-muted">Completed</span>' : '<button class="btn btn-scan" onclick="respondSOS(this)">Mark Responded</button>';
-        row.innerHTML = `<td>${new Date(alertData.createdAt).toLocaleTimeString()}</td><td>${alertData.lrn} (${alertData.username})</td><td>${alertData.location}</td><td>${alertData.description || 'No description provided.'}</td><td><span class="badge ${alertData.status === 'RESPONDED' ? 'badge-success' : 'badge-danger'}">${alertData.status}</span></td><td><div class="action-buttons">${dispatchAction}${isAnonymous ? '' : `<button class="btn btn-message" onclick="messageReporter('${encodeURIComponent(alertData.username)}')">Message Student</button>`}${responseAction}</div></td>`;
+        const dispatchAction = alertData.status === 'DISPATCHED' || alertData.status === 'RESPONDED' ? '' : '<button class="btn btn-more" onclick="dispatchSOS(this)">Dispatch Guard</button>';
+        const responseAction = alertData.status === 'RESPONDED' ? '' : '<button class="btn btn-scan" onclick="respondSOS(this)">Mark Responded</button>';
+        const messageAction = isAnonymous ? '' : `<button class="btn btn-message" onclick="messageReporter('${encodeURIComponent(alertData.username)}')">Message Student</button>`;
+        row.innerHTML = `<td>${new Date(alertData.createdAt).toLocaleTimeString()}</td><td>${alertData.lrn} (${alertData.username})</td><td>${alertData.location}</td><td>${alertData.description || 'No description provided.'}</td><td><span class="badge ${alertData.status === 'RESPONDED' ? 'badge-success' : 'badge-danger'}">${alertData.status}</span></td><td><div class="action-buttons">${dispatchAction}${responseAction}${messageAction}</div></td>`;
         sosAlertsBody?.prepend(row);
     });
     addEmptyState(sosAlertsBody, 'No emergency SOS cases found.', 6);

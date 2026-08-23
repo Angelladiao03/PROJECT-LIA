@@ -15,32 +15,6 @@ const registeredStudentsKey = 'lagroInActionRegisteredStudents';
 const approvedStudentsKey = 'lagroInActionApprovedStudents';
 const activeUserKey = 'lagroInActionActiveUser';
 const loginDraftKey = 'lagroInActionLoginDraft';
-const demoStudent = {
-    role: 'student',
-    fullName: 'Student Test',
-    username: 'student123',
-    lrn: '012345678901',
-    gradeSection: '12 - Rossum',
-    adviser: 'Mr. Richard Zabala',
-    email: 'student1@gmail.com',
-    password: 'student123'
-};
-
-function initializeApprovedStudents() {
-    let approvedStudents = [];
-    try {
-        approvedStudents = JSON.parse(localStorage.getItem(approvedStudentsKey) || '[]');
-    } catch (error) {
-        approvedStudents = [];
-    }
-
-    approvedStudents = approvedStudents.filter(student => student.username !== 'lebronny_mous' && student.lrn !== '136632140011');
-    approvedStudents = approvedStudents.filter(student => student.username !== demoStudent.username);
-    approvedStudents.push(demoStudent);
-    localStorage.setItem(approvedStudentsKey, JSON.stringify(approvedStudents));
-}
-
-initializeApprovedStudents();
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.auth-form').forEach(form => {

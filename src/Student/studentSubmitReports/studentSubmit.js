@@ -63,7 +63,7 @@ function handleReportSubmit(e) {
     const activeUser = JSON.parse(localStorage.getItem('lagroInActionActiveUser') || 'null');
     window.showPageLoading?.('Sending report...');
     setTimeout(() => {
-    localDatabase.addReport({ username: isAnonymous ? 'Anonymous' : (activeUser?.username || document.getElementById('fullName').value.trim()), fullName: isAnonymous ? 'Anonymous Student' : document.getElementById('fullName').value.trim(), lrn: isAnonymous ? 'Anonymous' : (activeUser?.lrn || ''), gradeSection: isAnonymous ? '' : document.getElementById('gradeSection').value.trim(), category: category === 'Others' ? `Others (${specifiedCategory})` : category, location, dateTime: date, description, status: 'requested' });
+    localDatabase.addReport({ username: isAnonymous ? 'Anonymous' : (activeUser?.username || document.getElementById('fullName').value.trim()), submittedBy: activeUser?.username || '', fullName: isAnonymous ? 'Anonymous Student' : document.getElementById('fullName').value.trim(), lrn: isAnonymous ? 'Anonymous' : (activeUser?.lrn || ''), gradeSection: isAnonymous ? '' : document.getElementById('gradeSection').value.trim(), adviser: isAnonymous ? '' : (activeUser?.adviser || ''), email: isAnonymous ? '' : (activeUser?.email || ''), category: category === 'Others' ? `Others (${specifiedCategory})` : category, location, dateTime: date, description, status: 'requested' });
     
     const finalCategory = category === 'Others' ? `Others (${specifiedCategory})` : category;
 
@@ -83,7 +83,7 @@ function handleReportSubmit(e) {
                    (isAnonymous ? ' Because this report is anonymous, it will be deleted after the case is resolved so your data will not be stored.' : '');
 
     window.hidePageLoading?.();
-    showPagePopup(alertMessage.replaceAll('\n', ' '), 'Report Submitted', () => {
+    showPagePopup(alertMessage.replaceAll('\n', ' '), isAnonymous ? 'Anonymous Report Submitted' : 'Report Submitted', () => {
         document.getElementById('reportForm').reset();
         resetCustomFields();
     });

@@ -1,10 +1,17 @@
 function openSosModal() {
     window.closeAllSidebars?.();
-    document.getElementById('sosModal')?.classList.remove('hidden');
+    const modal = document.getElementById('sosModal');
+    modal?.classList.remove('hidden', 'closing');
 }
 
 function closeSosModal() {
-    document.getElementById('sosModal')?.classList.add('hidden');
+    const modal = document.getElementById('sosModal');
+    if (!modal || modal.classList.contains('hidden') || modal.classList.contains('closing')) return;
+    modal.classList.add('closing');
+    window.setTimeout(() => {
+        modal.classList.remove('closing');
+        modal.classList.add('hidden');
+    }, 200);
 }
 
 function handleSosSubmit(event) {
