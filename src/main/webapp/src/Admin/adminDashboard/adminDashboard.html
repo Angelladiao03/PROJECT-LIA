@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LagroInAction - Admin Dashboard</title>
+    <link rel="icon" href="../../assets/LIALogo.ico" type="image/x-icon">
+    <link rel="stylesheet" href="adminDashboard.css">
+    <link rel="stylesheet" href="../../pageEnhancements.css">
+    <script src="../../pageEnhancements.js" defer></script>
+    <!-- Chart.js CDN for analytical graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <button onclick="toggleSidebar()" class="menu-btn" title="Toggle Menu">☰</button>
+            <img src="../../assets/lagroHSLogo.png" alt="School Logo" class="topbar-logo">
+        </div>
+
+        <div class="topbar-center">
+            PROJECT LIA
+        </div>
+
+        <div class="topbar-right">
+            <span class="user-name">Guidance Admin</span>
+            <div class="profile-link">
+                <img src="../../assets/lagroHSLogo.png" alt="Admin Profile" class="profile-pic">
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN BODY CONTAINER -->
+    <div class="app-body">
+
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="sidebar closed">
+            <ul class="nav-list">
+                <li class="nav-item"><a href="../adminHome/adminHome.html">Home</a></li>
+                <li class="nav-item active"><a href="../adminDashboard/adminDashboard.html">Dashboard</a></li>
+                <li class="nav-item"><a href="../adminManageReports/adminManage.html">Manage Reports</a></li>
+                <li class="nav-item"><a href="../adminReportRecords/adminRecords.html">Report Records</a></li>
+                <li class="nav-item"><a href="../adminRequestAccount/adminRequest.html">Registration Requests</a></li>
+                <li class="nav-item"><a href="../adminMessages/adminMessage.html">Messages</a></li>
+            </ul>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content">
+
+            <div class="dashboard-header">
+                <h2>System Overview & Incident Analytics</h2>
+                <p>Real-time analytics and quick status tracking for reported bullying cases.</p>
+            </div>
+
+            <!-- METRIC CARDS WITH NAVIGATION LINKS -->
+            <section class="metrics-grid">
+                
+                <!-- Registration Requests -> Student Registration page -->
+                <a href="../adminRequestAccount/adminRequest.html" class="metric-card metric-card-link border-purple">
+                    <h3>Registration Requests</h3>
+                    <p class="metric-value" id="registrationCount">0</p>
+                    <span class="metric-sub">Pending account approvals</span>
+                </a>
+
+                <!-- Total Reports -> Manage Reports page -->
+                <a href="../adminManageReports/adminManage.html" class="metric-card metric-card-link border-blue">
+                    <h3>Total Reports</h3>
+                    <p class="metric-value" id="totalReportsCount">0</p>
+                    <span class="metric-sub">Academic Year 2025–2026</span>
+                </a>
+
+                <!-- Pending Review -> Manage Reports page -->
+                <a href="../adminManageReports/adminManage.html" class="metric-card metric-card-link border-yellow">
+                    <h3>Pending Review</h3>
+                    <p class="metric-value" id="pendingReportsCount">0</p>
+                    <span class="metric-sub">Requires admin action</span>
+                </a>
+
+                <!-- In Investigation -> Manage Reports page -->
+                <a href="../adminManageReports/adminManage.html" class="metric-card metric-card-link border-orange">
+                    <h3>In Investigation</h3>
+                    <p class="metric-value" id="investigationReportsCount">0</p>
+                    <span class="metric-sub">Ongoing guidance sessions</span>
+                </a>
+
+                <!-- Resolved Cases -> Report Records page -->
+                <a href="../adminReportRecords/adminRecords.html" class="metric-card metric-card-link border-green">
+                    <h3>Resolved Cases</h3>
+                    <p class="metric-value" id="resolvedReportsCount">0</p>
+                    <span class="metric-sub">Successfully addressed</span>
+                </a>
+
+            </section>
+
+            <!-- ANALYTICAL CHARTS SECTION -->
+            <section class="charts-grid">
+                <!-- CHART 1: MONTHLY INCIDENT TREND -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Monthly Incident Trends</h3>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="trendsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- CHART 2: CATEGORY BREAKDOWN -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Reports by Bullying Category</h3>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RECENT EMERGENCY SOS ALERTS -->
+            <section class="table-card">
+                <div class="table-card-header">
+                    <h3>Recent SOS Emergency Dispatches</h3>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Student LRN / Name</th>
+                            <th>Reported Location</th>
+                            <th>Description / Note</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboardSosBody"></tbody>
+                </table>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="../../adminGuard.js"></script>
+    <script src="../../localDatabase.js"></script>
+    <script src="adminDashboard.js"></script>
+</body>
+</html>

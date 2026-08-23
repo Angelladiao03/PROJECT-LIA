@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LagroInAction - Manage Reports</title>
+    <link rel="icon" href="../../assets/LIALogo.ico" type="image/x-icon">
+    <link rel="stylesheet" href="adminManage.css">
+    <link rel="stylesheet" href="../../pageEnhancements.css">
+    <script src="../../pageEnhancements.js" defer></script>
+</head>
+<body>
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <button onclick="toggleSidebar()" class="menu-btn" title="Toggle Menu">☰</button>
+            <img src="../../assets/lagroHSLogo.png" alt="School Logo" class="topbar-logo">
+        </div>
+
+        <div class="topbar-center">
+            PROJECT LIA
+        </div>
+
+        <div class="topbar-right">
+            <span class="user-name">Guidance Admin</span>
+            <div class="profile-link">
+                <img src="../../assets/lagroHSLogo.png" alt="Admin Profile" class="profile-pic">
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN BODY CONTAINER -->
+    <div class="app-body">
+
+        <!-- FIXED SIDEBAR (MATCHES ADMIN DASHBOARD STYLE) -->
+        <aside id="sidebar" class="sidebar closed">
+            <ul class="nav-list">
+                <li class="nav-item"><a href="../adminHome/adminHome.html">Home</a></li>
+                <li class="nav-item"><a href="../adminDashboard/adminDashboard.html">Dashboard</a></li>
+                <li class="nav-item active"><a href="../adminManageReports/adminManage.html">Manage Reports</a></li>
+                <li class="nav-item"><a href="../adminReportRecords/adminRecords.html">Report Records</a></li>
+                <li class="nav-item"><a href="../adminRequestAccount/adminRequest.html">Registration Requests</a></li>
+                <li class="nav-item"><a href="../adminMessages/adminMessage.html">Messages</a></li>
+            </ul>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content">
+
+            <div class="dashboard-header">
+                <h2>Manage Incident Reports & Verification</h2>
+                <p>Review submitted incident requests, manage active investigations, and dispatch emergency SOS alerts.</p>
+            </div>
+
+            <!-- TABLE 1: REPORT REQUEST APPROVALS -->
+            <section class="table-card">
+                <div class="table-card-header">
+                    <h3>New Report Approval Requests</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Report ID</th>
+                                <th>Date Submitted</th>
+                                <th>Reporter Type</th>
+                                <th>Category</th>
+                                <th>Details / Summary</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="newReportsBody">
+                            <tr>
+                                <td>#REP-1049</td>
+                                <td>08/19/2026</td>
+                                <td>Student (Anonymous)</td>
+                                <td>Cyberbullying</td>
+                                <td>Received threatening messages on social media from a classmate.</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-approve" onclick="approveReport(this)">Approve</button>
+                                        <button class="btn btn-reject" onclick="rejectReport(this)">Reject</button>
+                                        
+                                        <div class="dropdown">
+                                            <button class="btn btn-more" onclick="toggleDropdown(this)">More ▾</button>
+                                            <div class="dropdown-menu">
+                                                <button onclick="suspendStudent('#REP-1049')">Suspend Reporter</button>
+                                                <button class="danger-item" onclick="banStudent('#REP-1049')">Ban Account</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#REP-1048</td>
+                                <td>08/18/2026</td>
+                                <td>Student (123456789012)</td>
+                                <td>Physical Harm</td>
+                                <td>Pushed near the cafeteria staircase during dismissal.</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-approve" onclick="approveReport(this)">Approve</button>
+                                        <button class="btn btn-reject" onclick="rejectReport(this)">Reject</button>
+                                        
+                                        <div class="dropdown">
+                                            <button class="btn btn-more" onclick="toggleDropdown(this)">More ▾</button>
+                                            <div class="dropdown-menu">
+                                                <button onclick="suspendStudent('#REP-1048')">Suspend Reporter</button>
+                                                <button class="danger-item" onclick="banStudent('#REP-1048')">Ban Account</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TABLE 2: PENDING & IN INVESTIGATION REPORTS -->
+            <section class="table-card">
+                <div class="table-card-header">
+                    <h3>Active Incident Tracking & Status Updates</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Report ID</th>
+                                <th>Reporter Info</th>
+                                <th>Category</th>
+                                <th>Current Status</th>
+                                <th>Update Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activeReportsBody">
+                            <!-- KNOWN REPORTER ROW -->
+                            <tr>
+                                <td>#REP-1042</td>
+                                <td>012345678901 (student123)</td>
+                                <td>Verbal Harassment</td>
+                                <td><span class="badge badge-warning">PENDING</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-scan" onclick="openReportModal('known')">Scan Details</button>
+                                        
+                                        <!-- DROPDOWN FOR STATUS & MESSAGE -->
+                                        <div class="dropdown">
+                                            <button class="btn btn-more" onclick="toggleDropdown(this)">Action ▾</button>
+                                            <div class="dropdown-menu">
+                                                <button onclick="updateStatus(this, 'Investigation')">Mark Investigating</button>
+                                                <button onclick="updateStatus(this, 'Resolved')">Mark Resolved</button>
+                                                <button onclick="window.location.href='adminMessage.html'">Message Student</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- ANONYMOUS REPORTER ROW -->
+                            <tr>
+                                <td>#REP-1038</td>
+                                <td>Anonymous Student</td>
+                                <td>Social Exclusion</td>
+                                <td><span class="badge badge-orange">IN INVESTIGATION</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-scan" onclick="openReportModal('anon')">Scan Details</button>
+                                        
+                                        <!-- DROPDOWN FOR STATUS & MESSAGE -->
+                                        <div class="dropdown">
+                                            <button class="btn btn-more" onclick="toggleDropdown(this)">Action ▾</button>
+                                            <div class="dropdown-menu">
+                                                <button onclick="updateStatus(this, 'Investigation')">Mark Investigating</button>
+                                                <button onclick="updateStatus(this, 'Resolved')">Mark Resolved</button>
+                                                <button onclick="window.location.href='adminMessage.html'">Message Student</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TABLE 3: SOS EMERGENCY ALERTS -->
+            <section class="table-card border-card-danger">
+                <div class="table-card-header">
+                    <h3 class="sos">Emergency SOS Verification & Dispatch</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Time Alert</th>
+                                <th>Student Info</th>
+                                <th>Location</th>
+                                <th>Description / Note</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sosAlertsBody">
+                            <tr>
+                                <td>10:42 AM Today</td>
+                                <td>012345678901 (student123)</td>
+                                <td>2nd Floor Gymnasium</td>
+                                <td>Cornered by 3 students, need immediate help!</td>
+                                <td><span class="badge badge-danger">UNVERIFIED</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <!-- DROPDOWN FOR SOS ACTIONS -->
+                                        <div class="dropdown">
+                                            <button class="btn btn-more" onclick="toggleDropdown(this)">Take Action ▾</button>
+                                            <div class="dropdown-menu">
+                                                <button class="danger-item" onclick="dispatchSOS(this)">Dispatch Guard</button>
+                                                <button onclick="respondSOS(this)">Mark Responded</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Yesterday 2:15 PM</td>
+                                <td>987654321098 (juan_b)</td>
+                                <td>Building B Corridor</td>
+                                <td>Verbal harassment escalation near stairwell.</td>
+                                <td><span class="badge badge-success">RESPONDED</span></td>
+                                        <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODAL POPUP FOR SCANNING REPORT DETAILS -->
+    <div id="reportModal" class="modal-overlay" onclick="closeModalOnOverlay(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalCaseNo">REPORT CASE NO. #REP-1042</h3>
+                <button class="modal-close" onclick="closeReportModal()">&times;</button>
+            </div>
+
+            <!-- ACCOUNT INFO SECTION -->
+            <div id="accountInfoSection" class="modal-section">
+                <h4 class="section-title">Student Account Details</h4>
+                <div class="info-grid">
+                    <div><strong>Full Name:</strong> <span id="accFullName">LeBronny Mouse</span></div>
+                    <div><strong>Grade & Section:</strong> <span id="accGradeSec">Grade 10 - Acacia</span></div>
+                    <div><strong>Username:</strong> <span id="accUsername">student123</span></div>
+                    <div><strong>Adviser:</strong> <span id="accAdviser">Mrs. Santos</span></div>
+                    <div><strong>LRN:</strong> <span id="accLRN">123456789012</span></div>
+                    <div><strong>Email:</strong> <span id="accEmail">lebronny@lagroschool.edu.ph</span></div>
+                </div>
+            </div>
+
+            <hr class="modal-divider" id="modalDivider">
+
+            <!-- SUBMITTED INCIDENT REPORT INFO SECTION -->
+            <div class="modal-section">
+                <h4 class="section-title">Incident Report Details</h4>
+                <div class="info-grid">
+                    <div><strong>Category of Bullying:</strong> <span id="repCategory">Verbal Harassment</span></div>
+                    <div><strong>Date & Time:</strong> <span id="repDateTime">August 18, 2026 - 10:30 AM</span></div>
+                    <div class="grid-span-2"><strong>Location:</strong> <span id="repLocation">2nd Floor Building B Corridor</span></div>
+                </div>
+                <div class="description-box">
+                    <strong>Description:</strong>
+                    <p id="repDescription">Student was repeatedly mocked and threatened by a group of classmates during recess near the stairwell.</p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-reject" onclick="closeReportModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../adminGuard.js"></script>
+    <script src="../../localDatabase.js"></script>
+    <script src="adminManage.js"></script>
+</body>
+</html>

@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LagroInAction - Admin Home</title>
+    <link rel="icon" href="../../assets/LIALogo.ico" type="image/x-icon">
+    <link rel="stylesheet" href="adminHome.css" />
+    <link rel="stylesheet" href="../../pageEnhancements.css" />
+    <script src="../../pageEnhancements.js" defer></script>
+  </head>
+  <body>
+    <!-- TOP NAVIGATION BAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button onclick="toggleSidebar()" class="menu-btn" title="Toggle Menu">
+          ☰
+        </button>
+        <img
+          src="../../assets/lagroHSLogo.png"
+          alt="School Logo"
+          class="topbar-logo"
+        />
+      </div>
+
+      <div class="topbar-center">PROJECT LIA</div>
+
+      <div class="topbar-right">
+        <a href="#" class="profile-link" title="Admin Profile">
+          <img
+            src="../../assets/lagroHSLogo.png"
+            alt="User Profile"
+            class="profile-pic"
+          />
+        </a>
+      </div>
+    </header>
+
+    <!-- MAIN BODY CONTAINER -->
+    <div class="app-body">
+      <!-- SIDEBAR -->
+      <aside id="sidebar" class="sidebar closed">
+        <!-- NAVIGATION LINKS -->
+        <ul class="nav-list">
+          <li class="nav-item active">
+            <a href="../adminHome/adminHome.html">Home</a>
+          </li>
+          <li class="nav-item">
+            <a href="../adminDashboard/adminDashboard.html">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a href="../adminManageReports/adminManage.html">Manage Reports</a>
+          </li>
+          <li class="nav-item">
+            <a href="../adminReportRecords/adminRecords.html">Report Records</a>
+          </li>
+          <li class="nav-item">
+            <a href="../adminRequestAccount/adminRequest.html"
+              >Registration Requests</a
+            >
+          </li>
+          <li class="nav-item">
+            <a href="../adminMessages/adminMessage.html">Messages</a>
+          </li>
+        </ul>
+      </aside>
+      <!-- MAIN CONTENT AREA -->
+      <main class="main-content">
+        <!-- INTRODUCTION BANNER -->
+        <section class="intro-banner">
+          <h1 class="banner-title">LagroInAction</h1>
+          <h2 class="banner-subtitle">
+            ANTI-BULLYING <span>Act (RA 10627)</span>
+          </h2>
+          <p class="banner-description">
+            Bullying is any severe or repeated physical, verbal, written,
+            electronic, or social behavior by one or more students that causes
+            or may cause physical or emotional harm, creates a hostile school
+            environment, violates another student's rights, or disrupts learning
+            and school operations. Anyone who commits these acts is considered a
+            bully. Retaliating against someone who reports bullying,
+            participates in an investigation, witnesses bullying, or has
+            reliable information about it is also prohibited.
+          </p>
+        </section>
+
+        <!-- FLEXIBLE CONTENT GRID (Left: Articles, Right: Videos) -->
+        <div class="content-grid">
+          <!-- LEFT SIDEBAR: ARTICLES (Flexible, bigger ratio) -->
+          <!-- LEFT COLUMN: ARTICLES & POSTERS (Flexible, expands automatically) -->
+          <!-- LEFT COLUMN: POSTER, ARTICLES, & LAGRONIAN VALUES -->
+          <section class="articles-column">
+            <!-- POSTER & CREDITS CONTAINER -->
+            <!-- FLEXIBLE POSTERS CONTAINER (2-3 Columns) -->
+            <div class="posters-section">
+              <h3 class="section-heading">Posters & Advocacies:</h3>
+
+              <div class="posters-grid">
+                <!-- Poster Card 1 -->
+                <div class="poster-card">
+                  <img
+                    src="../../assets/poster1.jpe"
+                    alt="Stop Bullying Poster 1"
+                    class="poster-img"
+                  />
+                  <div class="poster-credits">
+                    <span class="credit-creator"
+                      >Juan Batumbakal (Grade 11)</span
+                    >
+                    <span class="credit-details"
+                      >1st Place Poster Contest • Oct 2025</span
+                    >
+                  </div>
+                </div>
+
+                <!-- Poster Card 2 -->
+                <div class="poster-card">
+                  <img
+                    src="../../assets/poster2.jpe"
+                    alt="Stop Bullying Poster 2"
+                    class="poster-img"
+                  />
+                  <div class="poster-credits">
+                    <span class="credit-creator">Kathy P. Peko (Grade 10)</span>
+                    <span class="credit-details"
+                      >2nd Place Poster Contest • Nov 2025</span
+                    >
+                  </div>
+                </div>
+
+                <!-- Poster Card 3 -->
+                <div class="poster-card">
+                  <img
+                    src="../../assets/poster3.jpe"
+                    alt="Stop Bullying Poster 3"
+                    class="poster-img"
+                  />
+                  <div class="poster-credits">
+                    <span class="credit-creator">Jaja Collins (Grade 12)</span>
+                    <span class="credit-details"
+                      >Special Choice Award • Dec 2025</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ARTICLES SECTION -->
+            <h3 class="section-heading">Articles:</h3>
+            <div class="articles-list">
+              <article class="article-card">
+                <h4 class="article-title">
+                  Bullying still a 'silent, persistent' problem in schools
+                  &dash; EDCOM
+                </h4>
+                <p class="article-author">
+                  By GISELLE OMBAY, GMA Integrated News | Published Jan 29, 2025
+                </p>
+                <p class="article-snippet">
+                  Bullying, particularly in Metro Manila, continues to be a
+                  perennial issue in Philippine schools, the Second
+                  Congressional Commission on Education (EDCOM II) revealed...
+                </p>
+                <a href="#" class="read-more">Read More...</a>
+              </article>
+
+              <article class="article-card">
+                <h4 class="article-title">
+                  PH still world's 'bullying capital'; 63% of Grade 5 pupils
+                  bullied —EDCOM II
+                </h4>
+                <p class="article-author">
+                  By SHERYLIN UNTALAN, GMA Integrated News | Published Sept 2,
+                  2025
+                </p>
+                <p class="article-snippet">
+                  The Philippines remains the "bullying capital of the world,"
+                  with nearly two in three Grade 5 students reporting that they
+                  experience bullying...
+                </p>
+                <a href="#" class="read-more">Read More...</a>
+              </article>
+
+              <article class="article-card">
+                <h4 class="article-title">
+                  DepEd pushes for stronger guidance counseling programs in
+                  public schools
+                </h4>
+                <p class="article-author">
+                  By EDUCATION DESK | Published Oct 14, 2025
+                </p>
+                <p class="article-snippet">
+                  To combat increasing cyberbullying cases among secondary
+                  students, new mental health initiatives and anonymous
+                  reporting tools are being deployed nationwide...
+                </p>
+                <a href="#" class="read-more">Read More...</a>
+              </article>
+
+              <article class="article-card">
+                <h4 class="article-title">
+                  Understanding RA 10627: How student reporting protects rights
+                </h4>
+                <p class="article-author">
+                  By LEGAL AFFAIRS | Published Nov 05, 2025
+                </p>
+                <p class="article-snippet">
+                  An in-depth breakdown of the Anti-Bullying Act, detailing
+                  school responsibility, student protection policies, and legal
+                  safeguards for whistleblowers...
+                </p>
+                <a href="#" class="read-more">Read More...</a>
+              </article>
+
+              <article class="article-card">
+                <h4 class="article-title">
+                  Understanding RA 10627: How student reporting protects rights
+                </h4>
+                <p class="article-author">
+                  By LEGAL AFFAIRS | Published Nov 05, 2025
+                </p>
+                <p class="article-snippet">
+                  An in-depth breakdown of the Anti-Bullying Act, detailing
+                  school responsibility, student protection policies, and legal
+                  safeguards for whistleblowers...
+                </p>
+                <a href="#" class="read-more">Read More...</a>
+              </article>
+            </div>
+
+            <!-- LAGRONIAN WAY & SMART CONTAINER -->
+            <div class="values-card">
+              <div class="values-header">
+                <h3 class="values-title">The Lagronian Way</h3>
+                <p class="values-text">
+                  At Lagro High School, we strive for excellence in both
+                  academics and character. We celebrate and honor one another by
+                  practicing Self-discipline, Modesty, Academic excellence,
+                  Resiliency, and Trustworthiness (SMART). We always give our
+                  best whenever in or out of school, embodying these values.
+                  This is who we are, even when no one is watching.
+                </p>
+              </div>
+
+              <div class="smart-box">
+                <h4 class="smart-title">SMART Lagronian</h4>
+                <ul class="smart-list">
+                  <li><strong>S</strong> - Self-discipline</li>
+                  <li><strong>M</strong> - Modesty</li>
+                  <li><strong>A</strong> - Academic excellence</li>
+                  <li><strong>R</strong> - Resiliency</li>
+                  <li><strong>T</strong> - Trustworthiness</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- RIGHT SIDEBAR: YOUTUBE VIDEOS -->
+          <!-- RIGHT SIDEBAR: YOUTUBE VIDEOS (Fallback Cards) -->
+          <section class="videos-column">
+            <h3 class="section-heading">Videos:</h3>
+
+            <!-- Video 1 -->
+            <div class="video-card">
+              <iframe
+                src="https://www.youtube.com/embed/iFlrCuSyhvU"
+                title="Anti-Bullying Video 1"
+                allowfullscreen
+              ></iframe>
+            </div>
+
+            <!-- Video 2 -->
+            <div class="video-card">
+              <iframe
+                src="https://www.youtube.com/embed/F6r0B78GQgg"
+                title="Bullying is NEVER OK!"
+                allowfullscreen
+              ></iframe>
+            </div>
+
+            <!-- Video 3 -->
+            <div class="video-card">
+              <iframe
+                src="https://www.youtube.com/embed/5l6mDwanphM"
+                title="What to do about bullying"
+                allowfullscreen
+              ></iframe>
+            </div>
+
+            <!-- Video 4 -->
+            <div class="video-card">
+              <iframe
+                src="https://www.youtube.com/embed/dRmbn-kMfaI"
+                title="Be a Buddy Not a Bully"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </section>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="school-footer">
+          <div class="footer-grid">
+            <!-- Column 1: School Info & Address -->
+            <div class="footer-col">
+              <h4 class="footer-title">Lagro High School</h4>
+              <p class="footer-text">
+                <strong>Address:</strong> Misa de Gallo St. corner Ascension
+                Ave., Brgy. Greater Lagro, Novaliches, Quezon City.
+              </p>
+            </div>
+
+            <!-- Column 2: Contact Info -->
+            <div class="footer-col">
+              <h4 class="footer-title">Contact Us</h4>
+              <p class="footer-text">
+                <strong>Email:</strong> lagrohighschool@gmail.com
+              </p>
+              <p class="footer-text">
+                <strong>Facebook:</strong> Ask Lagro High School
+              </p>
+              <p class="footer-text"><strong>Office Numbers:</strong></p>
+              <ul class="footer-list">
+                <li>09XX-XXXX-XXX</li>
+                <li>09XX-XXXX-XXX</li>
+              </ul>
+            </div>
+
+            <!-- Column 3: Emergency Hotlines -->
+            <div class="footer-col">
+              <h4 class="footer-title">Emergency Hotlines</h4>
+              <ul class="footer-list emergency">
+                <li>12-XXX-XXX</li>
+                <li>12-XXX-XXX</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Bottom Copyright Line -->
+          <div class="footer-bottom">
+            <p>
+              © 2026 Lagro High School - LagroInAction. All Rights Reserved.
+            </p>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <script src="../../adminGuard.js"></script>
+    <script src="../../localDatabase.js"></script>
+    <script src="adminHome.js"></script>
+  </body>
+</html>

@@ -1,0 +1,18 @@
+# Maven build output
+/target/
+
+# NetBeans private/local IDE settings (per-machine, not shared)
+/nbproject/private/
+/nbproject/Makefile-*.mk
+/nbproject/Package-*.bash
+
+# Compiled class files (in case anything builds outside target/)
+*.class
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+
+# Logs
+*.log
