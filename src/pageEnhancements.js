@@ -59,7 +59,7 @@
             button.disabled = true;
             noButton.remove();
             localStorage.removeItem('lagroInActionActiveUser');
-            setTimeout(() => { window.location.href = '../../index.html'; }, 450);
+            setTimeout(() => { window.location.href = '../../../index.html'; }, 450);
         };
     };
 

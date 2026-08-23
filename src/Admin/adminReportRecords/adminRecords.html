@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LagroInAction - Report Records</title>
+    <link rel="icon" href="../../LIALogo.ico" type="image/x-icon">
+    <link rel="stylesheet" href="adminRecords.css">
+    <link rel="stylesheet" href="../../pageEnhancements.css">
+    <script src="../../pageEnhancements.js" defer></script>
+</head>
+<body>
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <button onclick="toggleSidebar()" class="menu-btn" title="Toggle Menu">☰</button>
+            <img src="../../assets/lagroHSLogo.png" alt="School Logo" class="topbar-logo">
+        </div>
+
+        <div class="topbar-center">
+            PROJECT LIA
+        </div>
+
+        <div class="topbar-right">
+            <span class="user-name">Guidance Admin</span>
+            <div class="profile-link">
+                <img src="../../assets/lagroHSLogo.png" alt="Admin Profile" class="profile-pic">
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN BODY CONTAINER -->
+    <div class="app-body">
+
+        <!-- FIXED SIDEBAR -->
+        <aside id="sidebar" class="sidebar closed">
+            <ul class="nav-list">
+                <li class="nav-item"><a href="../adminHome/adminHome.html">Home</a></li>
+                <li class="nav-item"><a href="../adminDashboard/adminDashboard.html">Dashboard</a></li>
+                <li class="nav-item"><a href="../adminManageReports/adminManage.html">Manage Reports</a></li>
+                <li class="nav-item active"><a href="../adminReportRecords/adminRecords.html">Report Records</a></li>
+                <li class="nav-item"><a href="../adminRequestAccount/adminRequest.html">Registration Requests</a></li>
+                <li class="nav-item"><a href="../adminMessages/adminMessage.html">Messages</a></li>
+            </ul>
+        </aside>
+
+        <!-- MAIN CONTENT AREA WITH FLOATING CARD WRAPPER -->
+        <main class="main-content">
+            <div class="records-card">
+
+                <!-- CARD HEADER -->
+                <div class="card-header">
+                    <div class="header-titles">
+                        <h2>Resolved Report Records</h2>
+                        <p>Archive of officially closed and resolved incident reports for Guidance reference.</p>
+                    </div>
+                </div>
+
+                <!-- FILTER BAR -->
+                <div class="filter-bar">
+                    <input type="text" id="searchInput" placeholder="Search by Case ID, Student Name, or LRN..." onkeyup="filterRecords()">
+                    
+                    <select id="categoryFilter" onchange="filterRecords()">
+                        <option value="ALL">All Categories</option>
+                        <option value="Verbal Harassment">Verbal Harassment</option>
+                        <option value="Cyberbullying">Cyberbullying</option>
+                        <option value="Physical Harm">Physical Harm</option>
+                        <option value="Social Exclusion">Social Exclusion</option>
+                        <option value="Others">Others</option>
+                        <option value="Vandalism">Vandalism</option>
+                    </select>
+
+                    <select id="yearFilter" onchange="filterRecords()">
+                        <option value="ALL">All School Years</option>
+                        <option value="2026">S.Y. 2026 - 2027</option>
+                        <option value="2025">S.Y. 2025 - 2026</option>
+                    </select>
+                </div>
+
+                <!-- TABLE CONTAINER -->
+                <div class="table-container">
+                    <table class="records-table">
+                        <thead>
+                            <tr>
+                                <th>Case ID</th>
+                                <th>Student Involved</th>
+                                <th>Incident Category</th>
+                                <th>Date Resolved</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTableBody">
+                            <tr id="row-REP-1039">
+                                <td class="case-id">#REP-1039</td>
+                                <td>
+                                    <div class="student-name">Juan Batumbakal</div>
+                                    <div class="student-sub">LRN: 987654321098 • Gr. 11 - Alan Turing</div>
+                                </td>
+                                <td>Academic Dishonesty</td>
+                                <td>Aug 17, 2026</td>
+                                <td><span class="badge badge-success">Resolved</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action btn-view" onclick="viewRecord({
+                                            caseId: '#REP-1039',
+                                            fullName: 'Juan Batumbakal',
+                                            gradeSection: 'Grade 11 - Alan Turing',
+                                            username: 'juan_batumbakal',
+                                            adviser: 'Mr. Santos',
+                                            lrn: '987654321098',
+                                            email: 'juan.batumbakal@lagroschool.edu.ph',
+                                            category: 'Academic Dishonesty',
+                                            dateTime: 'August 15, 2026 - 09:15 AM',
+                                            location: 'Room 304 - Examination Hall',
+                                            description: 'Student was caught utilizing unauthorized digital notes during the 1st Quarter Examinations. Case mediated with parents and subject teacher.'
+                                        })">Scan Details</button>
+                                        <button class="btn-action btn-delete" onclick="deleteRecord('row-REP-1039', '#REP-1039')">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr id="row-REP-1028">
+                                <td class="case-id">#REP-1028</td>
+                                <td>
+                                    <div class="student-name">Carlos Sainz</div>
+                                    <div class="student-sub">LRN: 112233445566 • Gr. 10 - Molave</div>
+                                </td>
+                                <td>Bullying</td>
+                                <td>Aug 02, 2026</td>
+                                <td><span class="badge badge-success">Resolved</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action btn-view" onclick="viewRecord({
+                                            caseId: '#REP-1028',
+                                            fullName: 'Carlos Sainz',
+                                            gradeSection: 'Grade 10 - Molave',
+                                            username: 'carlos_sainz',
+                                            adviser: 'Mrs. Cruz',
+                                            lrn: '112233445566',
+                                            email: 'carlos.sainz@lagroschool.edu.ph',
+                                            category: 'Verbal Harassment',
+                                            dateTime: 'August 01, 2026 - 01:30 PM',
+                                            location: 'Main Quadrangle',
+                                            description: 'Verbal conflict reported in the hallway during lunch period. Both parties participated in a restorative justice counseling session.'
+                                        })">Scan Details</button>
+                                        <button class="btn-action btn-delete" onclick="deleteRecord('row-REP-1028', '#REP-1028')">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr id="row-REP-1015">
+                                <td class="case-id">#REP-1015</td>
+                                <td>
+                                    <div class="student-name">Samantha Cruz</div>
+                                    <div class="student-sub">LRN: 445566778899 • Gr. 12 - STEM A</div>
+                                </td>
+                                <td>Vandalism</td>
+                                <td>Jul 24, 2026</td>
+                                <td><span class="badge badge-success">Resolved</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action btn-view" onclick="viewRecord({
+                                            caseId: '#REP-1015',
+                                            fullName: 'Samantha Cruz',
+                                            gradeSection: 'Grade 12 - STEM A',
+                                            username: 'samantha_cruz',
+                                            adviser: 'Dr. Reyes',
+                                            lrn: '445566778899',
+                                            email: 'samantha.cruz@lagroschool.edu.ph',
+                                            category: 'Property Damage',
+                                            dateTime: 'July 22, 2026 - 03:45 PM',
+                                            location: '2nd Floor Science Lab 2',
+                                            description: 'Property damage recorded on laboratory desk. Full restitution made by student along with a formal written apology.'
+                                        })">Scan Details</button>
+                                        <button class="btn-action btn-delete" onclick="deleteRecord('row-REP-1015', '#REP-1015')">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr id="row-REP-1002">
+                                <td class="case-id">#REP-1002</td>
+                                <td>
+                                    <div class="student-name">Alexander Wright</div>
+                                    <div class="student-sub">LRN: 332211445566 • Gr. 9 - Jasmin</div>
+                                </td>
+                                <td>Physical Altercation</td>
+                                <td>Jun 11, 2026</td>
+                                <td><span class="badge badge-success">Resolved</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-action btn-view" onclick="viewRecord({
+                                            caseId: '#REP-1002',
+                                            fullName: 'Alexander Wright',
+                                            gradeSection: 'Grade 9 - Jasmin',
+                                            username: 'alexander_wright',
+                                            adviser: 'Mr. Garcia',
+                                            lrn: '332211445566',
+                                            email: 'alex.wright@lagroschool.edu.ph',
+                                            category: 'Physical Conflict',
+                                            dateTime: 'June 09, 2026 - 10:00 AM',
+                                            location: 'Gymnasium Backstage',
+                                            description: 'Physical dispute occurred during P.E. class. Parent-Teacher conference held and 3-day behavioral monitoring completed.'
+                                        })">Scan Details</button>
+                                        <button class="btn-action btn-delete" onclick="deleteRecord('row-REP-1002', '#REP-1002')">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- REPORT CASE SCAN MODAL -->
+    <div id="reportModal" class="modal-overlay">
+        <div class="modal-card">
+            
+            <div class="modal-header">
+                <h3 id="modalCaseTitle">REPORT CASE NO. #REP-0000</h3>
+                <button class="modal-close-x" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                
+                <!-- SECTION 1: STUDENT ACCOUNT DETAILS -->
+                <div class="modal-section-title">STUDENT ACCOUNT DETAILS</div>
+                
+                <div class="modal-grid-2col">
+                    <div class="detail-item">
+                        <span class="detail-label">Full Name:</span>
+                        <span class="detail-val" id="modalFullName">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Grade & Section:</span>
+                        <span class="detail-val" id="modalGradeSection">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Username:</span>
+                        <span class="detail-val" id="modalUsername">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Adviser:</span>
+                        <span class="detail-val" id="modalAdviser">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">LRN:</span>
+                        <span class="detail-val" id="modalLrn">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-val" id="modalEmail">-</span>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: INCIDENT REPORT DETAILS -->
+                <div class="modal-section-title">INCIDENT REPORT DETAILS</div>
+
+                <div class="modal-grid-2col">
+                    <div class="detail-item">
+                        <span class="detail-label">Category of Bullying:</span>
+                        <span class="detail-val" id="modalCategory">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Date & Time:</span>
+                        <span class="detail-val" id="modalDateTime">-</span>
+                    </div>
+                    <div class="detail-item col-span-2">
+                        <span class="detail-label">Location:</span>
+                        <span class="detail-val" id="modalLocation">-</span>
+                    </div>
+                </div>
+
+                <!-- DESCRIPTION BOX -->
+                <div class="description-box">
+                    <div class="desc-label">Description:</div>
+                    <div class="desc-text" id="modalDescription">-</div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-close-modal" onclick="closeModal()">Close</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="../../adminGuard.js"></script>
+    <script src="../../localDatabase.js"></script>
+    <script src="adminRecords.js"></script>
+</body>
+</html>
