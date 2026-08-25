@@ -136,6 +136,31 @@ public class StudentDAO {
         }
     }
 
+    /** Fetches one student's profile data for admin tools like message-side info panels. */
+    public String[] getProfileForAdmin(long lrn) throws SQLException {
+        String sql = "SELECT student_fullName, student_username, grade_section, adviser_name, email, status "
+            + "FROM students WHERE student_lrn = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, lrn);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new String[] {
+                        rs.getString("student_fullName"),
+                        rs.getString("student_username"),
+                        rs.getString("grade_section"),
+                        rs.getString("adviser_name"),
+                        rs.getString("email"),
+                        rs.getString("status")
+                    };
+                }
+                return null;
+            }
+        }
+    }
+
     /** Updates the editable parts of a student's profile (username, grade & section, adviser). */
     public boolean updateProfile(long lrn, String username, String gradeSection, String adviser) throws SQLException {
         String sql = "UPDATE students SET student_username = ?, grade_section = ?, adviser_name = ? "

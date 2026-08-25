@@ -51,9 +51,9 @@ function resetCustomFields() {
 }
 
 // Handle Incident Report Form Submission
-// CHANGED: added "async" so we can use "await" with fetch() inside
-async function handleReportSubmit(e) {
-    e.preventDefault();
+// Submits the report form to the backend and handles user feedback states.
+async function handleReportSubmit(event) {
+    event.preventDefault();
 
     const isAnonymous = document.querySelector('input[name="anonymity"]:checked').value === 'anonymous';
     const category = document.getElementById('category').value;
@@ -66,7 +66,7 @@ async function handleReportSubmit(e) {
 
     window.showPageLoading?.('Sending report...');
 
-    // CHANGED: package the report data to send to ReportServlet
+    // Build form-encoded payload for ReportServlet.
     const params = new URLSearchParams({
         isAnonymous: isAnonymous ? 'true' : 'false',
         location,

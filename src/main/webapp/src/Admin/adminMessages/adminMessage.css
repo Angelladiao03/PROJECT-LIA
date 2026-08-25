@@ -302,6 +302,12 @@ body {
     margin-top: 2px;
 }
 
+.chat-header-actions {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+}
+
 .status-tag {
     color: #dd6b20;
     font-weight: 700;
@@ -321,6 +327,42 @@ body {
 
 .btn-scan:hover {
     background-color: #d9ebd9;
+}
+
+.student-info-modal-box {
+    width: min(100%, 560px);
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem 1rem;
+    color: #334155;
+    font-size: 0.9rem;
+}
+
+.info-full {
+    grid-column: 1 / -1;
+}
+
+.modal-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-cancel {
+    padding: 0.55rem 0.9rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.55rem;
+    background: #f8fafc;
+    color: #1f2937;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-cancel:hover {
+    background: #eef2f7;
 }
 
 /* Messages Area */
@@ -456,10 +498,12 @@ body {
     .student-name, .last-msg { font-size: 0.78rem; }
     .last-msg { max-width: 100%; }
     .chat-header .active-student-details p { display: none; }
+    .chat-header-actions { gap: 0.4rem; }
 }
 @media (max-width: 480px) {
     .chat-search-box { padding: 0.65rem; }
     .student-item { padding: 0.65rem 0.75rem; }
     .student-avatar { width: 32px; height: 32px; font-size: 0.72rem; }
     .btn-scan { padding: 6px 8px; font-size: 0.7rem; }
+    .info-grid { grid-template-columns: 1fr; }
 }

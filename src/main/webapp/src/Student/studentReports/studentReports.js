@@ -1,12 +1,10 @@
-// Toggle Sidebar Collapse
+// Sidebar visibility is managed globally; keep this for template compatibility.
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     sidebar.classList.toggle('collapsed');
 }
 
-// CHANGED: now async, fetches the real profile from StudentProfileServlet
-// instead of relying only on localStorage (which never had gradeSection/
-// adviser/email for students, since login only stored fullName + lrn).
+// Loads student account details from the backend and updates local cache fields.
 async function loadActiveStudent() {
     const activeUser = JSON.parse(localStorage.getItem('lagroInActionActiveUser') || 'null');
     if (!activeUser || activeUser.role !== 'student') return;
@@ -14,10 +12,11 @@ async function loadActiveStudent() {
     let profile = null;
     try {
         const res = await fetch('../../../StudentProfileServlet');
+        if (!res.ok) throw new Error('Profile request failed.');
         const data = await res.json();
         if (data.success) profile = data;
     } catch (error) {
-        // fall back to whatever's in localStorage below
+        // Keep graceful fallback to locally stored values when session expired.
     }
 
     const fields = {
@@ -35,7 +34,7 @@ async function loadActiveStudent() {
         if (element && value) element.textContent = value;
     });
 
-    // Keep localStorage in sync so other pages (topbar name, etc.) stay accurate too.
+    // Keep local storage in sync so the topbar and other pages stay consistent.
     if (profile) {
         Object.assign(activeUser, {
             fullName: profile.fullName,
@@ -51,9 +50,7 @@ async function loadActiveStudent() {
 
 loadActiveStudent();
 
-// CHANGED: the database stores different status words than the old mock data did.
-// This converts the database's status text into the same short codes the page
-// already expects (requested / pending / submitted / resolved).
+// Normalizes database statuses into the account-page filter/status buckets.
 function mapDbStatus(dbStatus) {
     const map = {
         'Pending': 'requested',
@@ -64,7 +61,7 @@ function mapDbStatus(dbStatus) {
     return map[dbStatus] || 'requested';
 }
 
-// CHANGED: now async, and pulls reports from MyReportsServlet instead of localStorage
+// Loads submitted reports from the backend and refreshes counters/table state.
 async function loadSubmittedReports() {
     const tableBody = document.getElementById('reportsTableBody');
     if (!tableBody) return;
@@ -74,6 +71,7 @@ async function loadSubmittedReports() {
     let studentReports = [];
     try {
         const res = await fetch('../../../MyReportsServlet');
+        if (!res.ok) throw new Error('Reports request failed.');
         studentReports = await res.json();
     } catch (error) {
         tableBody.innerHTML = '<tr class="empty-report-row"><td colspan="6">Could not load reports. Please try again.</td></tr>';
@@ -100,7 +98,8 @@ async function loadSubmittedReports() {
         const status = mapDbStatus(report.status);
         const row = document.createElement('tr');
         row.dataset.status = status;
-        row.innerHTML = `<td class="report-id">#${report.reportNo}</td><td>${report.category}</td><td>${report.location}</td><td>${activeUser?.fullName || ''}</td><td>${new Date(report.dateTime).toLocaleString()}</td><td><span class="status-text status-${status}">${status.replace('-', ' ').toUpperCase()}</span></td>`;
+        const reporterName = report.fullName || activeUser?.fullName || 'Student';
+        row.innerHTML = `<td class="report-id">#${report.reportNo}</td><td>${report.category}</td><td>${report.location}</td><td>${reporterName}</td><td>${new Date(report.dateTime).toLocaleString()}</td><td><span class="status-text status-${status}">${status.replace('-', ' ').toUpperCase()}</span></td>`;
         tableBody.appendChild(row);
     });
 }

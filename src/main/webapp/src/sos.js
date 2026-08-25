@@ -14,7 +14,7 @@ function closeSosModal() {
     }, 200);
 }
 
-// CHANGED: added "async" so we can use "await" with fetch() inside
+// Sends the SOS payload to the backend and updates the modal state.
 async function handleSosSubmit(event) {
     event.preventDefault();
     const locationInput = document.getElementById('sosLocation');

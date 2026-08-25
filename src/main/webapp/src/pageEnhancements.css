@@ -127,16 +127,16 @@ h6,
   z-index: 1000 !important;
 }
 .main-content > * {
-  animation: lia-rise-in 0.45s ease both;
+  animation: lia-rise-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 .main-content > *:nth-child(2) {
-  animation-delay: 0.04s;
+  animation-delay: 0.06s;
 }
 .main-content > *:nth-child(3) {
-  animation-delay: 0.08s;
+  animation-delay: 0.12s;
 }
 .main-content > *:nth-child(4) {
-  animation-delay: 0.12s;
+  animation-delay: 0.18s;
 }
 .topbar {
   background: rgba(255, 255, 255, 0.94);
@@ -396,11 +396,27 @@ body:has(#sosModal) .modal-header p {
 body:has(#sosModal) .close-modal-btn {
   top: 0.75rem;
   right: 0.75rem;
-  width: 24px;
-  height: 24px;
-  border: 2px solid #fff;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.92);
   border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1;
   color: #fff;
+  transition:
+    transform 0.22s ease,
+    background-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+body:has(#sosModal) .close-modal-btn:hover {
+  transform: rotate(90deg) scale(1.05);
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
 }
 body:has(#sosModal) .modal-body {
   padding: 2rem;
@@ -506,18 +522,48 @@ a:active {
   width: 100% !important;
 }
 .modal-overlay:not(.hidden) {
-    animation: lia-modal-fade .2s ease both;
+  animation: lia-modal-fade .26s ease both;
 }
 .modal-overlay:not(.hidden) .modal-box {
-    animation: lia-modal-pop .28s cubic-bezier(.34, 1.56, .64, 1) both;
+  animation: lia-modal-pop .34s cubic-bezier(.2, .85, .25, 1.15) both;
+}
+
+.close-modal-btn,
+.modal-close {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  border: 1.5px solid rgba(100, 116, 139, 0.5);
+  background: rgba(241, 245, 249, 0.92);
+  color: #1f2937;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 0.22s ease,
+    background-color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.close-modal-btn:hover,
+.modal-close:hover {
+  transform: rotate(90deg) scale(1.05);
+  background: #ffffff;
+  border-color: rgba(51, 65, 85, 0.6);
+  box-shadow: 0 0 0 3px rgba(15, 81, 50, 0.14);
 }
 @keyframes lia-modal-fade {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 @keyframes lia-modal-pop {
-    from { opacity: 0; transform: scale(.85) translateY(14px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; transform: scale(.82) translateY(18px); }
+  65% { opacity: 1; transform: scale(1.02) translateY(-2px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 @keyframes lia-modal-fade-out {
   from { opacity: 1; }
@@ -568,11 +614,11 @@ a:active {
 @keyframes lia-rise-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(14px) scale(0.988);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 

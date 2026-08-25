@@ -1,4 +1,4 @@
-// Function to switch between Student Login, Student Signup, and Admin Login
+// Switches visible authentication form sections.
 window.addEventListener('load', () => {
     document.getElementById('pageLoader').classList.add('loaded');
 });
@@ -92,7 +92,7 @@ function showPopup(message, title, onOkay) {
     okayButton.focus();
 }
 
-// CHANGED: added "async" so we can use "await" with fetch() inside
+// Handles both student and admin login using the corresponding backend endpoint.
 async function handleLogin(event, role) {
     event.preventDefault();
 
@@ -125,7 +125,7 @@ async function handleLogin(event, role) {
             return;
         }
     } else {
-        // CHANGED: student login now asks the real database via LoginServlet
+        // Student login uses the same server session used by student pages.
         const params = new URLSearchParams({ username, password });
 
         try {
@@ -153,7 +153,7 @@ async function handleLogin(event, role) {
     setFormMessage(form, 'Invalid login credentials. Your LRN may not be registered yet or your details are incorrect.');
 }
 
-// CHANGED: added "async" so we can use "await" with fetch() inside
+// Submits student registration and keeps local UI state in sync.
 async function handleRegistration(event) {
     event.preventDefault();
 
@@ -175,7 +175,7 @@ async function handleRegistration(event) {
 
     showAuthLoading('Creating account...');
 
-    // CHANGED: registration now sends data to RegisterServlet instead of localStorage
+    // Registration is persisted on the backend for admin approval.
     const params = new URLSearchParams({
         lrn, fullName, username, password, rePassword: confirmPassword, adviser, gradeSection, email
     });

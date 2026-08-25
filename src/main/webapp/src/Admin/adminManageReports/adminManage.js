@@ -1,15 +1,13 @@
-// In-memory cache of the last fetched reports/alerts, so modals and message
-// links can look up details without a second request.
+// Cache the latest fetched reports so the details modal can render instantly.
 let cachedReports = [];
-let cachedAlerts = [];
 
-// Toggle Sidebar Collapsed State
+// Sidebar visibility toggle.
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     sidebar.classList.toggle('collapsed');
 }
 
-// Toggle Action Dropdown Menu
+// Opens one dropdown and closes the rest for predictable actions.
 function toggleDropdown(btn) {
     document.querySelectorAll('.dropdown-menu').forEach(menu => {
         if (menu !== btn.nextElementSibling) {
@@ -20,7 +18,7 @@ function toggleDropdown(btn) {
     dropdownMenu.classList.toggle('show');
 }
 
-// Close dropdowns if user clicks anywhere outside
+// Closes all open dropdowns when clicking outside action buttons.
 window.onclick = function(event) {
     if (!event.target.matches('.btn-more')) {
         document.querySelectorAll('.dropdown-menu').forEach(menu => {
@@ -43,7 +41,7 @@ async function postReportAction(params) {
     }
 }
 
-// Approve submitted report (New Requests -> Active Tracking)
+// Moves a pending request to the active investigation queue.
 async function approveReport(btn) {
     const row = btn.closest('tr');
     const reportNo = row.dataset.reportId;
@@ -61,7 +59,7 @@ async function approveReport(btn) {
     }, 300);
 }
 
-// Reject submitted report
+// Removes a submitted report from the queue after confirmation.
 async function rejectReport(btn) {
     const row = btn.closest('tr');
     if (!confirm('Are you sure you want to reject this report?')) return;
@@ -77,7 +75,7 @@ async function rejectReport(btn) {
     setTimeout(() => row.remove(), 300);
 }
 
-// Update Active Investigation Status
+// Updates case status based on active-track actions.
 async function updateStatus(btn, targetStatus) {
     const row = btn.closest('tr');
     const reportNo = row.dataset.reportId;
@@ -112,7 +110,7 @@ async function updateStatus(btn, targetStatus) {
     }
 }
 
-// SOS Alert Dispatch
+// Marks an SOS alert as dispatched when a guard is sent.
 async function dispatchSOS(btn) {
     const row = btn.closest('tr');
     const badge = row.querySelector('.badge');
@@ -129,7 +127,7 @@ async function dispatchSOS(btn) {
     loadSavedReportsAndAlerts();
 }
 
-// SOS Alert Respond
+// Marks an SOS alert as responded after intervention is done.
 async function respondSOS(btn) {
     const row = btn.closest('tr');
     const sosNo = row.dataset.alertId;
@@ -141,7 +139,7 @@ async function respondSOS(btn) {
     loadSavedReportsAndAlerts();
 }
 
-// Open Modal with specific data mode ('known' vs 'anon') -- static design preview only
+// Fallback preview mode for static/demo report entries.
 function openReportModal(type) {
     const modal = document.getElementById('reportModal');
     const accountSection = document.getElementById('accountInfoSection');
@@ -239,13 +237,13 @@ async function loadSavedReportsAndAlerts() {
             fetch('../../../AdminReportServlet'),
             fetch('../../../AdminReportServlet?type=sos')
         ]);
+        if (!reportsRes.ok || !alertsRes.ok) throw new Error('Failed to load admin datasets.');
         reports = await reportsRes.json();
         alerts = await alertsRes.json();
     } catch (err) {
         // leave the tables empty / show the empty-state message below
     }
     cachedReports = reports;
-    cachedAlerts = alerts;
 
     if (newReportsBody) newReportsBody.innerHTML = '';
     if (activeReportsBody) activeReportsBody.innerHTML = '';
@@ -284,11 +282,13 @@ async function loadSavedReportsAndAlerts() {
         row.dataset.alertId = alertData.sosNo;
         const isAnonymous = !alertData.username;
         const status = alertData.status || 'Active';
+        const alertLrn = alertData.lrn || 'N/A';
+        const alertUser = alertData.username || alertData.fullName || 'Anonymous';
         const dispatchAction = status === 'Dispatched' || status === 'Responded' ? '' : '<button class="btn btn-more" onclick="dispatchSOS(this)">Dispatch Guard</button>';
         const responseAction = status === 'Responded' ? '' : '<button class="btn btn-scan" onclick="respondSOS(this)">Mark Responded</button>';
         const messageAction = isAnonymous ? '' : `<button class="btn btn-message" onclick="messageReporter('${alertData.lrn}')">Message Student</button>`;
         const badgeClass = status === 'Responded' ? 'badge-success' : 'badge-danger';
-        row.innerHTML = `<td>${alertData.dateTime}</td><td>${alertData.lrn} (${alertData.username})</td><td>${alertData.location}</td><td>${alertData.description || 'No description provided.'}</td><td><span class="badge ${badgeClass}">${status.toUpperCase()}</span></td><td><div class="action-buttons">${dispatchAction}${responseAction}${messageAction}</div></td>`;
+        row.innerHTML = `<td>${alertData.dateTime}</td><td>${alertLrn} (${alertUser})</td><td>${alertData.location}</td><td>${alertData.description || 'No description provided.'}</td><td><span class="badge ${badgeClass}">${status.toUpperCase()}</span></td><td><div class="action-buttons">${dispatchAction}${responseAction}${messageAction}</div></td>`;
         sosAlertsBody?.prepend(row);
     });
     addEmptyState(sosAlertsBody, 'No emergency SOS cases found.', 6);

@@ -14,6 +14,9 @@ async function loadDashboardData() {
             fetch('../../../AdminReportServlet?type=sos'),
             fetch('../../../AdminRequestServlet')
         ]);
+        if (!reportsRes.ok || !alertsRes.ok || !pendingRes.ok) {
+            throw new Error('Failed to load dashboard data.');
+        }
         reports = await reportsRes.json();
         alerts = await alertsRes.json();
         pending = await pendingRes.json();
@@ -43,7 +46,10 @@ async function loadDashboardData() {
     alerts.slice(0, 5).forEach(alertData => {
         const row = document.createElement('tr');
         const status = alertData.status || 'Active';
-        row.innerHTML = `<td>${alertData.dateTime}</td><td>${alertData.lrn} (${alertData.username})</td><td>${alertData.location}</td><td>${alertData.description || 'No description provided.'}</td><td><span class="badge badge-danger">${status}</span></td>`;
+        const lrn = alertData.lrn || 'N/A';
+        const reporter = alertData.username || alertData.fullName || 'Anonymous';
+        const badgeClass = status === 'Responded' ? 'badge-success' : (status === 'Dispatched' ? 'badge-warning' : 'badge-danger');
+        row.innerHTML = `<td>${alertData.dateTime}</td><td>${lrn} (${reporter})</td><td>${alertData.location}</td><td>${alertData.description || 'No description provided.'}</td><td><span class="badge ${badgeClass}">${status}</span></td>`;
         sosBody.appendChild(row);
     });
 

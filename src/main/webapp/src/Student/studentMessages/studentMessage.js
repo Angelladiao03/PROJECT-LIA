@@ -6,7 +6,7 @@ function toggleSidebar() {
     }
 }
 
-// CHANGED: converts the database's "2026-08-20 09:24:54" text into a readable time
+// Converts SQL datetime text into chat-friendly local time.
 function formatTime(dbDateTime) {
     if (!dbDateTime) return '';
     const date = new Date(dbDateTime.replace(' ', 'T'));
@@ -31,7 +31,7 @@ function appendMessageToChat(sender, text, time) {
     chatBody.appendChild(msgContainer);
 }
 
-// CHANGED: now async, loads the real conversation from MessageServlet
+// Loads the full student-admin conversation from the server.
 async function renderStoredMessages() {
     const chatBody = document.getElementById('chatBody');
     if (!chatBody) return;
@@ -61,7 +61,7 @@ async function renderStoredMessages() {
     }
 }
 
-// CHANGED: now async, sends the message to MessageServlet instead of localStorage
+// Sends a student message, then refreshes the conversation thread.
 async function handleSendMessage(event) {
     event.preventDefault();
 
