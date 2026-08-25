@@ -40,9 +40,40 @@ public class JsonUtil {
              + "\"message\": \"Your session has expired. Please log in again.\"}";
     }
 
-    /** Publicly reusable JSON string escaper, shared by every servlet that hand-builds JSON. */
+    /**
+     * Publicly reusable JSON string escaper, shared by every servlet that
+     * hand-builds JSON. Handles the two "obvious" characters (backslash and
+     * double quote) plus every other character JSON actually requires to be
+     * escaped: newlines, carriage returns, tabs, and any other raw control
+     * character. This matters a lot here because several fields in this app
+     * come straight from a <textarea> (SOS description, report description,
+     * chat messages) where the student can just press Enter -- if a raw
+     * newline slips into the JSON unescaped, the string literal breaks and
+     * the browser's JSON.parse() throws, which silently empties out
+     * whatever list was being loaded (that's exactly what was happening to
+     * the SOS table whenever an alert's description had a line break in it).
+     */
     public static String escapeJson(String s) {
         if (s == null) return "";
-        return s.replace("\\", "\\\\").replace("\"", "\\\"");
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '\\': sb.append("\\\\"); break;
+                case '"':  sb.append("\\\""); break;
+                case '\n': sb.append("\\n"); break;
+                case '\r': sb.append("\\r"); break;
+                case '\t': sb.append("\\t"); break;
+                case '\b': sb.append("\\b"); break;
+                case '\f': sb.append("\\f"); break;
+                default:
+                    if (c < 0x20) {
+                        sb.append(String.format("\\u%04x", (int) c));
+                    } else {
+                        sb.append(c);
+                    }
+            }
+        }
+        return sb.toString();
     }
 }
