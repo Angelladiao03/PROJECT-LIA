@@ -15,9 +15,8 @@ import java.sql.SQLException;
  * Handles the student sign-up form (Activity 12 wireframe: L.I.G.H.T "STUDENT SIGN UP").
  * Expects a POST with form fields: lrn, fullName, username, password, adviser, gradeSection, email
  *
- * NOTE: If your NetBeans project targets an older Servlet API (javax.servlet
- * instead of jakarta.servlet), just change the import lines above from
- * "jakarta.servlet.*" to "javax.servlet.*" — everything else stays the same.
+ * NOTE: This project is Jakarta-based; keep `jakarta.servlet.*` imports for compatibility
+ * with the Jakarta EE API declared in pom.xml.
  */
 @WebServlet("/RegisterServlet")
 public class RegisterServlet extends HttpServlet {
