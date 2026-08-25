@@ -1,6 +1,7 @@
 package com.lia.servlet;
 
 import com.lia.dao.StudentDAO;
+import com.lia.util.Validation;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -52,6 +53,26 @@ public class RegisterServlet extends HttpServlet {
 
             if (rePassword != null && !password.equals(rePassword)) {
                 out.print(JsonUtil.error("Password does not match."));
+                return;
+            }
+
+            if (!Validation.isValidLrn(lrnStr.trim())) {
+                out.print(JsonUtil.error("LRN must be exactly " + Validation.LRN_LENGTH + " digits."));
+                return;
+            }
+
+            if (!Validation.isValidEmail(email)) {
+                out.print(JsonUtil.error("Please enter a valid email address."));
+                return;
+            }
+
+            if (!Validation.isValidUsername(username)) {
+                out.print(JsonUtil.error("Username must be at least " + Validation.USERNAME_MIN_LENGTH + " characters long."));
+                return;
+            }
+
+            if (!Validation.isStrongPassword(password)) {
+                out.print(JsonUtil.error("Password must be at least 8 characters and include both letters and numbers."));
                 return;
             }
 

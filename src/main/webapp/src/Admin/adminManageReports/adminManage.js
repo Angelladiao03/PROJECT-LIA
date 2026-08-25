@@ -260,6 +260,7 @@ async function loadSavedReportsAndAlerts() {
     reports.filter(report => report.status === 'Pending').forEach(report => {
         const row = document.createElement('tr');
         row.dataset.reportId = report.reportNo;
+        row.dataset.lrn = report.lrn || '';
         row.innerHTML = `<td>#${report.reportNo}</td><td>${report.dateTime}</td><td>${report.fullName}</td><td>${report.category}</td><td>${report.description}</td><td><div class="action-buttons"><button class="btn btn-approve" onclick="approveReport(this)">Approve</button><button class="btn btn-reject" onclick="rejectReport(this)">Reject</button></div></td>`;
         newReportsBody?.prepend(row);
     });
@@ -267,11 +268,12 @@ async function loadSavedReportsAndAlerts() {
     reports.filter(report => report.status === 'Active' || report.status === 'Under Investigation').forEach(report => {
         const row = document.createElement('tr');
         row.dataset.reportId = report.reportNo;
+        row.dataset.lrn = report.lrn || '';
         const isInvestigation = report.status === 'Under Investigation';
         const badgeClass = isInvestigation ? 'badge-orange' : 'badge-warning';
         const label = isInvestigation ? 'IN INVESTIGATION' : 'ACTIVE';
         const investigateAction = !isInvestigation ? `<button class="btn btn-more" onclick="updateStatus(this, 'Investigation')">Mark Investigating</button>` : '';
-        row.innerHTML = `<td>#${report.reportNo}</td><td>${report.fullName} (${report.lrn})</td><td>${report.category}</td><td><span class="badge ${badgeClass}">${label}</span></td><td><div class="action-buttons"><button class="btn btn-scan" onclick="openStoredReport('${report.reportNo}')">Scan Details</button>${investigateAction}<button class="btn btn-more" onclick="updateStatus(this, 'Resolved')">Mark Resolved</button><button class="btn btn-message" onclick="messageReporter('${encodeURIComponent(report.username || '')}')">Message Student</button></div></td>`;
+        row.innerHTML = `<td>#${report.reportNo}</td><td>${report.fullName} (${report.lrn})</td><td>${report.category}</td><td><span class="badge ${badgeClass}">${label}</span></td><td><div class="action-buttons"><button class="btn btn-scan" onclick="openStoredReport('${report.reportNo}')">Scan Details</button>${investigateAction}<button class="btn btn-more" onclick="updateStatus(this, 'Resolved')">Mark Resolved</button><button class="btn btn-message" onclick="messageReporter('${report.lrn || ''}')">Message Student</button></div></td>`;
         activeReportsBody?.prepend(row);
     });
     addEmptyState(newReportsBody, 'No new report requests.', 6);
@@ -284,7 +286,7 @@ async function loadSavedReportsAndAlerts() {
         const status = alertData.status || 'Active';
         const dispatchAction = status === 'Dispatched' || status === 'Responded' ? '' : '<button class="btn btn-more" onclick="dispatchSOS(this)">Dispatch Guard</button>';
         const responseAction = status === 'Responded' ? '' : '<button class="btn btn-scan" onclick="respondSOS(this)">Mark Responded</button>';
-        const messageAction = isAnonymous ? '' : `<button class="btn btn-message" onclick="messageReporter('${encodeURIComponent(alertData.username)}')">Message Student</button>`;
+        const messageAction = isAnonymous ? '' : `<button class="btn btn-message" onclick="messageReporter('${alertData.lrn}')">Message Student</button>`;
         const badgeClass = status === 'Responded' ? 'badge-success' : 'badge-danger';
         row.innerHTML = `<td>${alertData.dateTime}</td><td>${alertData.lrn} (${alertData.username})</td><td>${alertData.location}</td><td>${alertData.description || 'No description provided.'}</td><td><span class="badge ${badgeClass}">${status.toUpperCase()}</span></td><td><div class="action-buttons">${dispatchAction}${responseAction}${messageAction}</div></td>`;
         sosAlertsBody?.prepend(row);
@@ -292,12 +294,29 @@ async function loadSavedReportsAndAlerts() {
     addEmptyState(sosAlertsBody, 'No emergency SOS cases found.', 6);
 }
 
-function messageReporter(username) {
-    if (!username) {
+function messageReporter(lrn) {
+    if (!lrn) {
         showPagePopup('Anonymous reports cannot receive direct messages.', 'Message Unavailable');
         return;
     }
-    window.location.href = `../adminMessages/adminMessage.html?username=${username}`;
+    window.location.href = `../adminMessages/adminMessage.html?lrn=${encodeURIComponent(lrn)}`;
 }
 
-loadSavedReportsAndAlerts();
+// If we arrived here via "View Linked Case" from the Messages page, jump
+// straight to that student's row and highlight it.
+function focusLinkedCase() {
+    const targetLrn = new URLSearchParams(window.location.search).get('lrn');
+    if (!targetLrn) return;
+
+    const matchingRow = document.querySelector(`#activeReportsBody tr[data-lrn="${targetLrn}"], #newReportsBody tr[data-lrn="${targetLrn}"]`);
+
+    if (matchingRow) {
+        matchingRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        matchingRow.classList.add('row-highlight');
+        setTimeout(() => matchingRow.classList.remove('row-highlight'), 2500);
+    } else {
+        showPagePopup('This student has no active or pending case right now.', 'No Active Case');
+    }
+}
+
+loadSavedReportsAndAlerts().then(focusLinkedCase);

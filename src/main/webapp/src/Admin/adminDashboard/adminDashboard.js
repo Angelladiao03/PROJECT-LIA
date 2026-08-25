@@ -54,15 +54,28 @@ function renderCharts(reports) {
     if (typeof Chart === 'undefined') return;
     const categories = [...new Set(reports.map(report => report.category))];
     const categoryCounts = categories.map(category => reports.filter(report => report.category === category).length);
-    const trends = Array.from({ length: 6 }, (_, index) => {
-        const month = new Date().getMonth() - (5 - index);
-        return reports.filter(report => new Date(report.dateTime).getMonth() === (month + 12) % 12).length;
-    });
+
+    const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentYear = new Date().getFullYear();
+    const trends = monthLabels.map((_, monthIndex) => reports.filter(report => {
+        const reportDate = new Date(report.dateTime);
+        return reportDate.getFullYear() === currentYear && reportDate.getMonth() === monthIndex;
+    }).length);
 
     new Chart(document.getElementById('trendsChart'), {
         type: 'line',
-        data: { labels: ['-5', '-4', '-3', '-2', '-1', 'Current'], datasets: [{ label: 'Reports', data: trends, borderColor: '#1b5e20', backgroundColor: 'rgba(27, 94, 32, 0.1)', fill: true, tension: 0.3 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        data: { labels: monthLabels, datasets: [{ label: `Reports (${currentYear})`, data: trends, borderColor: '#1b5e20', backgroundColor: 'rgba(27, 94, 32, 0.1)', fill: true, tension: 0.3 }] },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                }
+            }
+        }
     });
 
     new Chart(document.getElementById('categoryChart'), {

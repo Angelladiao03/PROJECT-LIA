@@ -52,16 +52,18 @@ public class MessageDAO {
         return results;
     }
 
-    /** One row per student with a conversation, showing their latest message (for the admin sidebar list). */
+    /** One row per approved student, showing their latest message if they have one (for the admin sidebar list). */
     public List<String[]> getConversationList() throws SQLException {
-        String sql = "SELECT m.student_lrn, s.student_fullName, m.message_text, m.sent_datetime "
-            + "FROM messages m "
-            + "JOIN students s ON s.student_lrn = m.student_lrn "
-            + "INNER JOIN ("
-            + "  SELECT student_lrn, MAX(sent_datetime) AS max_dt FROM messages GROUP BY student_lrn"
-            + ") latest ON latest.student_lrn = m.student_lrn AND latest.max_dt = m.sent_datetime "
-            + "GROUP BY m.student_lrn, s.student_fullName, m.message_text, m.sent_datetime "
-            + "ORDER BY m.sent_datetime DESC";
+        String sql = "SELECT s.student_lrn, s.student_fullName, m.message_text, m.sent_datetime "
+            + "FROM students s "
+            + "LEFT JOIN ("
+            + "  SELECT msg.student_lrn, msg.message_text, msg.sent_datetime FROM messages msg "
+            + "  INNER JOIN ("
+            + "    SELECT student_lrn, MAX(sent_datetime) AS max_dt FROM messages GROUP BY student_lrn"
+            + "  ) latest ON latest.student_lrn = msg.student_lrn AND latest.max_dt = msg.sent_datetime"
+            + ") m ON m.student_lrn = s.student_lrn "
+            + "WHERE s.status = 'Approved' "
+            + "ORDER BY (m.sent_datetime IS NULL) ASC, m.sent_datetime DESC, s.student_fullName ASC";
 
         List<String[]> results = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();

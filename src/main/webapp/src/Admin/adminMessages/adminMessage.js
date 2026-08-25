@@ -10,7 +10,9 @@ function formatTime(dbDateTime) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-// CHANGED: now async, loads the sidebar list from AdminMessageServlet
+// CHANGED: now async, loads the sidebar list from AdminMessageServlet, and
+// auto-selects a student if we arrived here via ?lrn=... (e.g. from the
+// "Message Student" button on Manage Reports).
 async function renderStudentList() {
     const list = document.getElementById('studentList');
     list.innerHTML = '';
@@ -34,10 +36,19 @@ async function renderStudentList() {
         item.className = 'student-item';
         item.dataset.lrn = convo.lrn;
         const initials = (convo.fullName || convo.lrn).slice(0, 2).toUpperCase();
-        item.innerHTML = `<div class="student-avatar">${initials}</div><div class="student-info"><div class="student-top"><span class="student-name">${convo.fullName}</span><span class="chat-time">${formatTime(convo.lastTime)}</span></div><div class="student-bottom"><span class="last-msg">${convo.lastText}</span></div></div>`;
+        item.innerHTML = `<div class="student-avatar">${initials}</div><div class="student-info"><div class="student-top"><span class="student-name">${convo.fullName}</span><span class="chat-time">${formatTime(convo.lastTime)}</span></div><div class="student-bottom"><span class="last-msg">${convo.lastText || 'No messages yet'}</span></div></div>`;
         item.addEventListener('click', () => selectStudent(convo.lrn, convo.fullName, item));
         list.appendChild(item);
     });
+
+    const targetLrn = new URLSearchParams(window.location.search).get('lrn');
+    if (targetLrn) {
+        const targetItem = list.querySelector(`.student-item[data-lrn="${targetLrn}"]`);
+        if (targetItem) {
+            targetItem.click();
+            targetItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
 }
 
 function selectStudent(lrn, fullName, item) {
@@ -112,7 +123,11 @@ function filterStudents() {
 }
 
 function viewCaseDetails() {
-    window.location.href = '../adminManageReports/adminManage.html';
+    if (!currentLrn) {
+        showPagePopup('Select a student conversation first.', 'No Student Selected');
+        return;
+    }
+    window.location.href = `../adminManageReports/adminManage.html?lrn=${encodeURIComponent(currentLrn)}`;
 }
 
 renderStudentList();

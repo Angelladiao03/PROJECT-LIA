@@ -20,9 +20,13 @@ Each teammate needs, installed locally:
 2. **Start XAMPP's MySQL module**, then open phpMyAdmin
    (usually `http://localhost/phpmyadmin`).
 
-3. **Create the database and tables.** Run `schema.sql` (if present) or the
-   latest `migration_*.sql` files in this repo, in order, against a new
-   database named `lia_db`.
+3. **Create the database and tables.**
+   - **Brand new setup?** Run `schema.sql` — it creates `lia_db` and every
+     table from scratch, already including the newer `status`/`sos_status`
+     columns.
+   - **Already have an older `lia_db`** (from before the account-approval
+     and SOS-status features)? Don't run `schema.sql` — run
+     `migration_2026_08.sql` instead, so your existing data isn't touched.
 
 4. **Check `DatabaseConnection.java`**
    (`src/main/java/com/lia/db/DatabaseConnection.java`) matches your local

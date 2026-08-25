@@ -474,3 +474,11 @@ body {
     .grid-span-2 { grid-column: span 1; }
     .modal-content { width: 94%; padding: 16px 18px; }
 }
+/* Highlights the row a case was linked in from (e.g. "View Linked Case" from Messages) */
+.row-highlight {
+    animation: rowHighlightFade 2.5s ease-out;
+}
+@keyframes rowHighlightFade {
+    0% { background-color: #fff3cd; }
+    100% { background-color: transparent; }
+}

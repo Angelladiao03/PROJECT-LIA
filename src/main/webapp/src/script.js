@@ -167,6 +167,12 @@ async function handleRegistration(event) {
         return;
     }
 
+    const validationError = validateLrn(lrn) || validateEmail(email) || validateUsername(username) || validatePassword(password);
+    if (validationError) {
+        setFormMessage(form, validationError);
+        return;
+    }
+
     showAuthLoading('Creating account...');
 
     // CHANGED: registration now sends data to RegisterServlet instead of localStorage

@@ -30,7 +30,7 @@ async function loadStoredRecords() {
     resolvedReports.forEach(report => {
         const row = document.createElement('tr');
         row.id = `row-${report.reportNo}`;
-        row.innerHTML = `<td class="case-id">#${report.reportNo}</td><td><div class="student-name">${report.fullName}</div><div class="student-sub">LRN: ${report.lrn}</div></td><td>${report.category}</td><td>${report.dateTime}</td><td><span class="badge badge-success">Resolved</span></td><td><div class="action-buttons"><button class="btn-action btn-view" onclick="viewStoredRecord('${report.reportNo}')">Scan Details</button>${report.isAnonymous === 'true' ? '' : `<button class="btn-action btn-message" onclick="messageRecordOwner('${encodeURIComponent(report.username)}')">Message</button>`}<button class="btn-action btn-delete" onclick="deleteRecord('row-${report.reportNo}', '#${report.reportNo}')">Delete</button></div></td>`;
+        row.innerHTML = `<td class="case-id">#${report.reportNo}</td><td><div class="student-name">${report.fullName}</div><div class="student-sub">LRN: ${report.lrn}</div></td><td>${report.category}</td><td>${report.dateTime}</td><td><span class="badge badge-success">Resolved</span></td><td><div class="action-buttons"><button class="btn-action btn-view" onclick="viewStoredRecord('${report.reportNo}')">Scan Details</button>${report.isAnonymous === 'true' ? '' : `<button class="btn-action btn-message" onclick="messageRecordOwner('${report.lrn}')">Message</button>`}<button class="btn-action btn-delete" onclick="deleteRecord('row-${report.reportNo}', '#${report.reportNo}')">Delete</button></div></td>`;
         tableBody.appendChild(row);
     });
 }
@@ -118,6 +118,6 @@ function deleteRecord(rowId, caseId) {
     });
 }
 
-function messageRecordOwner(username) {
-    window.location.href = `../adminMessages/adminMessage.html?username=${username}`;
+function messageRecordOwner(lrn) {
+    window.location.href = `../adminMessages/adminMessage.html?lrn=${encodeURIComponent(lrn)}`;
 }

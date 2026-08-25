@@ -112,9 +112,9 @@ public class StudentDAO {
         }
     }
 
-    /** Fetches basic profile info for a logged-in student (used to fill the session). */
+    /** Fetches basic profile info for a logged-in student (used to fill the session and the My Account page). */
     public String[] getProfile(long lrn) throws SQLException {
-        String sql = "SELECT student_fullName, adviser_name, grade_section, email "
+        String sql = "SELECT student_fullName, adviser_name, grade_section, email, student_username "
             + "FROM students WHERE student_lrn = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -127,10 +127,38 @@ public class StudentDAO {
                         rs.getString("student_fullName"),
                         rs.getString("adviser_name"),
                         rs.getString("grade_section"),
-                        rs.getString("email")
+                        rs.getString("email"),
+                        rs.getString("student_username")
                     };
                 }
                 return null;
+            }
+        }
+    }
+
+    /** Updates the editable parts of a student's profile (username, grade & section, adviser). */
+    public boolean updateProfile(long lrn, String username, String gradeSection, String adviser) throws SQLException {
+        String sql = "UPDATE students SET student_username = ?, grade_section = ?, adviser_name = ? "
+            + "WHERE student_lrn = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, username);
+            ps.setString(2, gradeSection);
+            ps.setString(3, adviser);
+            ps.setLong(4, lrn);
+            return ps.executeUpdate() == 1;
+        }
+    }
+
+    /** Same duplicate check as registration, but excludes the student's own current row (for profile edits). */
+    public boolean usernameTakenByOther(long lrn, String username) throws SQLException {
+        String sql = "SELECT student_lrn FROM students WHERE student_username = ? AND student_lrn != ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, username);
+            ps.setLong(2, lrn);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
             }
         }
     }

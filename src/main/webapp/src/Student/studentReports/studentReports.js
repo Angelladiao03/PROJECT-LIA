@@ -4,24 +4,49 @@ function toggleSidebar() {
     sidebar.classList.toggle('collapsed');
 }
 
-function loadActiveStudent() {
+// CHANGED: now async, fetches the real profile from StudentProfileServlet
+// instead of relying only on localStorage (which never had gradeSection/
+// adviser/email for students, since login only stored fullName + lrn).
+async function loadActiveStudent() {
     const activeUser = JSON.parse(localStorage.getItem('lagroInActionActiveUser') || 'null');
     if (!activeUser || activeUser.role !== 'student') return;
 
+    let profile = null;
+    try {
+        const res = await fetch('../../../StudentProfileServlet');
+        const data = await res.json();
+        if (data.success) profile = data;
+    } catch (error) {
+        // fall back to whatever's in localStorage below
+    }
+
     const fields = {
-        displayFullName: activeUser.fullName,
-        displayUsername: `@${activeUser.username}`,
-        displayLrn: activeUser.lrn,
-        displayGradeSection: activeUser.gradeSection,
-        displayAdviser: activeUser.adviser,
-        displayGmail: activeUser.email,
-        topbarUsername: activeUser.username
+        displayFullName: profile?.fullName || activeUser.fullName,
+        displayUsername: `@${profile?.username || activeUser.username}`,
+        displayLrn: profile?.lrn || activeUser.lrn,
+        displayGradeSection: profile?.gradeSection || activeUser.gradeSection,
+        displayAdviser: profile?.adviser || activeUser.adviser,
+        displayGmail: profile?.email || activeUser.email,
+        topbarUsername: profile?.username || activeUser.username
     };
 
     Object.entries(fields).forEach(([id, value]) => {
         const element = document.getElementById(id);
         if (element && value) element.textContent = value;
     });
+
+    // Keep localStorage in sync so other pages (topbar name, etc.) stay accurate too.
+    if (profile) {
+        Object.assign(activeUser, {
+            fullName: profile.fullName,
+            username: profile.username,
+            lrn: profile.lrn,
+            gradeSection: profile.gradeSection,
+            adviser: profile.adviser,
+            email: profile.email
+        });
+        localStorage.setItem('lagroInActionActiveUser', JSON.stringify(activeUser));
+    }
 }
 
 loadActiveStudent();
@@ -137,37 +162,52 @@ function closeEditProfileModal() {
 function handleProfileUpdate(e) {
     e.preventDefault();
 
-    const newFullName = document.getElementById('editFullName').value.trim();
     const newUsername = document.getElementById('editUsername').value.trim();
-    const newLrn = document.getElementById('editLrn').value.trim();
     const newGradeSection = document.getElementById('editGradeSection').value.trim();
     const newAdviser = document.getElementById('editAdviser').value.trim();
-    const newGmail = document.getElementById('editGmail').value.trim();
 
-    document.getElementById('displayFullName').textContent = newFullName;
+    const validationError = validateUsername(newUsername);
+    if (validationError) {
+        showPagePopup(validationError, 'Invalid Username');
+        return;
+    }
+
+    saveProfileUpdate(newUsername, newGradeSection, newAdviser);
+}
+
+async function saveProfileUpdate(newUsername, newGradeSection, newAdviser) {
+    const params = new URLSearchParams({ username: newUsername, gradeSection: newGradeSection, adviser: newAdviser });
+
+    let data;
+    try {
+        const res = await fetch('../../../StudentProfileServlet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params
+        });
+        data = await res.json();
+    } catch (error) {
+        showPagePopup('Could not reach the server. Please try again.', 'Update Failed');
+        return;
+    }
+
+    if (!data.success) {
+        showPagePopup(data.message || 'Could not update your profile.', 'Update Failed');
+        return;
+    }
+
     document.getElementById('displayUsername').textContent = `@${newUsername}`;
-    document.getElementById('displayLrn').textContent = newLrn;
     document.getElementById('displayGradeSection').textContent = newGradeSection;
     document.getElementById('displayAdviser').textContent = newAdviser;
-    document.getElementById('displayGmail').textContent = newGmail;
 
     const activeUser = JSON.parse(localStorage.getItem('lagroInActionActiveUser'));
     if (activeUser && activeUser.role === 'student') {
-        Object.assign(activeUser, {
-            fullName: newFullName,
-            username: newUsername,
-            lrn: newLrn,
-            gradeSection: newGradeSection,
-            adviser: newAdviser,
-            email: newGmail
-        });
+        Object.assign(activeUser, { username: newUsername, gradeSection: newGradeSection, adviser: newAdviser });
         localStorage.setItem('lagroInActionActiveUser', JSON.stringify(activeUser));
     }
 
     const topbarUser = document.getElementById('topbarUsername');
-    if (topbarUser) {
-        topbarUser.textContent = newUsername;
-    }
+    if (topbarUser) topbarUser.textContent = newUsername;
 
     showPagePopup('Your profile information was updated successfully.', 'Profile Updated');
     closeEditProfileModal();
