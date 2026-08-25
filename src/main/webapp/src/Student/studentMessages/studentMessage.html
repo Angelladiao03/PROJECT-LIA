@@ -101,7 +101,7 @@
             <div class="modal-header">
                 <h3>Confirm SOS Dispatch</h3>
                 <p>This will trigger an immediate emergency alert to the guidance office.</p>
-                <button onclick="closeSosModal()" class="close-modal-btn">✕</button>
+                <button onclick="closeSosModal()" class="close-modal-btn" aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
             </div>
             <form onsubmit="handleSosSubmit(event)" class="modal-body">
                 <div class="field-group">
@@ -120,7 +120,6 @@
         </div>
     </div>
 
-    <script src="../../localDatabase.js"></script>
     <script src="studentMessage.js"></script>
     <script src="../../sos.js"></script>
 </body>

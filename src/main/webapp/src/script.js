@@ -1,4 +1,4 @@
-// Switches visible authentication form sections.
+// Function to switch between Student Login, Student Signup, and Admin Login
 window.addEventListener('load', () => {
     document.getElementById('pageLoader').classList.add('loaded');
 });
@@ -11,8 +11,6 @@ function showForm(sectionId) {
     document.getElementById(sectionId).classList.remove('hidden');
 }
 
-const registeredStudentsKey = 'lagroInActionRegisteredStudents';
-const approvedStudentsKey = 'lagroInActionApprovedStudents';
 const activeUserKey = 'lagroInActionActiveUser';
 const loginDraftKey = 'lagroInActionLoginDraft';
 
@@ -33,22 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
-
-function getRegisteredStudents() {
-    try {
-        return JSON.parse(localStorage.getItem(registeredStudentsKey)) || [];
-    } catch (error) {
-        return [];
-    }
-}
-
-function getApprovedStudents() {
-    try {
-        return JSON.parse(localStorage.getItem(approvedStudentsKey)) || [];
-    } catch (error) {
-        return [];
-    }
-}
 
 function setFormMessage(form, message) {
     const messageElement = form.parentElement.querySelector('.form-message');
@@ -92,7 +74,9 @@ function showPopup(message, title, onOkay) {
     okayButton.focus();
 }
 
-// Handles both student and admin login using the corresponding backend endpoint.
+// Handles both the Student and Admin login forms. Which servlet gets called
+// (and which fields the session ends up carrying) depends on the "role"
+// argument passed in from the form's onsubmit handler in index.html.
 async function handleLogin(event, role) {
     event.preventDefault();
 
@@ -102,7 +86,7 @@ async function handleLogin(event, role) {
     const username = form.elements[0].value.trim();
     const password = form.elements[role === 'student' ? 2 : 1].value;
 
-        if (role === 'admin') {
+    if (role === 'admin') {
         const params = new URLSearchParams({ username, password });
         try {
             const res = await fetch('AdminLoginServlet', {
@@ -125,7 +109,6 @@ async function handleLogin(event, role) {
             return;
         }
     } else {
-        // Student login uses the same server session used by student pages.
         const params = new URLSearchParams({ username, password });
 
         try {
@@ -153,7 +136,8 @@ async function handleLogin(event, role) {
     setFormMessage(form, 'Invalid login credentials. Your LRN may not be registered yet or your details are incorrect.');
 }
 
-// Submits student registration and keeps local UI state in sync.
+// Handles the student sign-up form: validates the fields client-side, then
+// sends them to RegisterServlet and waits for the database to confirm.
 async function handleRegistration(event) {
     event.preventDefault();
 
@@ -175,7 +159,6 @@ async function handleRegistration(event) {
 
     showAuthLoading('Creating account...');
 
-    // Registration is persisted on the backend for admin approval.
     const params = new URLSearchParams({
         lrn, fullName, username, password, rePassword: confirmPassword, adviser, gradeSection, email
     });

@@ -2,8 +2,15 @@ function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('collapsed');
 }
 
+// Bounces the admin back to login if the server-side session has expired
+// (or was never created), instead of leaving the chat stuck empty.
+function redirectToLoginOnSessionExpiry() {
+    localStorage.removeItem('lagroInActionActiveUser');
+    window.location.href = '../../../index.html';
+}
+
 let currentLrn = null;
-let currentStudentName = '';
+let currentStudentName = null;
 
 function formatTime(dbDateTime) {
     if (!dbDateTime) return '';
@@ -11,7 +18,9 @@ function formatTime(dbDateTime) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-// Loads the conversation list and restores deep-linked student selection.
+// Loads the sidebar list of every student conversation from AdminMessageServlet,
+// and auto-selects a student if we arrived here via ?lrn=... (e.g. from the
+// "Message Student" button on Manage Reports).
 async function renderStudentList() {
     const list = document.getElementById('studentList');
     list.innerHTML = '';
@@ -19,7 +28,7 @@ async function renderStudentList() {
     let conversations = [];
     try {
         const res = await fetch('../../../AdminMessageServlet');
-        if (!res.ok) throw new Error('Could not load conversations.');
+        if (res.status === 401) return redirectToLoginOnSessionExpiry();
         conversations = await res.json();
     } catch (error) {
         list.innerHTML = '<p class="empty-state">Could not load conversations.</p>';
@@ -53,15 +62,15 @@ async function renderStudentList() {
 
 function selectStudent(lrn, fullName, item) {
     currentLrn = lrn;
-    currentStudentName = fullName || lrn;
+    currentStudentName = fullName;
     document.querySelectorAll('.student-item').forEach(element => element.classList.remove('active'));
     item.classList.add('active');
-    document.getElementById('activeStudentName').textContent = currentStudentName;
+    document.getElementById('activeStudentName').textContent = fullName;
     document.getElementById('activeStudentSub').textContent = 'Student conversation';
     renderMessages();
 }
 
-// Loads one selected student's message thread.
+// Loads one student's full conversation from AdminMessageServlet.
 async function renderMessages() {
     const container = document.getElementById('chatMessages');
     container.innerHTML = '';
@@ -69,7 +78,7 @@ async function renderMessages() {
 
     try {
         const res = await fetch(`../../../AdminMessageServlet?lrn=${encodeURIComponent(currentLrn)}`);
-        if (!res.ok) throw new Error('Could not load messages.');
+        if (res.status === 401) return redirectToLoginOnSessionExpiry();
         const messages = await res.json();
 
         messages.forEach(message => {
@@ -89,7 +98,8 @@ async function renderMessages() {
     }
 }
 
-// Sends an admin reply then refreshes both thread and sidebar previews.
+// Sends the admin's typed reply to AdminMessageServlet, then reloads both
+// the thread and the sidebar preview text so everything stays in sync.
 async function sendMessage(event) {
     event.preventDefault();
     const input = document.getElementById('messageInput');
@@ -106,7 +116,6 @@ async function sendMessage(event) {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: params
         });
-        if (!res.ok) throw new Error('Could not send message.');
         const data = await res.json();
 
         if (data.success) {
@@ -133,37 +142,50 @@ function viewCaseDetails() {
     window.location.href = `../adminManageReports/adminManage.html?lrn=${encodeURIComponent(currentLrn)}`;
 }
 
-function closeStudentInfoModal() {
-    document.getElementById('studentInfoModal')?.classList.add('hidden');
-}
-
-function closeStudentInfoOnOverlay(event) {
-    if (event.target.classList.contains('modal-overlay')) closeStudentInfoModal();
-}
-
-// Opens the selected student's profile details for quick admin review.
+// Opens the "View Info" modal with the selected student's full profile,
+// fetched fresh from AdminMessageServlet?info=<lrn> so it's always accurate.
 async function viewStudentInfo() {
     if (!currentLrn) {
         showPagePopup('Select a student conversation first.', 'No Student Selected');
         return;
     }
 
+    let info = null;
     try {
-        const res = await fetch(`../../../AdminMessageServlet?action=studentInfo&lrn=${encodeURIComponent(currentLrn)}`);
-        if (!res.ok) throw new Error('Could not load student information.');
+        const res = await fetch(`../../../AdminMessageServlet?info=${encodeURIComponent(currentLrn)}`);
+        if (res.status === 401) return redirectToLoginOnSessionExpiry();
         const data = await res.json();
-        if (!data.success) throw new Error(data.message || 'Could not load student information.');
-
-        document.getElementById('infoFullName').textContent = data.fullName || currentStudentName;
-        document.getElementById('infoLrn').textContent = data.lrn || currentLrn;
-        document.getElementById('infoUsername').textContent = data.username || '-';
-        document.getElementById('infoGradeSection').textContent = data.gradeSection || '-';
-        document.getElementById('infoAdviser').textContent = data.adviser || '-';
-        document.getElementById('infoEmail').textContent = data.email || '-';
-        document.getElementById('infoStatus').textContent = data.status || '-';
-        document.getElementById('studentInfoModal').classList.remove('hidden');
+        if (data.success) info = data;
     } catch (error) {
-        showPagePopup(error.message || 'Could not load student information.', 'View Student Info');
+        // handled below by the info === null check
+    }
+
+    if (!info) {
+        showPagePopup('Could not load this student\'s information. Please try again.', 'Info Unavailable');
+        return;
+    }
+
+    const initials = (info.fullName || info.lrn || '--').trim().slice(0, 2).toUpperCase();
+    document.getElementById('infoAvatarInitials').textContent = initials;
+    document.getElementById('infoFullName').textContent = info.fullName || currentStudentName || '-';
+    document.getElementById('infoUsername').textContent = `@${info.username || '-'}`;
+    document.getElementById('infoLrn').textContent = info.lrn || currentLrn;
+    document.getElementById('infoGradeSection').textContent = info.gradeSection || '-';
+    document.getElementById('infoAdviser').textContent = info.adviser || '-';
+    document.getElementById('infoEmail').textContent = info.email || '-';
+
+    document.getElementById('studentInfoModal').classList.remove('hidden');
+}
+
+function closeStudentInfoModal() {
+    document.getElementById('studentInfoModal').classList.add('hidden');
+}
+
+// Closes the Student Info modal when the darkened backdrop (not the card
+// itself) is clicked -- matches the same pattern used by other modals in the app.
+function closeModalOnOverlay(event) {
+    if (event.target.id === 'studentInfoModal') {
+        closeStudentInfoModal();
     }
 }
 

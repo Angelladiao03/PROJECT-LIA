@@ -284,13 +284,7 @@ body {
     font-weight: 700;
 }
 
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #a0aec0;
-    cursor: pointer;
-}
+/* Close-button styling now lives in the shared modal system in pageEnhancements.css. */
 
 .modal-section { 
     margin-bottom: 15px; 

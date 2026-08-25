@@ -397,16 +397,7 @@ body {
 
 .sos-header { background: #d32f2f; }
 
-.close-modal-btn {
-    position: absolute;
-    top: 12px;
-    right: 15px;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.2rem;
-    cursor: pointer;
-}
+/* Close-button styling now lives in the shared modal system in pageEnhancements.css. */
 
 .modal-body { padding: 20px; }
 .field-group { margin-bottom: 12px; }

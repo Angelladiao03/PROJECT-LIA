@@ -70,7 +70,7 @@
                                 <p id="activeStudentSub">Messages from students will appear here.</p>
                         </div>
                         <div class="chat-header-actions">
-                            <button class="btn btn-scan" onclick="viewStudentInfo()">View Student Info</button>
+                            <button class="btn btn-info" onclick="viewStudentInfo()">View Info</button>
                             <button class="btn btn-scan" onclick="viewCaseDetails()">View Linked Case</button>
                         </div>
                     </div>
@@ -90,31 +90,34 @@
         </main>
     </div>
 
-    <div id="studentInfoModal" class="modal-overlay hidden" onclick="closeStudentInfoOnOverlay(event)">
-        <div class="modal-box student-info-modal-box">
+    <!-- STUDENT INFO MODAL (opened from "View Info" in the chat header) -->
+    <div id="studentInfoModal" class="modal-overlay hidden" onclick="closeModalOnOverlay(event)">
+        <div class="modal-box">
             <div class="modal-header">
                 <h3>Student Information</h3>
-                <button type="button" onclick="closeStudentInfoModal()" class="close-modal-btn">✕</button>
+                <button onclick="closeStudentInfoModal()" class="close-modal-btn" aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+                </button>
             </div>
             <div class="modal-body">
-                <div class="info-grid">
-                    <div><strong>Full Name:</strong> <span id="infoFullName">-</span></div>
-                    <div><strong>LRN:</strong> <span id="infoLrn">-</span></div>
-                    <div><strong>Username:</strong> <span id="infoUsername">-</span></div>
-                    <div><strong>Status:</strong> <span id="infoStatus">-</span></div>
-                    <div><strong>Grade & Section:</strong> <span id="infoGradeSection">-</span></div>
-                    <div><strong>Adviser:</strong> <span id="infoAdviser">-</span></div>
-                    <div class="info-full"><strong>Email:</strong> <span id="infoEmail">-</span></div>
+                <div class="info-avatar-row">
+                    <div class="info-avatar" id="infoAvatarInitials">--</div>
+                    <div>
+                        <h4 id="infoFullName">-</h4>
+                        <p id="infoUsername" class="info-username">@-</p>
+                    </div>
                 </div>
-                <div class="modal-actions">
-                    <button type="button" onclick="closeStudentInfoModal()" class="btn-cancel">Close</button>
-                </div>
+                <dl class="info-detail-list">
+                    <div class="info-detail-row"><dt>LRN</dt><dd id="infoLrn">-</dd></div>
+                    <div class="info-detail-row"><dt>Grade &amp; Section</dt><dd id="infoGradeSection">-</dd></div>
+                    <div class="info-detail-row"><dt>Adviser</dt><dd id="infoAdviser">-</dd></div>
+                    <div class="info-detail-row"><dt>Gmail</dt><dd id="infoEmail">-</dd></div>
+                </dl>
             </div>
         </div>
     </div>
 
     <script src="../../adminGuard.js"></script>
-    <script src="../../localDatabase.js"></script>
     <script src="adminMessage.js"></script>
 </body>
 </html>

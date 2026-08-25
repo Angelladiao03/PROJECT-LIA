@@ -365,15 +365,7 @@ body {
     margin-bottom: 15px;
 }
 
-.close-modal-btn {
-    position: absolute;
-    right: 0;
-    top: 0;
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    cursor: pointer;
-}
+/* Close-button styling now lives in the shared modal system in pageEnhancements.css. */
 
 .field-group {
     margin-bottom: 15px;

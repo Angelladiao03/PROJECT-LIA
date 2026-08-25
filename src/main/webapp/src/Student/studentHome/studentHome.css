@@ -576,22 +576,7 @@ body {
     opacity: 0.9;
 }
 
-.close-modal-btn {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    background: none;
-    border: 2px solid #ffffff;
-    border-radius: 50%;
-    color: #ffffff;
-    width: 24px;
-    height: 24px;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+/* Close-button styling now lives in the shared modal system in pageEnhancements.css. */
 
 .modal-body {
     padding: 1.25rem;

@@ -35,7 +35,8 @@ public class AdminRequestServlet extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("adminId") == null) {
-                out.print("[]");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.print(JsonUtil.sessionExpired());
                 return;
             }
             out.print(pendingListToJson(studentDAO.getPendingStudents()));

@@ -14,7 +14,9 @@ function closeSosModal() {
     }, 200);
 }
 
-// Sends the SOS payload to the backend and updates the modal state.
+// Shared by every Student page's SOS button (the modal markup and this
+// script are identical everywhere it appears). Sends the alert to SosServlet
+// and waits for confirmation before closing the dialog.
 async function handleSosSubmit(event) {
     event.preventDefault();
     const locationInput = document.getElementById('sosLocation');

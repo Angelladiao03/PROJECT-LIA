@@ -35,18 +35,13 @@ public class SosServlet extends HttpServlet {
                 return;
             }
 
-            if (location == null || location.isBlank()) {
-                out.print(JsonUtil.error("Please provide your current location."));
+            if (location == null || description == null || location.isBlank() || description.isBlank()) {
+                out.print(JsonUtil.error("Please fill out location and description."));
                 return;
             }
 
-            // Description is optional in the UI, so keep storage consistent with a safe fallback.
-            String normalizedDescription = (description == null || description.isBlank())
-                ? "No description provided."
-                : description.trim();
-
             long lrn = (Long) session.getAttribute("studentLrn");
-            int sosNo = sosDAO.submitSos(lrn, location.trim(), normalizedDescription);
+            int sosNo = sosDAO.submitSos(lrn, location, description);
 
             if (sosNo != -1) {
                 out.print(JsonUtil.success("The guidance office has been notified immediately.",

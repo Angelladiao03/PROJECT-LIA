@@ -15,10 +15,10 @@ import java.util.List;
 
 /**
  * Used by the ADMIN messages page.
- * GET  (no params)            -> list of every student conversation (sidebar), latest message each
- * GET  ?lrn=123               -> full conversation with that one student
- * GET  ?action=studentInfo&lrn=123 -> student profile details for the selected chat
- * POST lrn=123&text=...       -> admin sends a message to that student
+ * GET  (no params)        -> list of every student conversation (sidebar), latest message each
+ * GET  ?lrn=123            -> full conversation with that one student
+ * GET  ?info=123           -> that student's profile details, for the "View Info" panel
+ * POST lrn=123&text=...    -> admin sends a message to that student
  */
 @WebServlet("/AdminMessageServlet")
 public class AdminMessageServlet extends HttpServlet {
@@ -36,38 +36,18 @@ public class AdminMessageServlet extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("adminId") == null) {
-                out.print("[]");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.print(JsonUtil.sessionExpired());
                 return;
             }
 
-            String action = request.getParameter("action");
             String lrnParam = request.getParameter("lrn");
+            String infoParam = request.getParameter("info");
 
-            if ("studentInfo".equals(action)) {
-                if (lrnParam == null || lrnParam.isBlank()) {
-                    out.print(JsonUtil.error("Missing student LRN."));
-                    return;
-                }
-
-                long lrn = Long.parseLong(lrnParam);
-                String[] profile = studentDAO.getProfileForAdmin(lrn);
-                if (profile == null) {
-                    out.print(JsonUtil.error("Student profile not found."));
-                    return;
-                }
-
-                out.print("{\"success\": true, "
-                    + "\"lrn\": \"" + lrn + "\", "
-                    + "\"fullName\": \"" + MessageServlet.esc(profile[0]) + "\", "
-                    + "\"username\": \"" + MessageServlet.esc(profile[1]) + "\", "
-                    + "\"gradeSection\": \"" + MessageServlet.esc(profile[2]) + "\", "
-                    + "\"adviser\": \"" + MessageServlet.esc(profile[3]) + "\", "
-                    + "\"email\": \"" + MessageServlet.esc(profile[4]) + "\", "
-                    + "\"status\": \"" + MessageServlet.esc(profile[5]) + "\"}");
-                return;
-            }
-
-            if (lrnParam != null && !lrnParam.isBlank()) {
+            if (infoParam != null && !infoParam.isBlank()) {
+                // Student details for the "View Info" panel on the chat header.
+                out.print(studentInfoToJson(Long.parseLong(infoParam)));
+            } else if (lrnParam != null && !lrnParam.isBlank()) {
                 // Full conversation with one student
                 long lrn = Long.parseLong(lrnParam);
                 out.print(MessageServlet.toJsonArray(messageDAO.getConversation(lrn)));
@@ -91,6 +71,22 @@ public class AdminMessageServlet extends HttpServlet {
         }
     }
 
+    /** Builds the JSON payload for the "View Info" panel: same fields as the student's own My Account page. */
+    private String studentInfoToJson(long lrn) throws SQLException {
+        String[] profile = studentDAO.getProfile(lrn);
+        if (profile == null) {
+            return JsonUtil.error("Student not found.");
+        }
+        // profile = [fullName, adviser, gradeSection, email, username]
+        return "{\"success\": true, "
+            + "\"lrn\": \"" + lrn + "\", "
+            + "\"fullName\": \"" + JsonUtil.escapeJson(profile[0]) + "\", "
+            + "\"adviser\": \"" + JsonUtil.escapeJson(profile[1]) + "\", "
+            + "\"gradeSection\": \"" + JsonUtil.escapeJson(profile[2]) + "\", "
+            + "\"email\": \"" + JsonUtil.escapeJson(profile[3]) + "\", "
+            + "\"username\": \"" + JsonUtil.escapeJson(profile[4]) + "\"}";
+    }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -105,7 +101,8 @@ public class AdminMessageServlet extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("adminId") == null) {
-                out.print(JsonUtil.error("You must be logged in as admin to send messages."));
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.print(JsonUtil.sessionExpired());
                 return;
             }
             if (lrnParam == null || text == null || text.isBlank()) {

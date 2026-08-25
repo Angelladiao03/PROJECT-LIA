@@ -1,10 +1,21 @@
-// Sidebar visibility is managed globally; keep this for template compatibility.
+// Toggle Sidebar Collapse
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     sidebar.classList.toggle('collapsed');
 }
 
-// Loads student account details from the backend and updates local cache fields.
+// Every fetch() on this page that reads private student data can come back
+// with a 401 if the server-side session has expired (or was never created,
+// e.g. the tab was left open past the 30-minute session timeout). Bounce the
+// student back to login instead of leaving the page stuck showing nothing.
+function redirectToLoginOnSessionExpiry() {
+    localStorage.removeItem('lagroInActionActiveUser');
+    window.location.href = '../../../index.html';
+}
+
+// Loads the logged-in student's real profile from StudentProfileServlet so
+// the "My Account" card always shows what's actually in the database,
+// instead of the stale copy cached in localStorage at login time.
 async function loadActiveStudent() {
     const activeUser = JSON.parse(localStorage.getItem('lagroInActionActiveUser') || 'null');
     if (!activeUser || activeUser.role !== 'student') return;
@@ -12,11 +23,12 @@ async function loadActiveStudent() {
     let profile = null;
     try {
         const res = await fetch('../../../StudentProfileServlet');
-        if (!res.ok) throw new Error('Profile request failed.');
+        if (res.status === 401) return redirectToLoginOnSessionExpiry();
         const data = await res.json();
         if (data.success) profile = data;
     } catch (error) {
-        // Keep graceful fallback to locally stored values when session expired.
+        // Server unreachable -- fall back to whatever's cached in localStorage below
+        // instead of leaving the profile card blank.
     }
 
     const fields = {
@@ -34,7 +46,7 @@ async function loadActiveStudent() {
         if (element && value) element.textContent = value;
     });
 
-    // Keep local storage in sync so the topbar and other pages stay consistent.
+    // Keep localStorage in sync so other pages (topbar name, etc.) stay accurate too.
     if (profile) {
         Object.assign(activeUser, {
             fullName: profile.fullName,
@@ -50,7 +62,8 @@ async function loadActiveStudent() {
 
 loadActiveStudent();
 
-// Normalizes database statuses into the account-page filter/status buckets.
+// Converts the database's status text into the short status codes this page's
+// stat cards and filter tabs already expect (requested / pending / submitted / resolved).
 function mapDbStatus(dbStatus) {
     const map = {
         'Pending': 'requested',
@@ -61,7 +74,8 @@ function mapDbStatus(dbStatus) {
     return map[dbStatus] || 'requested';
 }
 
-// Loads submitted reports from the backend and refreshes counters/table state.
+// Loads this student's own report history from MyReportsServlet and fills
+// in both the status-count cards and the report table below them.
 async function loadSubmittedReports() {
     const tableBody = document.getElementById('reportsTableBody');
     if (!tableBody) return;
@@ -71,7 +85,7 @@ async function loadSubmittedReports() {
     let studentReports = [];
     try {
         const res = await fetch('../../../MyReportsServlet');
-        if (!res.ok) throw new Error('Reports request failed.');
+        if (res.status === 401) return redirectToLoginOnSessionExpiry();
         studentReports = await res.json();
     } catch (error) {
         tableBody.innerHTML = '<tr class="empty-report-row"><td colspan="6">Could not load reports. Please try again.</td></tr>';
@@ -98,8 +112,7 @@ async function loadSubmittedReports() {
         const status = mapDbStatus(report.status);
         const row = document.createElement('tr');
         row.dataset.status = status;
-        const reporterName = report.fullName || activeUser?.fullName || 'Student';
-        row.innerHTML = `<td class="report-id">#${report.reportNo}</td><td>${report.category}</td><td>${report.location}</td><td>${reporterName}</td><td>${new Date(report.dateTime).toLocaleString()}</td><td><span class="status-text status-${status}">${status.replace('-', ' ').toUpperCase()}</span></td>`;
+        row.innerHTML = `<td class="report-id">#${report.reportNo}</td><td>${report.category}</td><td>${report.location}</td><td>${activeUser?.fullName || ''}</td><td>${new Date(report.dateTime).toLocaleString()}</td><td><span class="status-text status-${status}">${status.replace('-', ' ').toUpperCase()}</span></td>`;
         tableBody.appendChild(row);
     });
 }

@@ -32,7 +32,8 @@ public class MessageServlet extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("studentLrn") == null) {
-                out.print("[]");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.print(JsonUtil.sessionExpired());
                 return;
             }
             long lrn = (Long) session.getAttribute("studentLrn");
@@ -82,7 +83,11 @@ public class MessageServlet extends HttpServlet {
         return json.append("]").toString();
     }
 
+    // Kept as a short alias so the other servlets in this package (which were
+    // already calling MessageServlet.esc(...) all over the place) don't need
+    // to change -- it just forwards to the shared escaper in JsonUtil now,
+    // instead of duplicating the same replace() calls in every file.
     static String esc(String s) {
-        return s == null ? "" : s.replace("\\", "\\\\").replace("\"", "\\\"");
+        return JsonUtil.escapeJson(s);
     }
 }

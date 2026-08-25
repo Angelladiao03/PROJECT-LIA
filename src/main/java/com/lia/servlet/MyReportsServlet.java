@@ -28,7 +28,8 @@ public class MyReportsServlet extends HttpServlet {
 
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("studentLrn") == null) {
-                out.print("[]");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.print(JsonUtil.sessionExpired());
                 return;
             }
 
@@ -40,11 +41,11 @@ public class MyReportsServlet extends HttpServlet {
                 String[] r = reports.get(i);
                 if (i > 0) json.append(",");
                 json.append("{")
-                    .append("\"reportNo\":\"").append(escape(r[0])).append("\",")
-                    .append("\"category\":\"").append(escape(r[1])).append("\",")
-                    .append("\"location\":\"").append(escape(r[2])).append("\",")
-                    .append("\"status\":\"").append(escape(r[3])).append("\",")
-                    .append("\"dateTime\":\"").append(escape(r[4])).append("\"")
+                    .append("\"reportNo\":\"").append(JsonUtil.escapeJson(r[0])).append("\",")
+                    .append("\"category\":\"").append(JsonUtil.escapeJson(r[1])).append("\",")
+                    .append("\"location\":\"").append(JsonUtil.escapeJson(r[2])).append("\",")
+                    .append("\"status\":\"").append(JsonUtil.escapeJson(r[3])).append("\",")
+                    .append("\"dateTime\":\"").append(JsonUtil.escapeJson(r[4])).append("\"")
                     .append("}");
             }
             json.append("]");
@@ -54,10 +55,5 @@ public class MyReportsServlet extends HttpServlet {
         } catch (SQLException e) {
             response.getWriter().print("[]");
         }
-    }
-
-    private String escape(String s) {
-        if (s == null) return "";
-        return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

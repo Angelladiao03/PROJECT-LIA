@@ -50,10 +50,10 @@ function resetCustomFields() {
     }, 10);
 }
 
-// Handle Incident Report Form Submission
-// Submits the report form to the backend and handles user feedback states.
-async function handleReportSubmit(event) {
-    event.preventDefault();
+// Handle Incident Report Form Submission -- sends the form to ReportServlet
+// and waits for the database to confirm before showing a result popup.
+async function handleReportSubmit(e) {
+    e.preventDefault();
 
     const isAnonymous = document.querySelector('input[name="anonymity"]:checked').value === 'anonymous';
     const category = document.getElementById('category').value;
@@ -66,7 +66,6 @@ async function handleReportSubmit(event) {
 
     window.showPageLoading?.('Sending report...');
 
-    // Build form-encoded payload for ReportServlet.
     const params = new URLSearchParams({
         isAnonymous: isAnonymous ? 'true' : 'false',
         location,

@@ -4,6 +4,13 @@ function toggleSidebar() {
     sidebar.classList.toggle('collapsed');
 }
 
+// Bounces the admin back to login if the server-side session has expired
+// (or was never created), instead of leaving the table stuck empty.
+function redirectToLoginOnSessionExpiry() {
+    localStorage.removeItem('lagroInActionActiveUser');
+    window.location.href = '../../../index.html';
+}
+
 let cachedResolvedReports = [];
 
 async function loadStoredRecords() {
@@ -13,6 +20,7 @@ async function loadStoredRecords() {
     let reports = [];
     try {
         const res = await fetch('../../../AdminReportServlet');
+        if (res.status === 401) return redirectToLoginOnSessionExpiry();
         reports = await res.json();
     } catch (err) {
         tableBody.innerHTML = '<tr class="empty-record-row"><td colspan="6">Could not load report records.</td></tr>';

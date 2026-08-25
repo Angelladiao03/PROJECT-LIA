@@ -33,7 +33,8 @@ public class StudentProfileServlet extends HttpServlet {
             HttpSession session = request.getSession(false);
             Long lrn = session != null ? (Long) session.getAttribute("studentLrn") : null;
             if (lrn == null) {
-                out.print(JsonUtil.error("You must be logged in."));
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.print(JsonUtil.sessionExpired());
                 return;
             }
 

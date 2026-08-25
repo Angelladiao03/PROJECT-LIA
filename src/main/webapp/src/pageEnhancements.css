@@ -127,16 +127,16 @@ h6,
   z-index: 1000 !important;
 }
 .main-content > * {
-  animation: lia-rise-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: lia-rise-in 0.45s ease both;
 }
 .main-content > *:nth-child(2) {
-  animation-delay: 0.06s;
+  animation-delay: 0.04s;
 }
 .main-content > *:nth-child(3) {
-  animation-delay: 0.12s;
+  animation-delay: 0.08s;
 }
 .main-content > *:nth-child(4) {
-  animation-delay: 0.18s;
+  animation-delay: 0.12s;
 }
 .topbar {
   background: rgba(255, 255, 255, 0.94);
@@ -393,31 +393,10 @@ body:has(#sosModal) .modal-header p {
   font-size: 0.75rem;
   opacity: 0.9;
 }
-body:has(#sosModal) .close-modal-btn {
-  top: 0.75rem;
-  right: 0.75rem;
-  width: 2.1rem;
-  height: 2.1rem;
-  border: 1.5px solid rgba(255, 255, 255, 0.92);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 1rem;
-  line-height: 1;
-  color: #fff;
-  transition:
-    transform 0.22s ease,
-    background-color 0.22s ease,
-    box-shadow 0.22s ease;
-}
-body:has(#sosModal) .close-modal-btn:hover {
-  transform: rotate(90deg) scale(1.05);
-  background: rgba(255, 255, 255, 0.28);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
-}
+/* NOTE: the close button itself now uses the single shared .close-modal-btn
+   style further down this file (dark-header contrast included), so no
+   SOS-specific override is defined here anymore -- one consistent X button
+   across every modal in the app, including this one. */
 body:has(#sosModal) .modal-body {
   padding: 2rem;
   gap: 1.25rem;
@@ -521,49 +500,37 @@ a:active {
 .chat-card {
   width: 100% !important;
 }
-.modal-overlay:not(.hidden) {
-  animation: lia-modal-fade .26s ease both;
+/* ==========================================================================
+   SHARED MODAL SYSTEM (close button + open/closing animation)
+   Every modal in the app -- SOS, Edit Profile, Report Details, Student Scan,
+   Student Info, etc. -- shares this same entrance/exit animation and the
+   same circular "X" close button, no matter which page it lives on or
+   whether that page toggles the modal with the ".hidden" class or the
+   ".active" class. Keeping this in one place (instead of copy-pasted,
+   slightly-different button styles per page) is what makes the whole app
+   feel consistent instead of like ten different modals bolted together.
+   ========================================================================== */
+.modal-overlay:not(.hidden),
+.modal-overlay.active {
+    animation: lia-modal-fade 0.2s ease both;
 }
-.modal-overlay:not(.hidden) .modal-box {
-  animation: lia-modal-pop .34s cubic-bezier(.2, .85, .25, 1.15) both;
+.modal-overlay:not(.hidden) .modal-box,
+.modal-overlay.active .modal-box {
+    animation: lia-modal-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
-
-.close-modal-btn,
-.modal-close {
-  width: 2.1rem;
-  height: 2.1rem;
-  border-radius: 50%;
-  border: 1.5px solid rgba(100, 116, 139, 0.5);
-  background: rgba(241, 245, 249, 0.92);
-  color: #1f2937;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    transform 0.22s ease,
-    background-color 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
+.modal-overlay.closing {
+    animation: lia-modal-fade-out 0.2s ease both;
 }
-
-.close-modal-btn:hover,
-.modal-close:hover {
-  transform: rotate(90deg) scale(1.05);
-  background: #ffffff;
-  border-color: rgba(51, 65, 85, 0.6);
-  box-shadow: 0 0 0 3px rgba(15, 81, 50, 0.14);
+.modal-overlay.closing .modal-box {
+    animation: lia-modal-pop-out 0.2s ease both;
 }
 @keyframes lia-modal-fade {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 @keyframes lia-modal-pop {
-  from { opacity: 0; transform: scale(.82) translateY(18px); }
-  65% { opacity: 1; transform: scale(1.02) translateY(-2px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+    from { opacity: 0; transform: scale(.9) translateY(14px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
 }
 @keyframes lia-modal-fade-out {
   from { opacity: 1; }
@@ -572,6 +539,40 @@ a:active {
 @keyframes lia-modal-pop-out {
   from { opacity: 1; transform: scale(1) translateY(0); }
   to { opacity: 0; transform: scale(.94) translateY(10px); }
+}
+
+/* The circular "X" close button used by every modal header. Markup is a
+   small inline SVG (see any .modal-header in the HTML) so it stays crisp at
+   any size and always inherits `currentColor`, meaning it automatically
+   reads correctly on both dark headers (e.g. the SOS dialog) and plain
+   white ones (e.g. Student Info) without needing a page-specific override. */
+.close-modal-btn {
+    position: absolute;
+    top: 0.85rem;
+    right: 0.85rem;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(120, 130, 140, 0.12);
+    border: none;
+    border-radius: 50%;
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
+    transition: background-color 0.18s ease, transform 0.18s ease;
+}
+.close-modal-btn:hover {
+    background: rgba(120, 130, 140, 0.24);
+    transform: rotate(90deg);
+}
+.close-modal-btn:active {
+    transform: rotate(90deg) scale(0.9);
+}
+.close-modal-btn:focus-visible {
+    outline: 2px solid var(--lia-green-bright);
+    outline-offset: 2px;
 }
 
 @keyframes lia-spin {
@@ -614,11 +615,11 @@ a:active {
 @keyframes lia-rise-in {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.988);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 

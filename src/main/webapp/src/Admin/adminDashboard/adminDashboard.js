@@ -2,8 +2,17 @@ function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('collapsed');
 }
 
+// Bounces the admin back to login if the server-side session has expired
+// (or was never created), instead of leaving the dashboard stuck empty.
+function redirectToLoginOnSessionExpiry() {
+    localStorage.removeItem('lagroInActionActiveUser');
+    window.location.href = '../../../index.html';
+}
+
 let cachedDashboardReports = [];
 
+// Loads every dashboard widget in parallel: report/SOS counts, the recent
+// SOS table, and the trend charts, all sourced from the live database.
 async function loadDashboardData() {
     let reports = [];
     let alerts = [];
@@ -14,14 +23,14 @@ async function loadDashboardData() {
             fetch('../../../AdminReportServlet?type=sos'),
             fetch('../../../AdminRequestServlet')
         ]);
-        if (!reportsRes.ok || !alertsRes.ok || !pendingRes.ok) {
-            throw new Error('Failed to load dashboard data.');
+        if (reportsRes.status === 401 || alertsRes.status === 401 || pendingRes.status === 401) {
+            return redirectToLoginOnSessionExpiry();
         }
         reports = await reportsRes.json();
         alerts = await alertsRes.json();
         pending = await pendingRes.json();
     } catch (err) {
-        // fall through with empty arrays so the page still renders
+        // Server unreachable -- fall through with empty arrays so the page still renders.
     }
     cachedDashboardReports = reports;
 
@@ -46,10 +55,7 @@ async function loadDashboardData() {
     alerts.slice(0, 5).forEach(alertData => {
         const row = document.createElement('tr');
         const status = alertData.status || 'Active';
-        const lrn = alertData.lrn || 'N/A';
-        const reporter = alertData.username || alertData.fullName || 'Anonymous';
-        const badgeClass = status === 'Responded' ? 'badge-success' : (status === 'Dispatched' ? 'badge-warning' : 'badge-danger');
-        row.innerHTML = `<td>${alertData.dateTime}</td><td>${lrn} (${reporter})</td><td>${alertData.location}</td><td>${alertData.description || 'No description provided.'}</td><td><span class="badge ${badgeClass}">${status}</span></td>`;
+        row.innerHTML = `<td>${alertData.dateTime}</td><td>${alertData.lrn} (${alertData.username})</td><td>${alertData.location}</td><td>${alertData.description || 'No description provided.'}</td><td><span class="badge badge-danger">${status}</span></td>`;
         sosBody.appendChild(row);
     });
 

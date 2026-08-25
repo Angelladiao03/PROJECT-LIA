@@ -6,7 +6,14 @@ function toggleSidebar() {
     }
 }
 
-// Converts SQL datetime text into chat-friendly local time.
+// Bounces the student back to login if the server-side session has expired
+// (or was never created), instead of leaving the chat stuck empty.
+function redirectToLoginOnSessionExpiry() {
+    localStorage.removeItem('lagroInActionActiveUser');
+    window.location.href = '../../../index.html';
+}
+
+// Converts the database's "2026-08-20 09:24:54" text into a readable clock time.
 function formatTime(dbDateTime) {
     if (!dbDateTime) return '';
     const date = new Date(dbDateTime.replace(' ', 'T'));
@@ -31,7 +38,7 @@ function appendMessageToChat(sender, text, time) {
     chatBody.appendChild(msgContainer);
 }
 
-// Loads the full student-admin conversation from the server.
+// Loads the student's real conversation with the guidance office from MessageServlet.
 async function renderStoredMessages() {
     const chatBody = document.getElementById('chatBody');
     if (!chatBody) return;
@@ -42,6 +49,7 @@ async function renderStoredMessages() {
 
     try {
         const res = await fetch('../../../MessageServlet');
+        if (res.status === 401) return redirectToLoginOnSessionExpiry();
         const messages = await res.json();
 
         if (!messages.length) {
@@ -61,7 +69,8 @@ async function renderStoredMessages() {
     }
 }
 
-// Sends a student message, then refreshes the conversation thread.
+// Sends the student's typed message to MessageServlet, then reloads the
+// thread so it stays perfectly in sync with what's stored in the database.
 async function handleSendMessage(event) {
     event.preventDefault();
 

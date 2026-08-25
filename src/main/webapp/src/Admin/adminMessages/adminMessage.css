@@ -302,15 +302,16 @@ body {
     margin-top: 2px;
 }
 
-.chat-header-actions {
-    display: flex;
-    gap: 0.6rem;
-    align-items: center;
-}
-
 .status-tag {
     color: #dd6b20;
     font-weight: 700;
+}
+
+.chat-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 .btn-scan {
@@ -329,40 +330,90 @@ body {
     background-color: #d9ebd9;
 }
 
-.student-info-modal-box {
-    width: min(100%, 560px);
-}
-
-.info-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.7rem 1rem;
-    color: #334155;
-    font-size: 0.9rem;
-}
-
-.info-full {
-    grid-column: 1 / -1;
-}
-
-.modal-actions {
-    margin-top: 1rem;
-    display: flex;
-    justify-content: flex-end;
-}
-
-.btn-cancel {
-    padding: 0.55rem 0.9rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.55rem;
-    background: #f8fafc;
-    color: #1f2937;
-    font-weight: 700;
+.btn-info {
+    padding: 8px 14px;
+    background-color: #eef4ff;
+    color: #1d4ed8;
+    border: 1px solid #c3d7fb;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
     cursor: pointer;
+    transition: all 0.2s;
 }
 
-.btn-cancel:hover {
-    background: #eef2f7;
+.btn-info:hover {
+    background-color: #dbe7fe;
+}
+
+/* -- Student Info modal content (structure/animation shared via pageEnhancements.css) -- */
+.info-avatar-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.info-avatar {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1b5e20, #2e7d32);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+}
+
+.info-avatar-row h4 {
+    font-size: 1.05rem;
+    color: #1a202c;
+    font-weight: 700;
+}
+
+.info-username {
+    font-size: 0.85rem;
+    color: #718096;
+    margin-top: 2px;
+}
+
+.info-detail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.info-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.info-detail-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.info-detail-row dt {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.info-detail-row dd {
+    font-size: 0.9rem;
+    color: #1a202c;
+    font-weight: 600;
+    text-align: right;
 }
 
 /* Messages Area */
@@ -498,12 +549,10 @@ body {
     .student-name, .last-msg { font-size: 0.78rem; }
     .last-msg { max-width: 100%; }
     .chat-header .active-student-details p { display: none; }
-    .chat-header-actions { gap: 0.4rem; }
 }
 @media (max-width: 480px) {
     .chat-search-box { padding: 0.65rem; }
     .student-item { padding: 0.65rem 0.75rem; }
     .student-avatar { width: 32px; height: 32px; font-size: 0.72rem; }
     .btn-scan { padding: 6px 8px; font-size: 0.7rem; }
-    .info-grid { grid-template-columns: 1fr; }
 }
