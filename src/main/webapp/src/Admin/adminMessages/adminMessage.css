@@ -18,8 +18,57 @@ body {
 }
 
 /* ==========================================================================
-   2. TOP NAVIGATION BAR
+   1B. STUDENT INFO MODAL -- base structure
+   This page didn't have any modal before the "View Info" feature, so unlike
+   the other pages, it needs its own .modal-overlay / .modal-box / .hidden
+   definitions here (the shared pageEnhancements.css only adds the entrance
+   animation and close-button styling on top of these, it doesn't define the
+   box/positioning itself). Without this block the modal has no layout at
+   all and just dumps its content into the normal page flow.
    ========================================================================== */
+.hidden {
+    display: none !important;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-box {
+    background: #fff;
+    width: 90%;
+    max-width: 420px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    background: #1e4d2b;
+    color: #fff;
+    padding: 16px 20px;
+    position: relative;
+}
+
+.modal-header h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+
 .topbar {
     display: flex;
     justify-content: space-between;
