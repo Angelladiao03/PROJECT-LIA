@@ -35,8 +35,14 @@ public class SosServlet extends HttpServlet {
                 return;
             }
 
+            // Both fields are required -- the description especially, since
+            // leaving it optional made it too easy to send a location-only
+            // alert with no real information (or as a prank) that still
+            // pulls the guidance office's attention. The form now marks this
+            // field required too, so this check should rarely trigger in
+            // practice; it's here as the server-side backstop.
             if (location == null || description == null || location.isBlank() || description.isBlank()) {
-                out.print(JsonUtil.error("Please fill out location and description."));
+                out.print(JsonUtil.error("Please fill out both your location and a brief description."));
                 return;
             }
 
