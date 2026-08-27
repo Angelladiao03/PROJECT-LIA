@@ -14,7 +14,9 @@ import java.util.List;
 
 /**
  * Used by the STUDENT messages page.
- * GET  -> returns the logged-in student's full conversation with admin, as JSON.
+ * GET  -> { "connectedAdmin": "<name>" | null, "messages": [...] } for the
+ *         logged-in student's conversation. connectedAdmin is the name of
+ *         whichever admin most recently replied, or null if none has yet.
  * POST -> sends a new message from the student (form field: text)
  */
 @WebServlet("/MessageServlet")
@@ -37,9 +39,13 @@ public class MessageServlet extends HttpServlet {
                 return;
             }
             long lrn = (Long) session.getAttribute("studentLrn");
-            out.print(toJsonArray(messageDAO.getConversation(lrn)));
+            String connectedAdmin = messageDAO.getLatestRespondingAdminName(lrn);
+
+            out.print("{\"connectedAdmin\": "
+                + (connectedAdmin == null ? "null" : "\"" + esc(connectedAdmin) + "\"") + ", "
+                + "\"messages\": " + toJsonArray(messageDAO.getConversation(lrn)) + "}");
         } catch (SQLException e) {
-            response.getWriter().print("[]");
+            response.getWriter().print("{\"connectedAdmin\": null, \"messages\": []}");
         }
     }
 

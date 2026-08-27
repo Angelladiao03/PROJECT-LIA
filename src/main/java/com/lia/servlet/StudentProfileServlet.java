@@ -78,14 +78,22 @@ public class StudentProfileServlet extends HttpServlet {
             String gradeSection = request.getParameter("gradeSection");
             String adviser = request.getParameter("adviser");
 
-            if (username == null || username.isBlank() || gradeSection == null
-                    || gradeSection.isBlank() || adviser == null || adviser.isBlank()) {
-                out.print(JsonUtil.error("Please fill out all fields."));
+            if (username == null || username.isBlank()) {
+                out.print(JsonUtil.error("Please enter a username."));
+                return;
+            }
+            if (gradeSection == null || gradeSection.isBlank()) {
+                out.print(JsonUtil.error("Please enter your grade and section."));
+                return;
+            }
+            if (adviser == null || adviser.isBlank()) {
+                out.print(JsonUtil.error("Please enter your adviser's name."));
                 return;
             }
 
-            if (!Validation.isValidUsername(username)) {
-                out.print(JsonUtil.error("Username must be at least " + Validation.USERNAME_MIN_LENGTH + " characters long."));
+            String usernameError = Validation.usernameError(username);
+            if (usernameError != null) {
+                out.print(JsonUtil.error(usernameError));
                 return;
             }
 

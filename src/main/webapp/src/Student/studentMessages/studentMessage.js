@@ -38,19 +38,21 @@ function appendMessageToChat(sender, text, time) {
     chatBody.appendChild(msgContainer);
 }
 
-// Loads the student's real conversation with the guidance office from MessageServlet.
+// Loads the student's real conversation with the guidance office from MessageServlet,
+// and shows which admin they're currently connected with (whoever replied most
+// recently), or a generic "waiting for a reply" status if no admin has responded yet.
 async function renderStoredMessages() {
     const chatBody = document.getElementById('chatBody');
     if (!chatBody) return;
     chatBody.innerHTML = '';
 
-    const adminNameEl = document.querySelector('.admin-name');
-    if (adminNameEl) adminNameEl.textContent = 'Guidance Admin';
-
     try {
         const res = await fetch('../../../MessageServlet');
         if (res.status === 401) return redirectToLoginOnSessionExpiry();
-        const messages = await res.json();
+        const data = await res.json();
+        const messages = data.messages || [];
+
+        updateConnectionStatus(data.connectedAdmin);
 
         if (!messages.length) {
             const empty = document.createElement('div');
@@ -67,6 +69,16 @@ async function renderStoredMessages() {
     } catch (error) {
         chatBody.innerHTML = '<div class="system-message">Could not load messages.</div>';
     }
+}
+
+// Shows "You are connected with [Admin Name]" once an admin has replied,
+// or a neutral waiting message before that.
+function updateConnectionStatus(connectedAdmin) {
+    const statusEl = document.getElementById('adminConnectionStatus');
+    if (!statusEl) return;
+    statusEl.textContent = connectedAdmin
+        ? `You are connected with ${connectedAdmin}`
+        : 'Waiting for a guidance admin to respond';
 }
 
 // Sends the student's typed message to MessageServlet, then reloads the

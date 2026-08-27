@@ -43,16 +43,39 @@ public class RegisterServlet extends HttpServlet {
 
         try (PrintWriter out = response.getWriter()) {
 
-            if (lrnStr == null || fullName == null || username == null || password == null
-                    || adviser == null || gradeSection == null || email == null
-                    || lrnStr.isBlank() || fullName.isBlank() || username.isBlank()
-                    || password.isBlank()) {
-                out.print(JsonUtil.error("Please fill out all required fields."));
+            // Check each required field individually so the message tells the
+            // student exactly what's missing, instead of one generic notice.
+            if (lrnStr == null || lrnStr.isBlank()) {
+                out.print(JsonUtil.error("Please enter your LRN."));
+                return;
+            }
+            if (fullName == null || fullName.isBlank()) {
+                out.print(JsonUtil.error("Please enter your full name."));
+                return;
+            }
+            if (username == null || username.isBlank()) {
+                out.print(JsonUtil.error("Please enter a username."));
+                return;
+            }
+            if (gradeSection == null || gradeSection.isBlank()) {
+                out.print(JsonUtil.error("Please enter your grade and section."));
+                return;
+            }
+            if (adviser == null || adviser.isBlank()) {
+                out.print(JsonUtil.error("Please enter your adviser's name."));
+                return;
+            }
+            if (email == null || email.isBlank()) {
+                out.print(JsonUtil.error("Please enter your email address."));
+                return;
+            }
+            if (password == null || password.isBlank()) {
+                out.print(JsonUtil.error("Please enter a password."));
                 return;
             }
 
             if (rePassword != null && !password.equals(rePassword)) {
-                out.print(JsonUtil.error("Password does not match."));
+                out.print(JsonUtil.error("Passwords do not match."));
                 return;
             }
 
@@ -66,8 +89,9 @@ public class RegisterServlet extends HttpServlet {
                 return;
             }
 
-            if (!Validation.isValidUsername(username)) {
-                out.print(JsonUtil.error("Username must be at least " + Validation.USERNAME_MIN_LENGTH + " characters long."));
+            String usernameError = Validation.usernameError(username);
+            if (usernameError != null) {
+                out.print(JsonUtil.error(usernameError));
                 return;
             }
 
@@ -84,8 +108,19 @@ public class RegisterServlet extends HttpServlet {
                 return;
             }
 
-            if (studentDAO.usernameOrEmailExists(username, email)) {
-                out.print(JsonUtil.error("Username or email is already registered."));
+            // Check each uniqueness constraint separately so the student is
+            // told exactly which field is the problem, instead of one vague
+            // "username or email already registered" message.
+            if (studentDAO.lrnExists(lrn)) {
+                out.print(JsonUtil.error("This LRN is already registered. Please log in instead."));
+                return;
+            }
+            if (studentDAO.usernameExists(username)) {
+                out.print(JsonUtil.error("That username is already taken. Please choose another."));
+                return;
+            }
+            if (studentDAO.emailExists(email)) {
+                out.print(JsonUtil.error("That email address is already registered."));
                 return;
             }
 

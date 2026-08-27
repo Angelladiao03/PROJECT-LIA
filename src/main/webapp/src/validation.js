@@ -3,13 +3,21 @@
 // real source of truth (a request can always bypass this file), but
 // checking here first gives instant feedback instead of a round trip.
 
-const USERNAME_MIN_LENGTH = 13;
+const USERNAME_MIN_LENGTH = 8;
+const USERNAME_MAX_LENGTH = 24;
 const LRN_LENGTH = 12;
 
 // Returns an error message string, or null if the username is valid.
 function validateUsername(username) {
-    if (!username || username.trim().length < USERNAME_MIN_LENGTH) {
+    const trimmed = (username || '').trim();
+    if (!trimmed) {
+        return 'Username is required.';
+    }
+    if (trimmed.length < USERNAME_MIN_LENGTH) {
         return `Username must be at least ${USERNAME_MIN_LENGTH} characters long.`;
+    }
+    if (trimmed.length > USERNAME_MAX_LENGTH) {
+        return `Username must not exceed ${USERNAME_MAX_LENGTH} characters.`;
     }
     return null;
 }

@@ -76,7 +76,9 @@ function showPopup(message, title, onOkay) {
 
 // Handles both the Student and Admin login forms. Which servlet gets called
 // (and which fields the session ends up carrying) depends on the "role"
-// argument passed in from the form's onsubmit handler in index.html.
+// argument passed in from the form's onsubmit handler in index.html. Both
+// forms share the same shape (username, then password), so no per-role
+// field indexing is needed.
 async function handleLogin(event, role) {
     event.preventDefault();
 
@@ -84,7 +86,7 @@ async function handleLogin(event, role) {
     if (!validateRequiredFields(form)) return;
     setFormMessage(form, '');
     const username = form.elements[0].value.trim();
-    const password = form.elements[role === 'student' ? 2 : 1].value;
+    const password = form.elements[1].value;
 
     if (role === 'admin') {
         const params = new URLSearchParams({ username, password });

@@ -33,8 +33,12 @@ public class AdminLoginServlet extends HttpServlet {
 
         try (PrintWriter out = response.getWriter()) {
 
-            if (username == null || password == null || username.isBlank() || password.isBlank()) {
-                out.print(JsonUtil.error("Please enter a username and password."));
+            if (username == null || username.isBlank()) {
+                out.print(JsonUtil.error("Please enter your username."));
+                return;
+            }
+            if (password == null || password.isBlank()) {
+                out.print(JsonUtil.error("Please enter your password."));
                 return;
             }
 

@@ -163,15 +163,36 @@ public class StudentDAO {
         }
     }
 
-    /** Quick check used by the register form to stop duplicate usernames/emails. */
-    public boolean usernameOrEmailExists(String username, String email) throws SQLException {
-        String sql = "SELECT student_lrn FROM students WHERE student_username = ? OR email = ?";
-
+    /** True if this username is already taken by any student. Used by the register form. */
+    public boolean usernameExists(String username) throws SQLException {
+        String sql = "SELECT student_lrn FROM students WHERE student_username = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, username);
-            ps.setString(2, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /** True if this email is already registered to any student. Used by the register form. */
+    public boolean emailExists(String email) throws SQLException {
+        String sql = "SELECT student_lrn FROM students WHERE email = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /** True if this LRN is already registered to a student (primary key clash on sign-up). */
+    public boolean lrnExists(long lrn) throws SQLException {
+        String sql = "SELECT student_lrn FROM students WHERE student_lrn = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, lrn);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }

@@ -19,6 +19,14 @@ body {
   color: var(--lia-ink);
   min-height: 100vh;
   overflow-x: hidden;
+  /* Prevents the fixed topbar's 60px offset (set via .app-body's margin-top
+     below) from "collapsing through" body into html. Without this, body is
+     the first in-flow child's parent with no border/padding of its own, so
+     that top margin escapes body entirely -- html ends up 60px taller than
+     body, which shows up as blank space below the footer on any page whose
+     content is shorter than the viewport (e.g. Student > My Account). */
+  padding-top: 1px;
+  margin-top: -1px;
 }
 .app-body,
 .app-container {
@@ -432,11 +440,6 @@ body:has(#sosModal) .btn-send-sos {
 }
 .account-menu .sidebar-logout {
   font-size: 0.82rem;
-}
-.school-footer {
-  border-radius: 0 !important;
-  margin: 0 -1.5rem -1.5rem !important;
-  width: calc(100% + 3rem);
 }
 .stats-grid .stat-card {
   box-shadow: none !important;
