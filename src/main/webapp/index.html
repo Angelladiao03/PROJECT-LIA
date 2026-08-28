@@ -1,168 +1,296 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LagroInAction - Auth Portal</title>
-    <link rel="icon" href="./src/assets/LIALogo.ico" type="image/x-icon">
-    <link rel="stylesheet" href="src/styles.css">
-</head>
-<body>
-
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LIA - Authentication Portal</title>
+    <link rel="icon" href="./src/assets/LIALogo.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="src/styles.css" />
+  </head>
+  <body>
     <header class="auth-mobile-header">PROJECT LIA</header>
 
-    <div id="pageLoader" class="page-loader" role="status" aria-label="Loading website">
-        <div class="loader-spinner"></div>
-        <span>Loading...</span>
+    <div
+      id="pageLoader"
+      class="page-loader"
+      role="status"
+      aria-label="Loading website"
+    >
+      <div class="loader-spinner"></div>
+      <span>Loading...</span>
     </div>
 
     <!-- FLOATING MAIN CONTAINER -->
     <div class="main-container">
-        
-        <!-- ================= LEFT HALF: IMAGE PLACEHOLDER ================= -->
-        <div class="left-panel">
-            <div class="brand-title">LagroInAction</div>
-            <div class="image-placeholder-text"></div>
+      <!-- ================= LEFT HALF: IMAGE PLACEHOLDER ================= -->
+      <div class="left-panel">
+        <div class="brand-title">LagroInAction</div>
+        <div class="image-placeholder-text"></div>
+      </div>
+
+      <!-- ================= RIGHT HALF: FORMS CONTAINER ================= -->
+      <div class="right-panel">
+        <!-- CIRCULAR SCHOOL LOGO -->
+        <div class="logo-container">
+          <img
+            src="./src/assets/lagroHSLogo.png"
+            alt="Lagro High School Logo"
+          />
         </div>
 
-        <!-- ================= RIGHT HALF: FORMS CONTAINER ================= -->
-        <div class="right-panel">
-            
-            <!-- CIRCULAR SCHOOL LOGO -->
-            <div class="logo-container">
-                <img src="./src/assets/lagroHSLogo.png"
-                     alt="Lagro High School Logo">
+        <!-- ================= 1. STUDENT LOG IN FORM ================= -->
+        <div id="studentLoginSection" class="form-section">
+          <h2 class="form-title">STUDENT LOG IN</h2>
+
+          <form
+            onsubmit="handleLogin(event, 'student')"
+            class="auth-form"
+            novalidate
+          >
+            <div class="form-group">
+              <label class="form-label">Username:</label>
+              <input
+                type="text"
+                required
+                data-field="username"
+                placeholder="Enter your username"
+                class="form-input"
+                autocomplete="username"
+                onfocus="this.removeAttribute('placeholder')"
+                onblur="this.placeholder = 'Enter your username'"
+              />
             </div>
 
-            <!-- ================= 1. STUDENT LOG IN FORM ================= -->
-            <div id="studentLoginSection" class="form-section">
-                <h2 class="form-title">STUDENT LOG IN</h2>
-
-                <form onsubmit="handleLogin(event, 'student')" class="auth-form" novalidate>
-                    <div class="form-group">
-                        <label class="form-label">Username:</label>
-                        <input type="text" required data-field="username" placeholder="Enter your username" class="form-input" autocomplete="username" onfocus="this.removeAttribute('placeholder')" onblur="this.placeholder='Enter your username'">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Password:</label>
-                        <input type="password" required data-field="password" placeholder="Enter your password" class="form-input" autocomplete="current-password" onfocus="this.removeAttribute('placeholder')" onblur="this.placeholder='Enter your password'">
-                    </div>
-
-                    <p class="form-message" aria-live="polite"></p>
-                    <div class="button-container">
-                        <button type="submit" class="btn-submit">Login</button>
-                    </div>
-                </form>
-
-                <div class="switch-link-container">
-                    <span class="switch-text">Don't have an account?</span>
-                    <button onclick="showForm('studentSignupSection')" class="btn-switch">Register Here.</button>
-                </div>
+            <div class="form-group">
+              <label class="form-label">Password:</label>
+              <input
+                type="password"
+                required
+                data-field="password"
+                placeholder="Enter your password"
+                class="form-input"
+                autocomplete="current-password"
+                onfocus="this.removeAttribute('placeholder')"
+                onblur="this.placeholder = 'Enter your password'"
+              />
             </div>
 
-            <!-- ================= 2. STUDENT SIGN UP FORM ================= -->
-            <div id="studentSignupSection" class="form-section hidden">
-                <h2 class="form-title">STUDENT SIGN UP</h2>
-
-                <form onsubmit="handleRegistration(event)" class="auth-form" novalidate>
-                    <div class="form-group">
-                        <label class="form-label form-label-wide">Full Name:</label>
-                        <input type="text" required data-field="full name" placeholder="Enter your full name" class="form-input">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label form-label-wide">Username:</label>
-                        <input type="text" required minlength="8" maxlength="24" data-field="username" placeholder="Create a username (8-24 characters)" class="form-input">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label form-label-wide">LRN:</label>
-                        <input type="text" required pattern="\d{12}" maxlength="12" data-field="LRN" placeholder="Enter your 12-digit LRN" class="form-input">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label form-label-wide">Grade & Section:</label>
-                        <input type="text" required data-field="grade and section" placeholder="e.g. Grade 10 - Acacia" class="form-input">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label form-label-wide">Adviser:</label>
-                        <input type="text" required data-field="adviser" placeholder="Enter your adviser's name" class="form-input">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label form-label-wide">Email:</label>
-                        <input type="email" required data-field="email" placeholder="Enter your email" class="form-input">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label form-label-wide">Password:</label>
-                        <input type="password" required minlength="8" pattern="(?=.*[A-Za-z])(?=.*\d).{8,}" title="At least 8 characters, including a letter and a number" data-field="password" placeholder="At least 8 characters, with letters and numbers" class="form-input">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label form-label-wide">Re-Enter Password:</label>
-                        <input type="password" required data-field="password confirmation" placeholder="Re-enter your password" class="form-input">
-                    </div>
-
-                    <div class="button-container">
-                        <button type="submit" class="btn-submit">Register</button>
-                    </div>
-                    <p class="form-message" aria-live="polite"></p>
-                </form>
-
-                <div class="switch-link-container">
-                    <span class="switch-text">Already have an account?</span>
-                    <button onclick="showForm('studentLoginSection')" class="btn-switch">Login Here.</button>
-                </div>
+            <p class="form-message" aria-live="polite"></p>
+            <div class="button-container">
+              <button type="submit" class="btn-submit">Login</button>
             </div>
+          </form>
 
-            <!-- ================= 3. ADMIN LOG IN FORM ================= -->
-            <div id="adminLoginSection" class="form-section hidden">
-                <h2 class="form-title">ADMIN LOG IN</h2>
-
-                <form onsubmit="handleLogin(event, 'admin')" class="auth-form" novalidate>
-                    <div class="form-group">
-                        <label class="form-label">User:</label>
-                        <input type="text" required data-field="username" placeholder="Enter admin username" class="form-input" autocomplete="username">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Password:</label>
-                        <input type="password" required data-field="password" placeholder="Enter admin password" class="form-input" autocomplete="current-password">
-                    </div>
-
-                    <p class="form-message" aria-live="polite"></p>
-                    <div class="button-container">
-                        <button type="submit" class="btn-submit">Login</button>
-                    </div>
-                </form>
-
-                <div class="switch-link-container">
-                    <span class="switch-text">Not an admin?</span>
-                    <button onclick="showForm('studentLoginSection')" class="btn-switch">Back to Student Log In.</button>
-                </div>
-            </div>
-
-            <!-- Secret trigger for Admin Portal -->
-            <button onclick="showForm('adminLoginSection')" class="secret-admin-trigger">
-                v0.6.3-beta
+          <div class="switch-link-container">
+            <span class="switch-text">Don't have an account?</span>
+            <button
+              onclick="showForm('studentSignupSection')"
+              class="btn-switch"
+            >
+              Register Here.
             </button>
-
+          </div>
         </div>
+
+        <!-- ================= 2. STUDENT SIGN UP FORM ================= -->
+        <div id="studentSignupSection" class="form-section hidden">
+          <h2 class="form-title">STUDENT SIGN UP</h2>
+
+          <form
+            onsubmit="handleRegistration(event)"
+            class="auth-form"
+            novalidate
+          >
+            <div class="form-group">
+              <label class="form-label form-label-wide">Full Name:</label>
+              <input
+                type="text"
+                required
+                data-field="full name"
+                placeholder="Enter your full name"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label form-label-wide">Username:</label>
+              <input
+                type="text"
+                required
+                minlength="8"
+                maxlength="24"
+                data-field="username"
+                placeholder="Create a username (8-24 characters)"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label form-label-wide">LRN:</label>
+              <input
+                type="text"
+                required
+                pattern="\d{12}"
+                maxlength="12"
+                data-field="LRN"
+                placeholder="Enter your 12-digit LRN"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label form-label-wide">Grade & Section:</label>
+              <input
+                type="text"
+                required
+                data-field="grade and section"
+                placeholder="e.g. Grade 10 - Acacia"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label form-label-wide">Adviser:</label>
+              <input
+                type="text"
+                required
+                data-field="adviser"
+                placeholder="Enter your adviser's name"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label form-label-wide">Email:</label>
+              <input
+                type="email"
+                required
+                data-field="email"
+                placeholder="Enter your email"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label form-label-wide">Password:</label>
+              <input
+                type="password"
+                required
+                minlength="8"
+                pattern="(?=.*[A-Za-z])(?=.*\d).{8,}"
+                title="At least 8 characters, including a letter and a number"
+                data-field="password"
+                placeholder="At least 8 characters, with letters and numbers"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label form-label-wide"
+                >Re-Enter Password:</label
+              >
+              <input
+                type="password"
+                required
+                data-field="password confirmation"
+                placeholder="Re-enter your password"
+                class="form-input"
+              />
+            </div>
+
+            <div class="button-container">
+              <button type="submit" class="btn-submit">Register</button>
+            </div>
+            <p class="form-message" aria-live="polite"></p>
+          </form>
+
+          <div class="switch-link-container">
+            <span class="switch-text">Already have an account?</span>
+            <button
+              onclick="showForm('studentLoginSection')"
+              class="btn-switch"
+            >
+              Login Here.
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= 3. ADMIN LOG IN FORM ================= -->
+        <div id="adminLoginSection" class="form-section hidden">
+          <h2 class="form-title">ADMIN LOG IN</h2>
+
+          <form
+            onsubmit="handleLogin(event, 'admin')"
+            class="auth-form"
+            novalidate
+          >
+            <div class="form-group">
+              <label class="form-label">User:</label>
+              <input
+                type="text"
+                required
+                data-field="username"
+                placeholder="Enter admin username"
+                class="form-input"
+                autocomplete="username"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Password:</label>
+              <input
+                type="password"
+                required
+                data-field="password"
+                placeholder="Enter admin password"
+                class="form-input"
+                autocomplete="current-password"
+              />
+            </div>
+
+            <p class="form-message" aria-live="polite"></p>
+            <div class="button-container">
+              <button type="submit" class="btn-submit">Login</button>
+            </div>
+          </form>
+
+          <div class="switch-link-container">
+            <span class="switch-text">Not an admin?</span>
+            <button
+              onclick="showForm('studentLoginSection')"
+              class="btn-switch"
+            >
+              Back to Student Log In.
+            </button>
+          </div>
+        </div>
+
+        <!-- Secret trigger for Admin Portal -->
+        <button
+          onclick="showForm('adminLoginSection')"
+          class="secret-admin-trigger"
+        >
+          v1.0.0
+        </button>
+      </div>
     </div>
 
-    <div id="messagePopup" class="popup-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="popupTitle">
-        <div class="popup-container">
-            <div class="popup-icon">&#10003;</div>
-            <h2 id="popupTitle">Success</h2>
-            <p id="popupMessage"></p>
-            <button id="popupOkay" class="popup-button" type="button">Okay</button>
-        </div>
+    <div
+      id="messagePopup"
+      class="popup-overlay hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="popupTitle"
+    >
+      <div class="popup-container">
+        <div class="popup-icon">&#10003;</div>
+        <h2 id="popupTitle">Success</h2>
+        <p id="popupMessage"></p>
+        <button id="popupOkay" class="popup-button" type="button">Okay</button>
+      </div>
     </div>
 
     <script src="src/validation.js"></script>
     <script src="src/script.js"></script>
-</body>
+  </body>
 </html>

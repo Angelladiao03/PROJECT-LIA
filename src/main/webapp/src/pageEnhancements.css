@@ -515,33 +515,53 @@ a:active {
    ========================================================================== */
 .modal-overlay:not(.hidden),
 .modal-overlay.active {
-    animation: lia-modal-fade 0.2s ease both;
+  animation: lia-modal-fade 0.2s ease both;
 }
 .modal-overlay:not(.hidden) .modal-box,
 .modal-overlay.active .modal-box {
-    animation: lia-modal-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: lia-modal-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 .modal-overlay.closing {
-    animation: lia-modal-fade-out 0.2s ease both;
+  animation: lia-modal-fade-out 0.2s ease both;
 }
 .modal-overlay.closing .modal-box {
-    animation: lia-modal-pop-out 0.2s ease both;
+  animation: lia-modal-pop-out 0.2s ease both;
 }
 @keyframes lia-modal-fade {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes lia-modal-pop {
-    from { opacity: 0; transform: scale(.9) translateY(14px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 @keyframes lia-modal-fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 @keyframes lia-modal-pop-out {
-  from { opacity: 1; transform: scale(1) translateY(0); }
-  to { opacity: 0; transform: scale(.94) translateY(10px); }
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
 }
 
 /* The circular "X" close button used by every modal header. Markup is a
@@ -550,32 +570,34 @@ a:active {
    reads correctly on both dark headers (e.g. the SOS dialog) and plain
    white ones (e.g. Student Info) without needing a page-specific override. */
 .close-modal-btn {
-    position: absolute;
-    top: 0.85rem;
-    right: 0.85rem;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(120, 130, 140, 0.12);
-    border: none;
-    border-radius: 50%;
-    color: inherit;
-    cursor: pointer;
-    padding: 0;
-    transition: background-color 0.18s ease, transform 0.18s ease;
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(120, 130, 140, 0.12);
+  border: none;
+  border-radius: 50%;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background-color 0.18s ease,
+    transform 0.18s ease;
 }
 .close-modal-btn:hover {
-    background: rgba(120, 130, 140, 0.24);
-    transform: rotate(90deg);
+  background: rgba(120, 130, 140, 0.24);
+  transform: rotate(90deg);
 }
 .close-modal-btn:active {
-    transform: rotate(90deg) scale(0.9);
+  transform: rotate(90deg) scale(0.9);
 }
 .close-modal-btn:focus-visible {
-    outline: 2px solid var(--lia-green-bright);
-    outline-offset: 2px;
+  outline: 2px solid var(--lia-green-bright);
+  outline-offset: 2px;
 }
 
 @keyframes lia-spin {

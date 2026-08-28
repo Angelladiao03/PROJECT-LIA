@@ -15,10 +15,11 @@ import java.util.List;
 
 /**
  * Used by the ADMIN messages page.
- * GET  (no params)        -> list of every student conversation (sidebar), latest message each
- * GET  ?lrn=123            -> full conversation with that one student
- * GET  ?info=123           -> that student's profile details, for the "View Info" panel
- * POST lrn=123&text=...    -> admin sends a message to that student
+ * GET (no params) -> list of every student conversation (sidebar), latest
+ * message each
+ * GET ?lrn=123 -> full conversation with that one student
+ * GET ?info=123 -> that student's profile details, for the "View Info" panel
+ * POST lrn=123&text=... -> admin sends a message to that student
  */
 @WebServlet("/AdminMessageServlet")
 public class AdminMessageServlet extends HttpServlet {
@@ -57,11 +58,12 @@ public class AdminMessageServlet extends HttpServlet {
                 StringBuilder json = new StringBuilder("[");
                 for (int i = 0; i < rows.size(); i++) {
                     String[] r = rows.get(i);
-                    if (i > 0) json.append(",");
+                    if (i > 0)
+                        json.append(",");
                     json.append("{\"lrn\":\"").append(MessageServlet.esc(r[0])).append("\",")
-                        .append("\"fullName\":\"").append(MessageServlet.esc(r[1])).append("\",")
-                        .append("\"lastText\":\"").append(MessageServlet.esc(r[2])).append("\",")
-                        .append("\"lastTime\":\"").append(MessageServlet.esc(r[3])).append("\"}");
+                            .append("\"fullName\":\"").append(MessageServlet.esc(r[1])).append("\",")
+                            .append("\"lastText\":\"").append(MessageServlet.esc(r[2])).append("\",")
+                            .append("\"lastTime\":\"").append(MessageServlet.esc(r[3])).append("\"}");
                 }
                 json.append("]");
                 out.print(json.toString());
@@ -71,7 +73,10 @@ public class AdminMessageServlet extends HttpServlet {
         }
     }
 
-    /** Builds the JSON payload for the "View Info" panel: same fields as the student's own My Account page. */
+    /**
+     * Builds the JSON payload for the "View Info" panel: same fields as the
+     * student's own My Account page.
+     */
     private String studentInfoToJson(long lrn) throws SQLException {
         String[] profile = studentDAO.getProfile(lrn);
         if (profile == null) {
@@ -79,12 +84,12 @@ public class AdminMessageServlet extends HttpServlet {
         }
         // profile = [fullName, adviser, gradeSection, email, username]
         return "{\"success\": true, "
-            + "\"lrn\": \"" + lrn + "\", "
-            + "\"fullName\": \"" + JsonUtil.escapeJson(profile[0]) + "\", "
-            + "\"adviser\": \"" + JsonUtil.escapeJson(profile[1]) + "\", "
-            + "\"gradeSection\": \"" + JsonUtil.escapeJson(profile[2]) + "\", "
-            + "\"email\": \"" + JsonUtil.escapeJson(profile[3]) + "\", "
-            + "\"username\": \"" + JsonUtil.escapeJson(profile[4]) + "\"}";
+                + "\"lrn\": \"" + lrn + "\", "
+                + "\"fullName\": \"" + JsonUtil.escapeJson(profile[0]) + "\", "
+                + "\"adviser\": \"" + JsonUtil.escapeJson(profile[1]) + "\", "
+                + "\"gradeSection\": \"" + JsonUtil.escapeJson(profile[2]) + "\", "
+                + "\"email\": \"" + JsonUtil.escapeJson(profile[3]) + "\", "
+                + "\"username\": \"" + JsonUtil.escapeJson(profile[4]) + "\"}";
     }
 
     @Override

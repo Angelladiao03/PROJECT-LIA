@@ -2,311 +2,334 @@
    ADMIN DASHBOARD DESIGN SYSTEM (MATCHES STUDENT INTERFACE COLORS)
    ========================================================================== */
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    background-color: #ebf0f5;
-    color: #1e4620;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+  background-color: #ebf0f5;
+  color: #1e4620;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 /* TOPBAR */
 .topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #ffffff;
-    color: #333;
-    padding: 10px 20px;
-    height: 60px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    border-bottom: 1px solid #e0e5ea;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+  color: #333;
+  padding: 10px 20px;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid #e0e5ea;
 }
 
 .topbar-left {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 .menu-btn {
-    background: none;
-    border: none;
-    color: #333;
-    font-size: 1.5rem;
-    cursor: pointer;
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 1.5rem;
+  cursor: pointer;
 }
 
 .topbar-logo {
-    height: 40px;
-    width: auto;
+  height: 40px;
+  width: auto;
 }
 
 .topbar-center {
-    font-size: 1.3rem;
-    font-weight: 900;
-    color: #e59819;
-    letter-spacing: 1px;
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #e59819;
+  letter-spacing: 1px;
 }
 
 .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .user-name {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #333;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #333;
 }
 
 .profile-pic {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    object-fit: cover;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 /* APP BODY & SIDEBAR */
 .app-body {
-    display: flex;
-    flex: 1;
+  display: flex;
+  flex: 1;
 }
 
-/* SIDEBAR */ 
+/* SIDEBAR */
 .sidebar {
-    width: 200px;
-    background-color: #ffffff;
-    padding: 20px 0;
-    border-right: 1px solid #e2e8f0;
-    position: sticky;
-    top: 60px; /* Below topbar */
-    height: calc(100vh - 60px);
-    overflow-y: auto;
-    transition: margin-left 0.3s ease;
+  width: 200px;
+  background-color: #ffffff;
+  padding: 20px 0;
+  border-right: 1px solid #e2e8f0;
+  position: sticky;
+  top: 60px; /* Below topbar */
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+  transition: margin-left 0.3s ease;
 }
 
 .sidebar.collapsed {
-    margin-left: -200px;
+  margin-left: -200px;
 }
 
 .nav-list {
-    list-style: none;
+  list-style: none;
 }
 
 .nav-item {
-    margin-bottom: 4px;
+  margin-bottom: 4px;
 }
 
 .nav-item a {
-    color: #4a5568;
-    text-decoration: none;
-    display: block;
-    padding: 12px 20px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: all 0.2s;
+  color: #4a5568;
+  text-decoration: none;
+  display: block;
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
 }
 
 .nav-item a:hover {
-    background-color: #f7fafc;
-    color: #1a202c;
+  background-color: #f7fafc;
+  color: #1a202c;
 }
 
 .nav-item.active a {
-    background-color: #ebf8ff;
-    color: #3182ce;
-    border-left: 4px solid #3182ce;
-    font-weight: 700;
+  background-color: #ebf8ff;
+  color: #3182ce;
+  border-left: 4px solid #3182ce;
+  font-weight: 700;
 }
 
 /* MAIN CONTENT */
 .main-content {
-    flex: 1;
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
+  flex: 1;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
 }
 
 .dashboard-header h2 {
-    font-size: 1.6rem;
-    color: #1e4620;
-    font-weight: 800;
+  font-size: 1.6rem;
+  color: #1e4620;
+  font-weight: 800;
 }
 
 .dashboard-header p {
-    font-size: 0.9rem;
-    color: #555555;
-    margin-top: 4px;
+  font-size: 0.9rem;
+  color: #555555;
+  margin-top: 4px;
 }
 
 /* METRICS CARDS */
 .metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 20px;
 }
 
 .metric-card {
-    background: #ffffff;
-    padding: 14px 16px;
-    border-radius: 10px;
-    box-shadow: none;
-    border-top: 4px solid #1e4620;
+  background: #ffffff;
+  padding: 14px 16px;
+  border-radius: 10px;
+  box-shadow: none;
+  border-top: 4px solid #1e4620;
 }
 
 /* Metric Card Link Reset */
 .metric-card-link {
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .metric-card-link:hover {
-    transform: translateY(-3px);
-    box-shadow: none;
+  transform: translateY(-3px);
+  box-shadow: none;
 }
 
-.metric-card.border-purple { border-top-color: #94A3B8; }
-.metric-card.border-blue { border-top-color: #2196f3; }
-.metric-card.border-yellow { border-top-color: #ffc107; }
-.metric-card.border-orange { border-top-color: #ff9800; }
-.metric-card.border-green { border-top-color: #4caf50; }
+.metric-card.border-purple {
+  border-top-color: #94a3b8;
+}
+.metric-card.border-blue {
+  border-top-color: #2196f3;
+}
+.metric-card.border-yellow {
+  border-top-color: #ffc107;
+}
+.metric-card.border-orange {
+  border-top-color: #ff9800;
+}
+.metric-card.border-green {
+  border-top-color: #4caf50;
+}
 
 .metric-card h3 {
-    font-size: 0.85rem;
-    color: #666666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  font-size: 0.85rem;
+  color: #666666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .metric-value {
-    font-size: 2.2rem;
-    font-weight: 900;
-    color: #1e4620;
-    margin: 8px 0;
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #1e4620;
+  margin: 8px 0;
 }
 
 .metric-sub {
-    font-size: 0.75rem;
-    color: #888888;
+  font-size: 0.75rem;
+  color: #888888;
 }
 
 /* CHARTS GRID */
 .charts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
-    gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
+  gap: 20px;
 }
 
 .chart-card {
-    background: #ffffff;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
-    border: 1px solid #e0e5ea;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+  border: 1px solid #e0e5ea;
 }
 
 .chart-header h3 {
-    font-size: 1rem;
-    color: #1e4620;
-    font-weight: 700;
-    margin-bottom: 15px;
+  font-size: 1rem;
+  color: #1e4620;
+  font-weight: 700;
+  margin-bottom: 15px;
 }
 
 .chart-body {
-    position: relative;
-    height: 260px;
+  position: relative;
+  height: 260px;
 }
 
 .chart-body canvas {
-    max-width: 100% !important;
+  max-width: 100% !important;
 }
 
 /* TABLES */
 .table-card {
-    background: #ffffff;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
-    border: 1px solid #e0e5ea;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+  border: 1px solid #e0e5ea;
 }
 
 .table-card-header h3 {
-    font-size: 1rem;
-    color: #1e4620;
-    font-weight: 700;
-    margin-bottom: 15px;
+  font-size: 1rem;
+  color: #1e4620;
+  font-weight: 700;
+  margin-bottom: 15px;
 }
 
 .data-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-    font-size: 0.9rem;
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
 }
 
-.data-table th, .data-table td {
-    padding: 12px 15px;
-    border-bottom: 1px solid #eee;
+.data-table th,
+.data-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
 }
 
 .data-table th {
-    background-color: #fafbfc;
-    color: #1e4620;
-    font-weight: 700;
+  background-color: #fafbfc;
+  color: #1e4620;
+  font-weight: 700;
 }
 
 .badge {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
-.badge-danger { background-color: #ffebee; color: #c62828; }
-.badge-success { background-color: #e8f5e9; color: #2e7d32; }
+.badge-danger {
+  background-color: #ffebee;
+  color: #c62828;
+}
+.badge-success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
 
 @media (max-width: 768px) {
-    .main-content {
-        min-width: 0;
-        padding: 16px;
-        gap: 16px;
-    }
-    .dashboard-header h2 {
-        font-size: 1.2rem;
-    }
-    .metrics-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    .metric-card {
-        padding: 10px 12px;
-    }
-    .metric-value {
-        font-size: 1.5rem;
-        margin: 4px 0;
-    }
-    .charts-grid { grid-template-columns: minmax(0, 1fr); }
-    .chart-body { height: 220px; }
-    .table-card {
-        padding: 14px;
-        min-width: 0;
-        max-width: 100%;
-        overflow-x: auto;
-    }
-    .table-card .data-table {
-        min-width: 0;
-    }
+  .main-content {
+    min-width: 0;
+    padding: 16px;
+    gap: 16px;
+  }
+  .dashboard-header h2 {
+    font-size: 1.2rem;
+  }
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .metric-card {
+    padding: 10px 12px;
+  }
+  .metric-value {
+    font-size: 1.5rem;
+    margin: 4px 0;
+  }
+  .charts-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .chart-body {
+    height: 220px;
+  }
+  .table-card {
+    padding: 14px;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .table-card .data-table {
+    min-width: 0;
+  }
 }

@@ -17,7 +17,8 @@ import java.sql.SQLException;
  * category, description
  *
  * If isAnonymous is false, the student must be logged in (session must
- * contain "studentLrn") — this mirrors the wireframe's "Submit Anonymously? Yes/No" toggle.
+ * contain "studentLrn") — this mirrors the wireframe's "Submit Anonymously?
+ * Yes/No" toggle.
  */
 @WebServlet("/ReportServlet")
 public class ReportServlet extends HttpServlet {

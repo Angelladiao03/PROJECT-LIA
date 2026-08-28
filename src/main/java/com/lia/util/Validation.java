@@ -10,20 +10,22 @@ import java.util.regex.Pattern;
  */
 public final class Validation {
 
-    private static final Pattern EMAIL_PATTERN =
-        Pattern.compile("^[\\w.+-]+@[\\w-]+\\.[a-zA-Z]{2,}$");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[\\w.+-]+@[\\w-]+\\.[a-zA-Z]{2,}$");
 
     // At least 8 characters, at least one letter and one number.
-    private static final Pattern PASSWORD_PATTERN =
-        Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d).{8,}$");
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d).{8,}$");
 
     public static final int USERNAME_MIN_LENGTH = 8;
     public static final int USERNAME_MAX_LENGTH = 24;
     public static final int LRN_LENGTH = 12;
 
-    private Validation() {}
+    private Validation() {
+    }
 
-    /** LRN must be numeric and exactly LRN_LENGTH (12) digits -- no shorter, no longer. */
+    /**
+     * LRN must be numeric and exactly LRN_LENGTH (12) digits -- no shorter, no
+     * longer.
+     */
     public static boolean isValidLrn(String lrn) {
         return lrn != null && lrn.matches("\\d{" + LRN_LENGTH + "}");
     }
@@ -32,9 +34,13 @@ public final class Validation {
         return email != null && EMAIL_PATTERN.matcher(email).matches();
     }
 
-    /** Username must be between USERNAME_MIN_LENGTH (8) and USERNAME_MAX_LENGTH (24) characters. */
+    /**
+     * Username must be between USERNAME_MIN_LENGTH (8) and USERNAME_MAX_LENGTH (24)
+     * characters.
+     */
     public static boolean isValidUsername(String username) {
-        if (username == null) return false;
+        if (username == null)
+            return false;
         int length = username.trim().length();
         return length >= USERNAME_MIN_LENGTH && length <= USERNAME_MAX_LENGTH;
     }

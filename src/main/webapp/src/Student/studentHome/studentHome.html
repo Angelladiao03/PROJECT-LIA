@@ -1,249 +1,396 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LagroInAction - Student Home</title>
-    <link rel="icon" href="../../assets/LIALogo.ico" type="image/x-icon">
-    <link rel="stylesheet" href="studentHome.css">
-    <link rel="stylesheet" href="../../pageEnhancements.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LIA - Home</title>
+    <link rel="icon" href="../../assets/LIALogo.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="studentHome.css" />
+    <link rel="stylesheet" href="../../pageEnhancements.css" />
     <script src="../../pageEnhancements.js" defer></script>
-</head>
-<body>
-
+  </head>
+  <body>
     <!-- TOP NAVIGATION BAR -->
     <header class="topbar">
-        <div class="topbar-left">
-            <button onclick="toggleSidebar()" class="menu-btn" title="Toggle Menu">☰</button>
-            <img src="../../assets/lagroHSLogo.png" alt="School Logo" class="topbar-logo">
-        </div>
+      <div class="topbar-left">
+        <button onclick="toggleSidebar()" class="menu-btn" title="Toggle Menu">
+          ☰
+        </button>
+        <img
+          src="../../assets/lagroHSLogo.png"
+          alt="School Logo"
+          class="topbar-logo"
+        />
+      </div>
 
-        <div class="topbar-center">
-            PROJECT LIA
-        </div>
+      <div class="topbar-center">PROJECT LIA</div>
 
-        <div class="topbar-right">
-            <span class="user-name">Student Test</span>
-                <a href="../studentReports/studentReports.html" class="profile-link" title="Go to Profile">
-                <img src="../../assets/profilePic.jpg" alt="User Profile" class="profile-pic">
-            </a>
-        </div>
+      <div class="topbar-right">
+        <span class="user-name">Student Test</span>
+        <a
+          href="../studentReports/studentReports.html"
+          class="profile-link"
+          title="Go to Profile"
+        >
+          <img
+            src="../../assets/profilePic.jpg"
+            alt="User Profile"
+            class="profile-pic"
+          />
+        </a>
+      </div>
     </header>
 
     <!-- MAIN BODY CONTAINER -->
     <div class="app-body">
+      <!-- SIDEBAR -->
+      <aside id="sidebar" class="sidebar closed">
+        <div class="sos-container">
+          <button onclick="openSosModal()" class="sos-btn">
+            <span class="sos-text">SOS</span>
+          </button>
+        </div>
 
-        <!-- SIDEBAR -->
-        <aside id="sidebar" class="sidebar closed">
-            <div class="sos-container">
-                <button onclick="openSosModal()" class="sos-btn">
-                    <span class="sos-text">SOS</span>
-                </button>
+        <ul class="nav-list">
+          <li class="nav-item active">
+            <a href="../studentHome/studentHome.html">Home</a>
+          </li>
+          <li class="nav-item">
+            <a href="../studentSubmitReports/studentSubmit.html"
+              >Submit Report</a
+            >
+          </li>
+          <li class="nav-item">
+            <a href="../studentMessages/studentMessage.html">Message</a>
+          </li>
+          <li class="nav-item">
+            <a href="../studentReports/studentReports.html">My Account</a>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- MAIN CONTENT AREA -->
+      <main class="main-content">
+        <!-- INTRODUCTION BANNER -->
+        <section class="intro-banner">
+          <h1 class="banner-title">LagroInAction</h1>
+          <h2 class="banner-subtitle">
+            ANTI-BULLYING <span>Act (RA 10627)</span>
+          </h2>
+          <p class="banner-description">
+            Bullying is any severe or repeated physical, verbal, written,
+            electronic, or social behavior by one or more students that causes
+            or may cause physical or emotional harm, creates a hostile school
+            environment, violates another student's rights, or disrupts learning
+            and school operations. Anyone who commits these acts is considered a
+            bully. Retaliating against someone who reports bullying,
+            participates in an investigation, witnesses bullying, or has
+            reliable information about it is also prohibited.
+          </p>
+        </section>
+
+        <!-- FLEXIBLE CONTENT GRID -->
+        <div class="content-grid">
+          <!-- LEFT COLUMN: POSTERS, ARTICLES, VALUES -->
+          <section class="articles-column">
+            <!-- POSTERS CONTAINER -->
+            <div class="posters-section">
+              <h3 class="section-heading">Posters & Advocacies:</h3>
+
+              <div class="posters-grid">
+                <div class="poster-card">
+                  <img
+                    src="../../assets/poster1.jpe"
+                    alt="Stop Bullying Poster 1"
+                    class="poster-img"
+                  />
+                  <div class="poster-credits">
+                    <span class="credit-creator"
+                      >Sheldrick Erandio Ocampo (Grade 12)</span
+                    >
+                    <span class="credit-details"
+                      >1st Place Poster Contest • Aug 2026</span
+                    >
+                  </div>
+                </div>
+
+                <div class="poster-card">
+                  <img
+                    src="../../assets/poster2.jpe"
+                    alt="Stop Bullying Poster 2"
+                    class="poster-img"
+                  />
+                  <div class="poster-credits">
+                    <span class="credit-creator">Precious Rhian Brien Francisco (Grade 12)</span>
+                    <span class="credit-details"
+                      >2nd Place Poster Contest • Aug 2026</span
+                    >
+                  </div>
+                </div>
+
+                <div class="poster-card">
+                  <img
+                    src="../../assets/poster3.jpe"
+                    alt="Stop Bullying Poster 3"
+                    class="poster-img"
+                  />
+                  <div class="poster-credits">
+                    <span class="credit-creator">Kurt Vinz Culajara (Grade 12)</span>
+                    <span class="credit-details"
+                      >Special Choice Award • Aug 2026</span
+                    >
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <ul class="nav-list">
-                <li class="nav-item active"><a href="../studentHome/studentHome.html">Home</a></li>
-                <li class="nav-item"><a href="../studentSubmitReports/studentSubmit.html">Submit Report</a></li>
-                <li class="nav-item"><a href="../studentMessages/studentMessage.html">Message</a></li>
-                <li class="nav-item"><a href="../studentReports/studentReports.html">My Account</a></li>
-            </ul>
-        </aside>
-
-        <!-- MAIN CONTENT AREA -->
-        <main class="main-content">
-
-            <!-- INTRODUCTION BANNER -->
-            <section class="intro-banner">
-                <h1 class="banner-title">LagroInAction</h1>
-                <h2 class="banner-subtitle">ANTI-BULLYING <span>Act (RA 10627)</span></h2>
-                <p class="banner-description">
-                    Bullying is any severe or repeated physical, verbal, written, electronic, or social behavior by one or more students that causes or may cause physical or emotional harm, creates a hostile school environment, violates another student's rights, or disrupts learning and school operations. Anyone who commits these acts is considered a bully. Retaliating against someone who reports bullying, participates in an investigation, witnesses bullying, or has reliable information about it is also prohibited.
+            <!-- ARTICLES SECTION -->
+            <h3 class="section-heading">Articles:</h3>
+            <div class="articles-list">
+              <article class="article-card">
+                <h4 class="article-title">
+                  Bullying still a 'silent, persistent' problem in schools
+                  &dash; EDCOM
+                </h4>
+                <p class="article-author">
+                  By GISELLE OMBAY, GMA Integrated News | Published Jan 29, 2025
                 </p>
-            </section>
+                <p class="article-snippet">
+                  Bullying, particularly in Metro Manila, continues to be a
+                  perennial issue in Philippine schools, the Second
+                  Congressional Commission on Education (EDCOM II) revealed...
+                </p>
+                <a
+                  href="https://l.facebook.com/l.php?u=https%3A%2F%2Fwww.gmanetwork.com%2Fnews%2Ftopstories%2Fnation%2F934485%2Fbullying-still-a-silent-persistent-problem-in-schools-edcom%2Fstory%2F%3Ffbclid%3DIwcGRvZgVleHRuA2FlbQIxMABicmlkETFRZUdDYzczZmhxZkFWUkpOc3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHt_pnSsvz8BLEsj12joahtTkmnwFFGne02pvqPZxqgmf1epg7-l69LE75k9s_aem_6oFcCsi3nTvZY-Rzc01utA&h=AUAeIBooFS6vnkTmHvFZ_kvO_GON_I3MlsdZULQystCqbEnD4loq0gImBXCuPBJOWVnhgwcMnYNOC2l_WByyeRtAZGQ0x15U5Dw7oIqrNXQHLjDB9mEa4LsGzugGc4yR4hX2IQ"
+                  class="read-more"
+                  target="_blank"
+                  >Read More...</a
+                >
+              </article>
 
-            <!-- FLEXIBLE CONTENT GRID -->
-            <div class="content-grid">
+              <article class="article-card">
+                <h4 class="article-title">
+                  PH still world's 'bullying capital'; 63% of Grade 5 pupils
+                  bullied —EDCOM II
+                </h4>
+                <p class="article-author">
+                  By SHERYLIN UNTALAN, GMA Integrated News | Published Sept 2,
+                  2025
+                </p>
+                <p class="article-snippet">
+                  The Philippines remains the "bullying capital of the world,"
+                  with nearly two in three Grade 5 students reporting that they
+                  experience bullying...
+                </p>
+                <a
+                  href="https://l.facebook.com/l.php?u=https%3A%2F%2Fwww.gmanetwork.com%2Fnews%2Ftopstories%2Fnation%2F957779%2Fph-still-world-s-bullying-capital-63-of-grade-5-pupils-bullied-edcom-ii%2Fstory%2F%3Ffbclid%3DIwcGRvZgVleHRuA2FlbQIxMABicmlkETFRZUdDYzczZmhxZkFWUkpOc3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHsXHFRyJM48ac47HZ9Vgkf_vkrVGB4_HXuvCKKWTkrcZqU8kTZOMITKBjBu5_aem_mcgrdu8XDnk67X-EnXqrlg&h=AUAeIBooFS6vnkTmHvFZ_kvO_GON_I3MlsdZULQystCqbEnD4loq0gImBXCuPBJOWVnhgwcMnYNOC2l_WByyeRtAZGQ0x15U5Dw7oIqrNXQHLjDB9mEa4LsGzugGc4yR4hX2IQ"
+                  class="read-more"
+                  target="_blank"
+                  >Read More...</a
+                >
+              </article>
 
-                <!-- LEFT COLUMN: POSTERS, ARTICLES, VALUES -->
-                <section class="articles-column">
-                    
-                    <!-- POSTERS CONTAINER -->
-                    <div class="posters-section">
-                        <h3 class="section-heading">Posters & Advocacies:</h3>
-                        
-                        <div class="posters-grid">
-                            <div class="poster-card">
-                                <img src="../../assets/poster1.jpe" alt="Stop Bullying Poster 1" class="poster-img">
-                                <div class="poster-credits">
-                                    <span class="credit-creator">Juan Batumbakal (Grade 11)</span>
-                                    <span class="credit-details">1st Place Poster Contest • Oct 2025</span>
-                                </div>
-                            </div>
+              <article class="article-card">
+                <h4 class="article-title">
+                  Bullying in Schools: What to Know and How to Deal With it
+                </h4>
+                <p class="article-author">
+                  By FRAN JEFFRIES | Published Nov 18, 2025
+                </p>
+                <p class="article-snippet">
+                  Bullying takes various forms, and there are steps parents can
+                  take to help tackle the problem in schools...
+                </p>
+                <a
+                  href="https://www.usnews.com/education/articles/bullying-in-schools-what-to-know-and-how-to-deal-with-it"
+                  class="read-more"
+                  target="_blank"
+                  >Read More...</a
+                >
+              </article>
 
-                            <div class="poster-card">
-                                <img src="../../assets/poster2.jpe" alt="Stop Bullying Poster 2" class="poster-img">
-                                <div class="poster-credits">
-                                    <span class="credit-creator">Kathy P. Peko (Grade 10)</span>
-                                    <span class="credit-details">2nd Place Poster Contest • Nov 2025</span>
-                                </div>
-                            </div>
-
-                            <div class="poster-card">
-                                <img src="../../assets/poster3.jpe" alt="Stop Bullying Poster 3" class="poster-img">
-                                <div class="poster-credits">
-                                    <span class="credit-creator">Jaja Collins (Grade 12)</span>
-                                    <span class="credit-details">Special Choice Award • Dec 2025</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ARTICLES SECTION -->
-                    <h3 class="section-heading">Articles:</h3>
-                    <div class="articles-list">
-                        <article class="article-card">
-                            <h4 class="article-title">Bullying still a 'silent, persistent' problem in schools &dash; EDCOM</h4>
-                            <p class="article-author">By GISELLE OMBAY, GMA Integrated News | Published Jan 29, 2025</p>
-                            <p class="article-snippet">
-                                Bullying, particularly in Metro Manila, continues to be a perennial issue in Philippine schools, the Second Congressional Commission on Education (EDCOM II) revealed...
-                            </p>
-                            <a href="https://l.facebook.com/l.php?u=https%3A%2F%2Fwww.gmanetwork.com%2Fnews%2Ftopstories%2Fnation%2F934485%2Fbullying-still-a-silent-persistent-problem-in-schools-edcom%2Fstory%2F%3Ffbclid%3DIwcGRvZgVleHRuA2FlbQIxMABicmlkETFRZUdDYzczZmhxZkFWUkpOc3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHt_pnSsvz8BLEsj12joahtTkmnwFFGne02pvqPZxqgmf1epg7-l69LE75k9s_aem_6oFcCsi3nTvZY-Rzc01utA&h=AUAeIBooFS6vnkTmHvFZ_kvO_GON_I3MlsdZULQystCqbEnD4loq0gImBXCuPBJOWVnhgwcMnYNOC2l_WByyeRtAZGQ0x15U5Dw7oIqrNXQHLjDB9mEa4LsGzugGc4yR4hX2IQ" class="read-more" target="_blank">Read More...</a>
-                        </article>
-
-                        <article class="article-card">
-                            <h4 class="article-title">PH still world's 'bullying capital'; 63% of Grade 5 pupils bullied —EDCOM II</h4>
-                            <p class="article-author">By SHERYLIN UNTALAN, GMA Integrated News | Published Sept 2, 2025</p>
-                            <p class="article-snippet">
-                                The Philippines remains the "bullying capital of the world," with nearly two in three Grade 5 students reporting that they experience bullying...
-                            </p>
-                            <a href="https://l.facebook.com/l.php?u=https%3A%2F%2Fwww.gmanetwork.com%2Fnews%2Ftopstories%2Fnation%2F957779%2Fph-still-world-s-bullying-capital-63-of-grade-5-pupils-bullied-edcom-ii%2Fstory%2F%3Ffbclid%3DIwcGRvZgVleHRuA2FlbQIxMABicmlkETFRZUdDYzczZmhxZkFWUkpOc3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHsXHFRyJM48ac47HZ9Vgkf_vkrVGB4_HXuvCKKWTkrcZqU8kTZOMITKBjBu5_aem_mcgrdu8XDnk67X-EnXqrlg&h=AUAeIBooFS6vnkTmHvFZ_kvO_GON_I3MlsdZULQystCqbEnD4loq0gImBXCuPBJOWVnhgwcMnYNOC2l_WByyeRtAZGQ0x15U5Dw7oIqrNXQHLjDB9mEa4LsGzugGc4yR4hX2IQ" class="read-more" target="_blank">Read More...</a>
-                        </article>
-
-                        <article class="article-card">
-                            <h4 class="article-title">Bullying in Schools: What to Know and How to Deal With it</h4>
-                            <p class="article-author">By Fran Jeffries | Published Nov. 18, 2025</p>
-                            <p class="article-snippet">
-                                Bullying takes various forms, and there are steps parents can take to help tackle the problem in schools...
-                            </p>
-                            <a href="https://www.usnews.com/education/articles/bullying-in-schools-what-to-know-and-how-to-deal-with-it" class="read-more" target="_blank">Read More...</a>
-                        </article>
-
-                        <article class="article-card">
-                            <h4 class="article-title">Defining school bullying and its implications on education, teachers and learners</h4>
-                            <p class="article-author">By UNESCO | Published 30 November 2023</p>
-                            <p class="article-snippet">
-                                School violence, including bullying, is widespread: one in three learners is bullied at school every month globally...
-                            </p>
-                            <a href="https://www.unesco.org/en/articles/defining-school-bullying-and-its-implications-education-teachers-and-learners" class="read-more" target="_blank">Read More...</a>
-                        </article>
-                    </div>
-
-                    <!-- LAGRONIAN VALUES CONTAINER -->
-                    <div class="values-card">
-                        <div class="values-header">
-                            <h3 class="values-title">The Lagronian Way</h3>
-                            <p class="values-text">
-                                At Lagro High School, we strive for excellence in both academics and character. We celebrate and honor one another by practicing Self-discipline, Modesty, Academic excellence, Resiliency, and Trustworthiness (SMART). We always give our best whenever in or out of school, embodying these values. This is who we are, even when no one is watching.
-                            </p>
-                        </div>
-
-                        <div class="smart-box">
-                            <h4 class="smart-title">SMART Lagronian</h4>
-                            <ul class="smart-list">
-                                <li><strong>S</strong> - Self-discipline</li>
-                                <li><strong>M</strong> - Modesty</li>
-                                <li><strong>A</strong> - Academic excellence</li>
-                                <li><strong>R</strong> - Resiliency</li>
-                                <li><strong>T</strong> - Trustworthiness</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                </section>
-
-                <!-- RIGHT COLUMN: YOUTUBE VIDEOS -->
-                <section class="videos-column">
-                    <h3 class="section-heading">Videos:</h3>
-
-                    <div class="video-card">
-                        <iframe src="https://www.youtube.com/embed/iFlrCuSyhvU" title="Anti-Bullying Video 1" allowfullscreen></iframe>
-                    </div>
-
-                    <div class="video-card">
-                        <iframe src="https://www.youtube.com/embed/F6r0B78GQgg" title="Bullying is NEVER OK!" allowfullscreen></iframe>
-                    </div>
-
-                    <div class="video-card">
-                        <iframe src="https://www.youtube.com/embed/5l6mDwanphM" title="What to do about bullying" allowfullscreen></iframe>
-                    </div>
-
-                    <div class="video-card">
-                        <iframe src="https://www.youtube.com/embed/dRmbn-kMfaI" title="Be a Buddy Not a Bully" allowfullscreen></iframe>
-                    </div>
-                </section>
-
+              <article class="article-card">
+                <h4 class="article-title">
+                  Defining school bullying and its implications on education,
+                  teachers and learners
+                </h4>
+                <p class="article-author">
+                  By UNESCO | Published Nov 30, 2023
+                </p>
+                <p class="article-snippet">
+                  School violence, including bullying, is widespread: one in
+                  three learners is bullied at school every month globally...
+                </p>
+                <a
+                  href="https://www.unesco.org/en/articles/defining-school-bullying-and-its-implications-education-teachers-and-learners"
+                  class="read-more"
+                  target="_blank"
+                  >Read More...</a
+                >
+              </article>
             </div>
 
-            <!-- FOOTER -->
-            <footer class="school-footer">
-                <div class="footer-grid">
-                    <div class="footer-col">
-                        <h4 class="footer-title">Lagro High School</h4>
-                        <p class="footer-text"><strong>Address:</strong> Misa de Gallo St. corner Ascension Ave., Brgy. Greater Lagro, Novaliches, Quezon City.</p>
-                    </div>
+            <!-- LAGRONIAN VALUES CONTAINER -->
+            <div class="values-card">
+              <div class="values-header">
+                <h3 class="values-title">The Lagronian Way</h3>
+                <p class="values-text">
+                  At Lagro High School, we strive for excellence in both
+                  academics and character. We celebrate and honor one another by
+                  practicing Self-discipline, Modesty, Academic excellence,
+                  Resiliency, and Trustworthiness (SMART). We always give our
+                  best whenever in or out of school, embodying these values.
+                  This is who we are, even when no one is watching.
+                </p>
+              </div>
 
-                    <div class="footer-col">
-                        <h4 class="footer-title">Contact Us</h4>
-                        <p class="footer-text"><strong>Email:</strong> lagrohighschool@gmail.com</p>
-                        <p class="footer-text"><strong>Facebook:</strong> Ask Lagro High School</p>
-                    </div>
+              <div class="smart-box">
+                <h4 class="smart-title">SMART Lagronian</h4>
+                <ul class="smart-list">
+                  <li><strong>S</strong> - Self-discipline</li>
+                  <li><strong>M</strong> - Modesty</li>
+                  <li><strong>A</strong> - Academic excellence</li>
+                  <li><strong>R</strong> - Resiliency</li>
+                  <li><strong>T</strong> - Trustworthiness</li>
+                </ul>
+              </div>
+            </div>
+          </section>
 
-                    <div class="footer-col">
-                        <h4 class="footer-title">Emergency Hotlines</h4>
-                        <ul class="footer-list emergency">
-                            <li><strong>Quezon City Hotline - 122</strong></li>
-                            <li><strong>National Emergency Hotline - 911</strong></li>
-                        </ul>
-                    </div>
-                </div>
+          <!-- RIGHT COLUMN: YOUTUBE VIDEOS -->
+          <section class="videos-column">
+            <h3 class="section-heading">Videos:</h3>
 
-                <div class="footer-bottom">
-                    <p>© 2026 Lagro High School - LagroInAction. All Rights Reserved.</p>
-                </div>
-            </footer>
+            <div class="video-card">
+              <iframe
+                src="https://www.youtube.com/embed/iFlrCuSyhvU"
+                title="Anti-Bullying Video 1"
+                allowfullscreen
+              ></iframe>
+            </div>
 
-        </main>
+            <div class="video-card">
+              <iframe
+                src="https://www.youtube.com/embed/F6r0B78GQgg"
+                title="Bullying is NEVER OK!"
+                allowfullscreen
+              ></iframe>
+            </div>
+
+            <div class="video-card">
+              <iframe
+                src="https://www.youtube.com/embed/5l6mDwanphM"
+                title="What to do about bullying"
+                allowfullscreen
+              ></iframe>
+            </div>
+
+            <div class="video-card">
+              <iframe
+                src="https://www.youtube.com/embed/dRmbn-kMfaI"
+                title="Be a Buddy Not a Bully"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </section>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="school-footer">
+          <div class="footer-grid">
+            <div class="footer-col">
+              <h4 class="footer-title">Lagro High School</h4>
+              <p class="footer-text">
+                <strong>Address:</strong> Misa de Gallo St. corner Ascension
+                Ave., Brgy. Greater Lagro, Novaliches, Quezon City.
+              </p>
+            </div>
+
+            <div class="footer-col">
+              <h4 class="footer-title">Contact Us</h4>
+              <p class="footer-text">
+                <strong>Email:</strong> lagrohighschool@gmail.com
+              </p>
+              <p class="footer-text">
+                <strong>Facebook:</strong> Ask Lagro High School
+              </p>
+            </div>
+
+            <div class="footer-col">
+              <h4 class="footer-title">Emergency Hotlines</h4>
+              <ul class="footer-list emergency">
+                <li><strong>Quezon City Hotline - 122</strong></li>
+                <li><strong>National Emergency Hotline - 911</strong></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="footer-bottom">
+            <p>
+              © 2026 Lagro High School - Lagro In Action. All Rights Reserved.
+            </p>
+          </div>
+        </footer>
+      </main>
     </div>
 
     <!-- SOS ALERT MODAL -->
     <div id="sosModal" class="modal-overlay hidden">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3>Confirm SOS Dispatch</h3>
-                <p>This will trigger an immediate emergency alert to the guidance office.</p>
-                <button onclick="closeSosModal()" class="close-modal-btn" aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
-            </div>
-
-            <form onsubmit="handleSosSubmit(event)" class="modal-body">
-                <div class="field-group">
-                    <label for="sosLocation">Your exact location right now:</label>
-                    <input type="text" id="sosLocation" required placeholder="e.g. Near Gate 2, Grade 8 & 7 Building">
-                </div>
-
-                <div class="field-group">
-                    <label for="sosDescription">Brief Description / Threats:</label>
-                    <textarea id="sosDescription" rows="3" required placeholder="e.g. Cornered by 5 students, threatening physical violence"></textarea>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="submit" class="btn-send-sos">Send SOS</button>
-                    <button type="button" onclick="closeSosModal()" class="btn-cancel">Cancel</button>
-                </div>
-            </form>
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>Confirm SOS Dispatch</h3>
+          <p>
+            This will trigger an immediate emergency alert to the guidance
+            office.
+          </p>
+          <button
+            onclick="closeSosModal()"
+            class="close-modal-btn"
+            aria-label="Close"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path
+                d="M6 6L18 18M18 6L6 18"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
         </div>
+
+        <form onsubmit="handleSosSubmit(event)" class="modal-body">
+          <div class="field-group">
+            <label for="sosLocation">Your exact location right now:</label>
+            <input
+              type="text"
+              id="sosLocation"
+              required
+              placeholder="e.g. Near Gate 2, Grade 8 & 7 Building"
+            />
+          </div>
+
+          <div class="field-group">
+            <label for="sosDescription">Brief Description / Threats:</label>
+            <textarea
+              id="sosDescription"
+              rows="3"
+              required
+              placeholder="e.g. Cornered by 5 students, threatening physical violence"
+            ></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button type="submit" class="btn-send-sos">Send SOS</button>
+            <button type="button" onclick="closeSosModal()" class="btn-cancel">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <script src="studentHome.js"></script>
     <script src="../../sos.js"></script>
-</body>
+  </body>
 </html>

@@ -15,7 +15,8 @@ import java.sql.SQLException;
  * Handles the student login form.
  * Expects a POST with form fields: username, password
  * On success it stores the student's LRN in the HttpSession so every other
- * servlet (ReportServlet, SosServlet, MessageServlet...) can find out who is logged in.
+ * servlet (ReportServlet, SosServlet, MessageServlet...) can find out who is
+ * logged in.
  */
 @WebServlet("/LoginServlet")
 public class LoginServlet extends HttpServlet {
@@ -64,8 +65,8 @@ public class LoginServlet extends HttpServlet {
             String fullName = profile != null ? profile[0] : "";
 
             out.print("{\"success\": true, \"message\": \"Login successful.\", "
-                + "\"lrn\": \"" + lrn + "\", "
-                + "\"fullName\": \"" + MessageServlet.esc(fullName) + "\"}");
+                    + "\"lrn\": \"" + lrn + "\", "
+                    + "\"fullName\": \"" + MessageServlet.esc(fullName) + "\"}");
 
         } catch (SQLException e) {
             response.getWriter().print(JsonUtil.error("Database error: " + e.getMessage()));

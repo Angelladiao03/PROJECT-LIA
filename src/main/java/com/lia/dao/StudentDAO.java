@@ -7,15 +7,15 @@ public class StudentDAO {
 
     /** Inserts a new student. Returns true if it worked. */
     public boolean registerStudent(long lrn, String fullName, String username,
-                                    String password, String adviser, String gradeSection,
-                                    String email) throws SQLException {
+            String password, String adviser, String gradeSection,
+            String email) throws SQLException {
 
         String sql = "INSERT INTO students "
-            + "(student_lrn, student_fullName, student_username, student_password, "
-            + " adviser_name, grade_section, email) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                + "(student_lrn, student_fullName, student_username, student_password, "
+                + " adviser_name, grade_section, email) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setLong(1, lrn);
             ps.setString(2, fullName);
@@ -37,10 +37,10 @@ public class StudentDAO {
      */
     public long login(String username, String password) throws SQLException {
         String sql = "SELECT student_lrn FROM students "
-            + "WHERE student_username = ? AND student_password = ?";
+                + "WHERE student_username = ? AND student_password = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, username);
             ps.setString(2, password);
@@ -54,11 +54,14 @@ public class StudentDAO {
         }
     }
 
-    /** Returns "Pending" or "Approved" for a student, or null if the LRN doesn't exist. */
+    /**
+     * Returns "Pending" or "Approved" for a student, or null if the LRN doesn't
+     * exist.
+     */
     public String getStatus(long lrn) throws SQLException {
         String sql = "SELECT status FROM students WHERE student_lrn = ?";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setLong(1, lrn);
             try (ResultSet rs = ps.executeQuery()) {
@@ -70,22 +73,22 @@ public class StudentDAO {
     /** Every student still waiting on admin approval, oldest sign-up first. */
     public java.util.List<String[]> getPendingStudents() throws SQLException {
         String sql = "SELECT student_lrn, student_fullName, student_username, "
-            + "adviser_name, grade_section, email, registered_at "
-            + "FROM students WHERE status = 'Pending' ORDER BY registered_at ASC";
+                + "adviser_name, grade_section, email, registered_at "
+                + "FROM students WHERE status = 'Pending' ORDER BY registered_at ASC";
 
         java.util.List<String[]> results = new java.util.ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
+                Statement st = conn.createStatement();
+                ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) {
                 results.add(new String[] {
-                    rs.getString("student_lrn"),
-                    rs.getString("student_fullName"),
-                    rs.getString("student_username"),
-                    rs.getString("adviser_name"),
-                    rs.getString("grade_section"),
-                    rs.getString("email"),
-                    rs.getString("registered_at")
+                        rs.getString("student_lrn"),
+                        rs.getString("student_fullName"),
+                        rs.getString("student_username"),
+                        rs.getString("adviser_name"),
+                        rs.getString("grade_section"),
+                        rs.getString("email"),
+                        rs.getString("registered_at")
                 });
             }
         }
@@ -96,39 +99,44 @@ public class StudentDAO {
     public boolean approveStudent(long lrn) throws SQLException {
         String sql = "UPDATE students SET status = 'Approved' WHERE student_lrn = ? AND status = 'Pending'";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, lrn);
             return ps.executeUpdate() == 1;
         }
     }
 
-    /** Admin rejects a pending sign-up; the row is removed so they can re-register. */
+    /**
+     * Admin rejects a pending sign-up; the row is removed so they can re-register.
+     */
     public boolean rejectStudent(long lrn) throws SQLException {
         String sql = "DELETE FROM students WHERE student_lrn = ? AND status = 'Pending'";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, lrn);
             return ps.executeUpdate() == 1;
         }
     }
 
-    /** Fetches basic profile info for a logged-in student (used to fill the session and the My Account page). */
+    /**
+     * Fetches basic profile info for a logged-in student (used to fill the session
+     * and the My Account page).
+     */
     public String[] getProfile(long lrn) throws SQLException {
         String sql = "SELECT student_fullName, adviser_name, grade_section, email, student_username "
-            + "FROM students WHERE student_lrn = ?";
+                + "FROM students WHERE student_lrn = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setLong(1, lrn);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return new String[] {
-                        rs.getString("student_fullName"),
-                        rs.getString("adviser_name"),
-                        rs.getString("grade_section"),
-                        rs.getString("email"),
-                        rs.getString("student_username")
+                            rs.getString("student_fullName"),
+                            rs.getString("adviser_name"),
+                            rs.getString("grade_section"),
+                            rs.getString("email"),
+                            rs.getString("student_username")
                     };
                 }
                 return null;
@@ -136,12 +144,15 @@ public class StudentDAO {
         }
     }
 
-    /** Updates the editable parts of a student's profile (username, grade & section, adviser). */
+    /**
+     * Updates the editable parts of a student's profile (username, grade & section,
+     * adviser).
+     */
     public boolean updateProfile(long lrn, String username, String gradeSection, String adviser) throws SQLException {
         String sql = "UPDATE students SET student_username = ?, grade_section = ?, adviser_name = ? "
-            + "WHERE student_lrn = ?";
+                + "WHERE student_lrn = ?";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username);
             ps.setString(2, gradeSection);
             ps.setString(3, adviser);
@@ -150,11 +161,14 @@ public class StudentDAO {
         }
     }
 
-    /** Same duplicate check as registration, but excludes the student's own current row (for profile edits). */
+    /**
+     * Same duplicate check as registration, but excludes the student's own current
+     * row (for profile edits).
+     */
     public boolean usernameTakenByOther(long lrn, String username) throws SQLException {
         String sql = "SELECT student_lrn FROM students WHERE student_username = ? AND student_lrn != ?";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username);
             ps.setLong(2, lrn);
             try (ResultSet rs = ps.executeQuery()) {
@@ -163,11 +177,14 @@ public class StudentDAO {
         }
     }
 
-    /** True if this username is already taken by any student. Used by the register form. */
+    /**
+     * True if this username is already taken by any student. Used by the register
+     * form.
+     */
     public boolean usernameExists(String username) throws SQLException {
         String sql = "SELECT student_lrn FROM students WHERE student_username = ?";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
@@ -175,11 +192,14 @@ public class StudentDAO {
         }
     }
 
-    /** True if this email is already registered to any student. Used by the register form. */
+    /**
+     * True if this email is already registered to any student. Used by the register
+     * form.
+     */
     public boolean emailExists(String email) throws SQLException {
         String sql = "SELECT student_lrn FROM students WHERE email = ?";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
@@ -187,11 +207,14 @@ public class StudentDAO {
         }
     }
 
-    /** True if this LRN is already registered to a student (primary key clash on sign-up). */
+    /**
+     * True if this LRN is already registered to a student (primary key clash on
+     * sign-up).
+     */
     public boolean lrnExists(long lrn) throws SQLException {
         String sql = "SELECT student_lrn FROM students WHERE student_lrn = ?";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, lrn);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();

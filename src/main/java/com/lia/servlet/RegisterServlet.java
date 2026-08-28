@@ -12,8 +12,10 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 
 /**
- * Handles the student sign-up form (Activity 12 wireframe: L.I.G.H.T "STUDENT SIGN UP").
- * Expects a POST with form fields: lrn, fullName, username, password, adviser, gradeSection, email
+ * Handles the student sign-up form (Activity 12 wireframe: L.I.G.H.T "STUDENT
+ * SIGN UP").
+ * Expects a POST with form fields: lrn, fullName, username, password, adviser,
+ * gradeSection, email
  *
  * NOTE: If your NetBeans project targets an older Servlet API (javax.servlet
  * instead of jakarta.servlet), just change the import lines above from
@@ -96,7 +98,8 @@ public class RegisterServlet extends HttpServlet {
             }
 
             if (!Validation.isStrongPassword(password)) {
-                out.print(JsonUtil.error("Password must be at least 8 characters and include both letters and numbers."));
+                out.print(
+                        JsonUtil.error("Password must be at least 8 characters and include both letters and numbers."));
                 return;
             }
 
@@ -125,7 +128,7 @@ public class RegisterServlet extends HttpServlet {
             }
 
             boolean created = studentDAO.registerStudent(
-                lrn, fullName, username, password, adviser, gradeSection, email);
+                    lrn, fullName, username, password, adviser, gradeSection, email);
 
             if (created) {
                 out.print(JsonUtil.success("Account registered! Please wait for approval."));

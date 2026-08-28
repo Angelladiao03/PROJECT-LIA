@@ -39,14 +39,15 @@ public class MyReportsServlet extends HttpServlet {
             StringBuilder json = new StringBuilder("[");
             for (int i = 0; i < reports.size(); i++) {
                 String[] r = reports.get(i);
-                if (i > 0) json.append(",");
+                if (i > 0)
+                    json.append(",");
                 json.append("{")
-                    .append("\"reportNo\":\"").append(JsonUtil.escapeJson(r[0])).append("\",")
-                    .append("\"category\":\"").append(JsonUtil.escapeJson(r[1])).append("\",")
-                    .append("\"location\":\"").append(JsonUtil.escapeJson(r[2])).append("\",")
-                    .append("\"status\":\"").append(JsonUtil.escapeJson(r[3])).append("\",")
-                    .append("\"dateTime\":\"").append(JsonUtil.escapeJson(r[4])).append("\"")
-                    .append("}");
+                        .append("\"reportNo\":\"").append(JsonUtil.escapeJson(r[0])).append("\",")
+                        .append("\"category\":\"").append(JsonUtil.escapeJson(r[1])).append("\",")
+                        .append("\"location\":\"").append(JsonUtil.escapeJson(r[2])).append("\",")
+                        .append("\"status\":\"").append(JsonUtil.escapeJson(r[3])).append("\",")
+                        .append("\"dateTime\":\"").append(JsonUtil.escapeJson(r[4])).append("\"")
+                        .append("}");
             }
             json.append("]");
 

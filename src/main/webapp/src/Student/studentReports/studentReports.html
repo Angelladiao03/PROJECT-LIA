@@ -1,229 +1,421 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LagroInAction - My Account</title>
-    <link rel="icon" href="../../assets/LIALogo.ico" type="image/x-icon">
-    <link rel="stylesheet" href="studentReports.css">
-    <link rel="stylesheet" href="../../pageEnhancements.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LIA - My Account</title>
+    <link rel="icon" href="../../assets/LIALogo.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="studentReports.css" />
+    <link rel="stylesheet" href="../../pageEnhancements.css" />
     <script src="../../pageEnhancements.js" defer></script>
-</head>
-<body>
-
+  </head>
+  <body>
     <!-- TOP NAVIGATION BAR -->
     <header class="topbar">
-        <div class="topbar-left">
-            <button onclick="toggleSidebar()" class="menu-btn" title="Toggle Menu">☰</button>
-            <img src="../../assets/lagroHSLogo.png" alt="School Logo" class="topbar-logo">
-        </div>
+      <div class="topbar-left">
+        <button onclick="toggleSidebar()" class="menu-btn" title="Toggle Menu">
+          ☰
+        </button>
+        <img
+          src="../../assets/lagroHSLogo.png"
+          alt="School Logo"
+          class="topbar-logo"
+        />
+      </div>
 
-        <div class="topbar-center">
-            PROJECT LIA
-        </div>
+      <div class="topbar-center">PROJECT LIA</div>
 
-        <div class="topbar-right">
-            <span class="user-name" id="topbarUsername">Student Test</span>
-                <a href="../studentReports/studentReports.html" class="profile-link" title="Go to Profile">
-                <img src="../../assets/profilePic.jpg" alt="User Profile" class="profile-pic">
-            </a>
-        </div>
+      <div class="topbar-right">
+        <span class="user-name" id="topbarUsername"></span>
+        <a
+          href="../studentReports/studentReports.html"
+          class="profile-link"
+          title="Go to Profile"
+        >
+          <img
+            src="../../assets/profilePic.jpg"
+            alt="User Profile"
+            class="profile-pic"
+          />
+        </a>
+      </div>
     </header>
 
     <!-- MAIN BODY CONTAINER -->
     <div class="app-body">
+      <!-- SIDEBAR -->
+      <aside id="sidebar" class="sidebar closed">
+        <div class="sos-container">
+          <button onclick="openSosModal()" class="sos-btn">
+            <span class="sos-text">SOS</span>
+          </button>
+        </div>
 
-        <!-- SIDEBAR -->
-        <aside id="sidebar" class="sidebar closed">
-            <div class="sos-container">
-                <button onclick="openSosModal()" class="sos-btn">
-                    <span class="sos-text">SOS</span>
-                </button>
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="../studentHome/studentHome.html">Home</a>
+          </li>
+          <li class="nav-item">
+            <a href="../studentSubmitReports/studentSubmit.html"
+              >Submit Report</a
+            >
+          </li>
+          <li class="nav-item">
+            <a href="../studentMessages/studentMessage.html">Message</a>
+          </li>
+          <li class="nav-item active">
+            <a href="../studentReports/studentReports.html">My Account</a>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- MAIN SCROLLABLE CONTENT -->
+      <main class="main-content">
+        <!-- USER ACCOUNT / PROFILE CARD -->
+        <section class="user-profile-card">
+          <div class="user-avatar-container">
+            <img
+              src="../../assets/profilePic.jpg"
+              alt="User Profile"
+              class="profile-circle-logo"
+            />
+          </div>
+          <div class="user-details">
+            <h3 class="user-fullname" id="displayFullName">Student Test</h3>
+            <p class="user-info-text">
+              <strong>Username:</strong>
+              <span id="displayUsername">@student123</span>
+            </p>
+            <p class="user-info-text">
+              <strong>LRN:</strong> <span id="displayLrn">012345678901</span>
+            </p>
+            <p class="user-info-text">
+              <strong>Grade & Section:</strong>
+              <span id="displayGradeSection">12 - Rossum</span>
+            </p>
+            <p class="user-info-text">
+              <strong>Adviser:</strong>
+              <span id="displayAdviser">Mr. Richard Zabala</span>
+            </p>
+            <p class="user-info-text">
+              <strong>Gmail:</strong>
+              <span id="displayGmail">student1@gmail.com</span>
+            </p>
+          </div>
+          <div class="user-actions">
+            <button onclick="openEditProfileModal()" class="btn-edit-profile">
+              Edit Profile
+            </button>
+            <button onclick="handleLogout()" class="btn-logout">Log Out</button>
+          </div>
+        </section>
+
+        <div class="page-header">
+          <h2 class="page-title">My Report History</h2>
+          <p class="page-subtitle">
+            Track the real-time status and investigation progress of your filed
+            incident reports.
+          </p>
+        </div>
+
+        <!-- STATS CARDS -->
+        <section class="stats-grid">
+          <div
+            class="stat-card requested"
+            data-report-filter="requested"
+            role="button"
+            tabindex="0"
+            onclick="selectReportStatus('requested')"
+            onkeydown="
+              if (event.key === 'Enter' || event.key === ' ')
+                selectReportStatus('requested');
+            "
+          >
+            <div class="stat-number" id="countRequested">0</div>
+            <div class="stat-label">REQUESTED</div>
+          </div>
+          <div
+            class="stat-card pending"
+            data-report-filter="pending"
+            role="button"
+            tabindex="0"
+            onclick="selectReportStatus('pending')"
+            onkeydown="
+              if (event.key === 'Enter' || event.key === ' ')
+                selectReportStatus('pending');
+            "
+          >
+            <div class="stat-number" id="countPending">0</div>
+            <div class="stat-label">PENDING REVIEW</div>
+          </div>
+          <div
+            class="stat-card submitted"
+            data-report-filter="submitted"
+            role="button"
+            tabindex="0"
+            onclick="selectReportStatus('submitted')"
+            onkeydown="
+              if (event.key === 'Enter' || event.key === ' ')
+                selectReportStatus('submitted');
+            "
+          >
+            <div class="stat-number" id="countSubmitted">0</div>
+            <div class="stat-label">IN INVESTIGATION</div>
+          </div>
+          <div
+            class="stat-card resolved"
+            data-report-filter="resolved"
+            role="button"
+            tabindex="0"
+            onclick="selectReportStatus('resolved')"
+            onkeydown="
+              if (event.key === 'Enter' || event.key === ' ')
+                selectReportStatus('resolved');
+            "
+          >
+            <div class="stat-number" id="countResolved">0</div>
+            <div class="stat-label">RESOLVED</div>
+          </div>
+        </section>
+
+        <!-- TABLE CARD -->
+        <section class="table-card">
+          <div class="table-header">
+            <div class="filter-tabs">
+              <button
+                class="tab-btn active"
+                onclick="filterReports('all', this)"
+              >
+                All Reports
+              </button>
+              <button
+                class="tab-btn"
+                onclick="filterReports('requested', this)"
+              >
+                Requested
+              </button>
+              <button class="tab-btn" onclick="filterReports('pending', this)">
+                Pending
+              </button>
+              <button
+                class="tab-btn"
+                onclick="filterReports('submitted', this)"
+              >
+                In Investigation
+              </button>
+              <button class="tab-btn" onclick="filterReports('resolved', this)">
+                Resolved
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="reports-table">
+              <thead>
+                <tr>
+                  <th>Report No.</th>
+                  <th>Category</th>
+                  <th>Location</th>
+                  <th>Reporter Name</th>
+                  <th>Date & Time Filed</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="reportsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="school-footer">
+          <div class="footer-grid">
+            <div class="footer-col">
+              <h4 class="footer-title">Lagro High School</h4>
+              <p class="footer-text">
+                <strong>Address:</strong> Misa de Gallo St. corner Ascension
+                Ave., Brgy. Greater Lagro, Novaliches, Quezon City.
+              </p>
             </div>
 
-            <ul class="nav-list">
-                <li class="nav-item"><a href="../studentHome/studentHome.html">Home</a></li>
-                <li class="nav-item"><a href="../studentSubmitReports/studentSubmit.html">Submit Report</a></li>
-                <li class="nav-item"><a href="../studentMessages/studentMessage.html">Message</a></li>
-                <li class="nav-item active"><a href="../studentReports/studentReports.html">My Account</a></li>
-            </ul>
-        </aside>
-
-        <!-- MAIN SCROLLABLE CONTENT -->
-        <main class="main-content">
-
-            <!-- USER ACCOUNT / PROFILE CARD -->
-            <section class="user-profile-card">
-                <div class="user-avatar-container">
-                    <img src="../../assets/profilePic.jpg" alt="User Profile" class="profile-circle-logo">
-                </div>
-                <div class="user-details">
-                    <h3 class="user-fullname" id="displayFullName">Student Test</h3>
-                    <p class="user-info-text"><strong>Username:</strong> <span id="displayUsername">@student123</span></p>
-                    <p class="user-info-text"><strong>LRN:</strong> <span id="displayLrn">012345678901</span></p>
-                    <p class="user-info-text"><strong>Grade & Section:</strong> <span id="displayGradeSection">12 - Rossum</span></p>
-                    <p class="user-info-text"><strong>Adviser:</strong> <span id="displayAdviser">Mr. Richard Zabala</span></p>
-                    <p class="user-info-text"><strong>Gmail:</strong> <span id="displayGmail">student1@gmail.com</span></p>
-                </div>
-                <div class="user-actions">
-                    <button onclick="openEditProfileModal()" class="btn-edit-profile">Edit Profile</button>
-                    <button onclick="handleLogout()" class="btn-logout">Log Out</button>
-                </div>
-            </section>
-
-            <div class="page-header">
-                <h2 class="page-title">My Report History</h2>
-                <p class="page-subtitle">Track the real-time status and investigation progress of your filed incident reports.</p>
+            <div class="footer-col">
+              <h4 class="footer-title">Contact Us</h4>
+              <p class="footer-text">
+                <strong>Email:</strong> lagrohighschool@gmail.com
+              </p>
+              <p class="footer-text">
+                <strong>Facebook:</strong> Ask Lagro High School
+              </p>
             </div>
 
-            <!-- STATS CARDS -->
-            <section class="stats-grid">
-                <div class="stat-card requested" data-report-filter="requested" role="button" tabindex="0" onclick="selectReportStatus('requested')" onkeydown="if (event.key === 'Enter' || event.key === ' ') selectReportStatus('requested')">
-                    <div class="stat-number" id="countRequested">0</div>
-                    <div class="stat-label">REQUESTED</div>
-                </div>
-                <div class="stat-card pending" data-report-filter="pending" role="button" tabindex="0" onclick="selectReportStatus('pending')" onkeydown="if (event.key === 'Enter' || event.key === ' ') selectReportStatus('pending')">
-                    <div class="stat-number" id="countPending">0</div>
-                    <div class="stat-label">PENDING REVIEW</div>
-                </div>
-                <div class="stat-card submitted" data-report-filter="submitted" role="button" tabindex="0" onclick="selectReportStatus('submitted')" onkeydown="if (event.key === 'Enter' || event.key === ' ') selectReportStatus('submitted')">
-                    <div class="stat-number" id="countSubmitted">0</div>
-                    <div class="stat-label">IN INVESTIGATION</div>
-                </div>
-                <div class="stat-card resolved" data-report-filter="resolved" role="button" tabindex="0" onclick="selectReportStatus('resolved')" onkeydown="if (event.key === 'Enter' || event.key === ' ') selectReportStatus('resolved')">
-                    <div class="stat-number" id="countResolved">0</div>
-                    <div class="stat-label">RESOLVED</div>
-                </div>
-            </section>
+            <div class="footer-col">
+              <h4 class="footer-title">Emergency Hotlines</h4>
+              <ul class="footer-list emergency">
+                <li><strong>Quezon City Hotline - 122</strong></li>
+                <li><strong>National Emergency Hotline - 911</strong></li>
+              </ul>
+            </div>
+          </div>
 
-            <!-- TABLE CARD -->
-            <section class="table-card">
-                <div class="table-header">
-                    <div class="filter-tabs">
-                        <button class="tab-btn active" onclick="filterReports('all', this)">All Reports</button>
-                        <button class="tab-btn" onclick="filterReports('requested', this)">Requested</button>
-                        <button class="tab-btn" onclick="filterReports('pending', this)">Pending</button>
-                        <button class="tab-btn" onclick="filterReports('submitted', this)">In Investigation</button>
-                        <button class="tab-btn" onclick="filterReports('resolved', this)">Resolved</button>
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="reports-table">
-                        <thead>
-                            <tr>
-                                <th>Report No.</th>
-                                <th>Category</th>
-                                <th>Location</th>
-                                <th>Reporter Name</th>
-                                <th>Date & Time Filed</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="reportsTableBody">
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- FOOTER -->
-            <footer class="school-footer">
-                <div class="footer-grid">
-                    <div class="footer-col">
-                        <h4 class="footer-title">Lagro High School</h4>
-                        <p class="footer-text"><strong>Address:</strong> Misa de Gallo St. corner Ascension Ave., Brgy. Greater Lagro, Novaliches, Quezon City.</p>
-                    </div>
-
-                    <div class="footer-col">
-                        <h4 class="footer-title">Contact Us</h4>
-                        <p class="footer-text"><strong>Email:</strong> lagrohighschool@gmail.com</p>
-                        <p class="footer-text"><strong>Facebook:</strong> Ask Lagro High School</p>
-                    </div>
-
-                    <div class="footer-col">
-                        <h4 class="footer-title">Emergency Hotlines</h4>
-                        <ul class="footer-list emergency">
-                            <li><strong>Quezon City Hotline - 122</strong></li>
-                            <li><strong>National Emergency Hotline - 911</strong></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="footer-bottom">
-                    <p>© 2026 Lagro High School - LagroInAction. All Rights Reserved.</p>
-                </div>
-            </footer>
-
-        </main>
+          <div class="footer-bottom">
+            <p>
+              © 2026 Lagro High School - Lagro In Action. All Rights Reserved.
+            </p>
+          </div>
+        </footer>
+      </main>
     </div>
 
     <!-- EDIT PROFILE MODAL -->
     <div id="editProfileModal" class="modal-overlay hidden">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3>Edit Profile Information</h3>
-                <button onclick="closeEditProfileModal()" class="close-modal-btn" aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
-            </div>
-            <form onsubmit="handleProfileUpdate(event)" class="modal-body">
-                <div class="field-group">
-                    <label for="editFullName">Full Name</label>
-                    <input type="text" id="editFullName" required readonly aria-readonly="true">
-                </div>
-                <div class="field-group">
-                    <label for="editUsername">Username</label>
-                    <input type="text" id="editUsername" required minlength="8" maxlength="24" placeholder="8-24 characters">
-                </div>
-                <div class="field-group">
-                    <label for="editLrn">LRN</label>
-                    <input type="text" id="editLrn" maxlength="12" required readonly aria-readonly="true">
-                </div>
-                <div class="field-group">
-                    <label for="editGradeSection">Grade & Section</label>
-                    <input type="text" id="editGradeSection" required placeholder="e.g. Grade 11 - Bill Gates">
-                </div>
-                <div class="field-group">
-                    <label for="editAdviser">Class Adviser</label>
-                    <input type="text" id="editAdviser" required placeholder="e.g. Ms. Santos">
-                </div>
-                <div class="field-group">
-                    <label for="editGmail">Gmail</label>
-                    <input type="email" id="editGmail" required readonly aria-readonly="true" placeholder="e.g. user@deped.gov.ph">
-                </div>
-                <div class="modal-actions">
-                    <button type="button" onclick="closeEditProfileModal()" class="btn-cancel">Cancel</button>
-                    <button type="submit" class="btn-save-profile">Save Changes</button>
-                </div>
-            </form>
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>Edit Profile Information</h3>
+          <button
+            onclick="closeEditProfileModal()"
+            class="close-modal-btn"
+            aria-label="Close"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path
+                d="M6 6L18 18M18 6L6 18"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
         </div>
+        <form onsubmit="handleProfileUpdate(event)" class="modal-body">
+          <div class="field-group">
+            <label for="editFullName">Full Name</label>
+            <input
+              type="text"
+              id="editFullName"
+              required
+              readonly
+              aria-readonly="true"
+            />
+          </div>
+          <div class="field-group">
+            <label for="editUsername">Username</label>
+            <input
+              type="text"
+              id="editUsername"
+              required
+              minlength="8"
+              maxlength="24"
+              placeholder="8-24 characters"
+            />
+          </div>
+          <div class="field-group">
+            <label for="editLrn">LRN</label>
+            <input
+              type="text"
+              id="editLrn"
+              maxlength="12"
+              required
+              readonly
+              aria-readonly="true"
+            />
+          </div>
+          <div class="field-group">
+            <label for="editGradeSection">Grade & Section</label>
+            <input
+              type="text"
+              id="editGradeSection"
+              required
+              placeholder="e.g. Grade 11 - Bill Gates"
+            />
+          </div>
+          <div class="field-group">
+            <label for="editAdviser">Class Adviser</label>
+            <input
+              type="text"
+              id="editAdviser"
+              required
+              placeholder="e.g. Ms. Santos"
+            />
+          </div>
+          <div class="field-group">
+            <label for="editGmail">Gmail</label>
+            <input
+              type="email"
+              id="editGmail"
+              required
+              readonly
+              aria-readonly="true"
+              placeholder="e.g. user@deped.gov.ph"
+            />
+          </div>
+          <div class="modal-actions">
+            <button
+              type="button"
+              onclick="closeEditProfileModal()"
+              class="btn-cancel"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn-save-profile">Save Changes</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- SOS MODAL -->
     <div id="sosModal" class="modal-overlay hidden">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3>Confirm SOS Dispatch</h3>
-                <p>This will trigger an immediate emergency alert to the guidance office.</p>
-                <button onclick="closeSosModal()" class="close-modal-btn" aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
-            </div>
-            <form onsubmit="handleSosSubmit(event)" class="modal-body">
-                <div class="field-group">
-                    <label for="sosLocation">Your exact location right now:</label>
-                    <input type="text" id="sosLocation" required placeholder="e.g. Near Gate 2, Grade 8 & 7 Building">
-                </div>
-                <div class="field-group">
-                    <label for="sosDescription">Brief Description / Threats:</label>
-                    <textarea id="sosDescription" rows="3" required placeholder="e.g. Cornered by 5 students, threatening physical violence"></textarea>
-                </div>
-                <div class="modal-actions">
-                    <button type="submit" class="btn-send-sos">Send SOS</button>
-                    <button type="button" onclick="closeSosModal()" class="btn-cancel">Cancel</button>
-                </div>
-            </form>
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>Confirm SOS Dispatch</h3>
+          <p>
+            This will trigger an immediate emergency alert to the guidance
+            office.
+          </p>
+          <button
+            onclick="closeSosModal()"
+            class="close-modal-btn"
+            aria-label="Close"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path
+                d="M6 6L18 18M18 6L6 18"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
         </div>
+        <form onsubmit="handleSosSubmit(event)" class="modal-body">
+          <div class="field-group">
+            <label for="sosLocation">Your exact location right now:</label>
+            <input
+              type="text"
+              id="sosLocation"
+              required
+              placeholder="e.g. Near Gate 2, Grade 8 & 7 Building"
+            />
+          </div>
+          <div class="field-group">
+            <label for="sosDescription">Brief Description / Threats:</label>
+            <textarea
+              id="sosDescription"
+              rows="3"
+              required
+              placeholder="e.g. Cornered by 5 students, threatening physical violence"
+            ></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="submit" class="btn-send-sos">Send SOS</button>
+            <button type="button" onclick="closeSosModal()" class="btn-cancel">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <script src="../../validation.js"></script>
     <script src="studentReports.js"></script>
     <script src="../../sos.js"></script>
-</body>
+  </body>
 </html>

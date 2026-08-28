@@ -11,9 +11,8 @@ import java.sql.SQLException;
  */
 public class DatabaseConnection {
 
-    // ⚠️ Change these three values to match your own MySQL setup
-    private static final String URL =
-        "jdbc:mysql://localhost:3306/lia_db?useSSL=false&serverTimezone=Asia/Manila";
+    // Change these three values to match your own MySQL setup
+    private static final String URL = "jdbc:mysql://localhost:3306/lia_db?useSSL=false&serverTimezone=Asia/Manila";
     private static final String USER = "root";
     private static final String PASSWORD = "";
 
@@ -22,9 +21,10 @@ public class DatabaseConnection {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
             throw new SQLException(
-                "MySQL Connector/J driver not found. Right-click your project > "
-                + "Properties > Libraries > Add JAR/Folder, and add the "
-                + "mysql-connector-j-x.x.x.jar file.", e);
+                    "MySQL Connector/J driver not found. Right-click your project > "
+                            + "Properties > Libraries > Add JAR/Folder, and add the "
+                            + "mysql-connector-j-x.x.x.jar file.",
+                    e);
         }
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }

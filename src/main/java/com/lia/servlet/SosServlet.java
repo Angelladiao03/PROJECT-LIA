@@ -53,7 +53,7 @@ public class SosServlet extends HttpServlet {
                 out.print(JsonUtil.success("The guidance office has been notified immediately.",
                         "sosNo", String.valueOf(sosNo)));
             } else {
-                out.print(JsonUtil.error("Could not send SOS alert. Please try again."));
+                out.print(JsonUtil.error("Could not send SOS alert. Please try again later."));
             }
 
         } catch (SQLException e) {

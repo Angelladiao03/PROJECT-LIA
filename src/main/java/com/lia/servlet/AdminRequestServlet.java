@@ -16,9 +16,9 @@ import java.util.List;
  * Used by the admin "Request Account" page to approve or reject student
  * sign-ups before they're allowed to log in.
  *
- * GET  -> every student still waiting on approval, as JSON
+ * GET -> every student still waiting on approval, as JSON
  * POST action=approve&lrn=123456789012 -> Pending -> Approved
- * POST action=reject&lrn=123456789012  -> deletes the pending sign-up
+ * POST action=reject&lrn=123456789012 -> deletes the pending sign-up
  */
 @WebServlet("/AdminRequestServlet")
 public class AdminRequestServlet extends HttpServlet {
@@ -93,10 +93,12 @@ public class AdminRequestServlet extends HttpServlet {
         String[] keys = { "lrn", "fullName", "username", "adviser", "gradeSection", "email", "registeredAt" };
         for (int i = 0; i < rows.size(); i++) {
             String[] r = rows.get(i);
-            if (i > 0) json.append(",");
+            if (i > 0)
+                json.append(",");
             json.append("{");
             for (int j = 0; j < keys.length; j++) {
-                if (j > 0) json.append(",");
+                if (j > 0)
+                    json.append(",");
                 json.append("\"").append(keys[j]).append("\":\"").append(MessageServlet.esc(r[j])).append("\"");
             }
             json.append("}");

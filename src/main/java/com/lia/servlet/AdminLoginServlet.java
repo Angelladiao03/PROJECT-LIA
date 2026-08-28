@@ -56,8 +56,8 @@ public class AdminLoginServlet extends HttpServlet {
             session.setAttribute("adminFullName", fullName);
 
             out.print("{\"success\": true, \"message\": \"Login successful.\", "
-                + "\"adminId\": " + adminId + ", "
-                + "\"fullName\": \"" + (fullName == null ? "" : fullName.replace("\"", "\\\"")) + "\"}");
+                    + "\"adminId\": " + adminId + ", "
+                    + "\"fullName\": \"" + (fullName == null ? "" : fullName.replace("\"", "\\\"")) + "\"}");
 
         } catch (SQLException e) {
             response.getWriter().print(JsonUtil.error("Database error: " + e.getMessage()));

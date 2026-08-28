@@ -14,7 +14,8 @@ import java.sql.SQLException;
 
 /**
  * Used by the student "My Account" page.
- * GET  -> the logged-in student's own profile (fullName, username, lrn, gradeSection, adviser, email), as JSON
+ * GET -> the logged-in student's own profile (fullName, username, lrn,
+ * gradeSection, adviser, email), as JSON
  * POST username=...&gradeSection=...&adviser=... -> updates the editable fields
  */
 @WebServlet("/StudentProfileServlet")
@@ -46,12 +47,12 @@ public class StudentProfileServlet extends HttpServlet {
 
             // profile = [fullName, adviser, gradeSection, email, username]
             out.print("{\"success\": true, "
-                + "\"fullName\": \"" + MessageServlet.esc(profile[0]) + "\", "
-                + "\"adviser\": \"" + MessageServlet.esc(profile[1]) + "\", "
-                + "\"gradeSection\": \"" + MessageServlet.esc(profile[2]) + "\", "
-                + "\"email\": \"" + MessageServlet.esc(profile[3]) + "\", "
-                + "\"username\": \"" + MessageServlet.esc(profile[4]) + "\", "
-                + "\"lrn\": \"" + lrn + "\"}");
+                    + "\"fullName\": \"" + MessageServlet.esc(profile[0]) + "\", "
+                    + "\"adviser\": \"" + MessageServlet.esc(profile[1]) + "\", "
+                    + "\"gradeSection\": \"" + MessageServlet.esc(profile[2]) + "\", "
+                    + "\"email\": \"" + MessageServlet.esc(profile[3]) + "\", "
+                    + "\"username\": \"" + MessageServlet.esc(profile[4]) + "\", "
+                    + "\"lrn\": \"" + lrn + "\"}");
 
         } catch (SQLException e) {
             response.getWriter().print(JsonUtil.error("Database error: " + e.getMessage()));

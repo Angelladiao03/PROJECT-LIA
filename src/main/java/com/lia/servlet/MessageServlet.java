@@ -14,9 +14,9 @@ import java.util.List;
 
 /**
  * Used by the STUDENT messages page.
- * GET  -> { "connectedAdmin": "<name>" | null, "messages": [...] } for the
- *         logged-in student's conversation. connectedAdmin is the name of
- *         whichever admin most recently replied, or null if none has yet.
+ * GET -> { "connectedAdmin": "<name>" | null, "messages": [...] } for the
+ * logged-in student's conversation. connectedAdmin is the name of
+ * whichever admin most recently replied, or null if none has yet.
  * POST -> sends a new message from the student (form field: text)
  */
 @WebServlet("/MessageServlet")
@@ -42,8 +42,8 @@ public class MessageServlet extends HttpServlet {
             String connectedAdmin = messageDAO.getLatestRespondingAdminName(lrn);
 
             out.print("{\"connectedAdmin\": "
-                + (connectedAdmin == null ? "null" : "\"" + esc(connectedAdmin) + "\"") + ", "
-                + "\"messages\": " + toJsonArray(messageDAO.getConversation(lrn)) + "}");
+                    + (connectedAdmin == null ? "null" : "\"" + esc(connectedAdmin) + "\"") + ", "
+                    + "\"messages\": " + toJsonArray(messageDAO.getConversation(lrn)) + "}");
         } catch (SQLException e) {
             response.getWriter().print("{\"connectedAdmin\": null, \"messages\": []}");
         }
@@ -81,10 +81,11 @@ public class MessageServlet extends HttpServlet {
         StringBuilder json = new StringBuilder("[");
         for (int i = 0; i < rows.size(); i++) {
             String[] r = rows.get(i);
-            if (i > 0) json.append(",");
+            if (i > 0)
+                json.append(",");
             json.append("{\"sender\":\"").append(esc(r[0])).append("\",")
-                .append("\"text\":\"").append(esc(r[1])).append("\",")
-                .append("\"time\":\"").append(esc(r[2])).append("\"}");
+                    .append("\"text\":\"").append(esc(r[1])).append("\",")
+                    .append("\"time\":\"").append(esc(r[2])).append("\"}");
         }
         return json.append("]").toString();
     }

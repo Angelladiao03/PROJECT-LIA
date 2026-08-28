@@ -17,17 +17,18 @@ import java.util.List;
  * Used by admin pages that manage reports (New Requests, Active Tracking,
  * Report Records) and view SOS alerts.
  *
- * GET  ?type=sos          -> all SOS alerts as JSON
- * GET  (no params)        -> all reports (every status) as JSON, with student
- *                            info attached. The admin pages filter by status
- *                            in JavaScript, same as before.
+ * GET ?type=sos -> all SOS alerts as JSON
+ * GET (no params) -> all reports (every status) as JSON, with student
+ * info attached. The admin pages filter by status
+ * in JavaScript, same as before.
  *
- * POST action=approve&reportNo=123     -> Pending -> Active
+ * POST action=approve&reportNo=123 -> Pending -> Active
  * POST action=investigate&reportNo=123 -> Active -> Under Investigation
- * POST action=resolve&reportNo=123     -> -> Resolved (deletes the row instead if anonymous)
- * POST action=reject&reportNo=123      -> deletes the report entirely
- * POST action=dispatch&sosNo=123       -> Active -> Dispatched
- * POST action=respond&sosNo=123        -> -> Responded
+ * POST action=resolve&reportNo=123 -> -> Resolved (deletes the row instead if
+ * anonymous)
+ * POST action=reject&reportNo=123 -> deletes the report entirely
+ * POST action=dispatch&sosNo=123 -> Active -> Dispatched
+ * POST action=respond&sosNo=123 -> -> Responded
  */
 @WebServlet("/AdminReportServlet")
 public class AdminReportServlet extends HttpServlet {
@@ -93,7 +94,7 @@ public class AdminReportServlet extends HttpServlet {
                     int reportNo = requireReportNo(request);
                     boolean isAnon = "true".equals(request.getParameter("isAnonymous"));
                     ok = isAnon ? reportDAO.deleteReport(reportNo)
-                                : reportDAO.updateStatus(reportNo, "Resolved");
+                            : reportDAO.updateStatus(reportNo, "Resolved");
                     break;
                 }
                 case "reject":
@@ -128,14 +129,16 @@ public class AdminReportServlet extends HttpServlet {
     private String reportListToJson(List<String[]> rows) {
         StringBuilder json = new StringBuilder("[");
         String[] keys = { "reportNo", "isAnonymous", "lrn", "fullName", "username",
-            "gradeSection", "adviser", "email", "category", "description",
-            "location", "dateTime", "status" };
+                "gradeSection", "adviser", "email", "category", "description",
+                "location", "dateTime", "status" };
         for (int i = 0; i < rows.size(); i++) {
             String[] r = rows.get(i);
-            if (i > 0) json.append(",");
+            if (i > 0)
+                json.append(",");
             json.append("{");
             for (int j = 0; j < keys.length; j++) {
-                if (j > 0) json.append(",");
+                if (j > 0)
+                    json.append(",");
                 json.append("\"").append(keys[j]).append("\":\"").append(MessageServlet.esc(r[j])).append("\"");
             }
             json.append("}");
@@ -148,10 +151,12 @@ public class AdminReportServlet extends HttpServlet {
         String[] keys = { "sosNo", "lrn", "fullName", "username", "location", "description", "dateTime", "status" };
         for (int i = 0; i < rows.size(); i++) {
             String[] r = rows.get(i);
-            if (i > 0) json.append(",");
+            if (i > 0)
+                json.append(",");
             json.append("{");
             for (int j = 0; j < keys.length; j++) {
-                if (j > 0) json.append(",");
+                if (j > 0)
+                    json.append(",");
                 json.append("\"").append(keys[j]).append("\":\"").append(MessageServlet.esc(r[j])).append("\"");
             }
             json.append("}");
