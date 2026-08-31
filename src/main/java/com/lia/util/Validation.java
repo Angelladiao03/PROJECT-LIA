@@ -11,9 +11,9 @@ import java.util.regex.Pattern;
 public final class Validation {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[\\w.+-]+@[\\w-]+\\.[a-zA-Z]{2,}$");
-
-    // At least 8 characters, at least one letter and one number.
-    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d).{8,}$");
+    private static final Pattern DIGITS_ONLY = Pattern.compile("^\\d+$");
+    private static final Pattern HAS_LETTER = Pattern.compile(".*[A-Za-z].*");
+    private static final Pattern HAS_DIGIT = Pattern.compile(".*\\d.*");
 
     public static final int USERNAME_MIN_LENGTH = 8;
     public static final int USERNAME_MAX_LENGTH = 24;
@@ -23,26 +23,25 @@ public final class Validation {
     }
 
     /**
-     * LRN must be numeric and exactly LRN_LENGTH (12) digits -- no shorter, no
-     * longer.
+     * Returns a specific reason an LRN is invalid, or null if it's valid.
+     * Lets callers show the exact problem instead of one generic message.
      */
-    public static boolean isValidLrn(String lrn) {
-        return lrn != null && lrn.matches("\\d{" + LRN_LENGTH + "}");
+    public static String lrnError(String lrn) {
+        String trimmed = lrn == null ? "" : lrn.trim();
+        if (trimmed.isEmpty()) {
+            return "LRN is required!";
+        }
+        if (!DIGITS_ONLY.matcher(trimmed).matches()) {
+            return "LRN must contain numbers only!";
+        }
+        if (trimmed.length() != LRN_LENGTH) {
+            return "LRN must be " + LRN_LENGTH + " numbers!";
+        }
+        return null;
     }
 
     public static boolean isValidEmail(String email) {
         return email != null && EMAIL_PATTERN.matcher(email).matches();
-    }
-
-    /**
-     * Username must be between USERNAME_MIN_LENGTH (8) and USERNAME_MAX_LENGTH (24)
-     * characters.
-     */
-    public static boolean isValidUsername(String username) {
-        if (username == null)
-            return false;
-        int length = username.trim().length();
-        return length >= USERNAME_MIN_LENGTH && length <= USERNAME_MAX_LENGTH;
     }
 
     /**
@@ -52,19 +51,34 @@ public final class Validation {
      */
     public static String usernameError(String username) {
         if (username == null || username.trim().isEmpty()) {
-            return "Username is required.";
+            return "Username is required!";
         }
         int length = username.trim().length();
         if (length < USERNAME_MIN_LENGTH) {
-            return "Username must be at least " + USERNAME_MIN_LENGTH + " characters long.";
+            return "Username must be at least " + USERNAME_MIN_LENGTH + " characters long!";
         }
         if (length > USERNAME_MAX_LENGTH) {
-            return "Username must not exceed " + USERNAME_MAX_LENGTH + " characters.";
+            return "Username must not exceed " + USERNAME_MAX_LENGTH + " characters!";
         }
         return null;
     }
 
-    public static boolean isStrongPassword(String password) {
-        return password != null && PASSWORD_PATTERN.matcher(password).matches();
+    /**
+     * Returns a specific reason a password is too weak, checked one rule at
+     * a time (length, then letter, then number) so the person sees exactly
+     * what's missing, e.g. "Password must have a number!"
+     */
+    public static String passwordError(String password) {
+        String value = password == null ? "" : password;
+        if (value.length() < 8) {
+            return "Password must be at least 8 characters!";
+        }
+        if (!HAS_LETTER.matcher(value).matches()) {
+            return "Password must have a letter!";
+        }
+        if (!HAS_DIGIT.matcher(value).matches()) {
+            return "Password must have a number!";
+        }
+        return null;
     }
 }

@@ -77,17 +77,18 @@ public class RegisterServlet extends HttpServlet {
             }
 
             if (rePassword != null && !password.equals(rePassword)) {
-                out.print(JsonUtil.error("Passwords do not match."));
+                out.print(JsonUtil.error("Password does not match!"));
                 return;
             }
 
-            if (!Validation.isValidLrn(lrnStr.trim())) {
-                out.print(JsonUtil.error("LRN must be exactly " + Validation.LRN_LENGTH + " digits."));
+            String lrnError = Validation.lrnError(lrnStr.trim());
+            if (lrnError != null) {
+                out.print(JsonUtil.error(lrnError));
                 return;
             }
 
             if (!Validation.isValidEmail(email)) {
-                out.print(JsonUtil.error("Please enter a valid email address."));
+                out.print(JsonUtil.error("Please enter a valid email address!"));
                 return;
             }
 
@@ -97,9 +98,9 @@ public class RegisterServlet extends HttpServlet {
                 return;
             }
 
-            if (!Validation.isStrongPassword(password)) {
-                out.print(
-                        JsonUtil.error("Password must be at least 8 characters and include both letters and numbers."));
+            String passwordError = Validation.passwordError(password);
+            if (passwordError != null) {
+                out.print(JsonUtil.error(passwordError));
                 return;
             }
 

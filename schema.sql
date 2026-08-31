@@ -1,17 +1,13 @@
--- Full schema for lia_db, built from the columns every DAO class actually
--- queries. Run this ONCE in phpMyAdmin (SQL tab, no database selected, or
--- after creating an empty `lia_db` database) to set up a brand new copy of
--- the database from scratch.
+-- Full schema for the LIA database (PostgreSQL / Neon), built from the
+-- columns every DAO class actually queries. Run this ONCE against a brand
+-- new Neon database (Neon's SQL Editor, or `psql`) to set it up from scratch.
 --
--- If you already have a working lia_db from before the account-approval /
+-- If you already have a working database from before the account-approval /
 -- SOS-status features were added, do NOT run this file -- run
 -- migration_2026_08.sql instead, so you don't lose your existing data.
 
-CREATE DATABASE IF NOT EXISTS lia_db;
-USE lia_db;
-
 CREATE TABLE IF NOT EXISTS admin_profile (
-    admin_id       INT AUTO_INCREMENT PRIMARY KEY,
+    admin_id       INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     admin_username VARCHAR(50)  NOT NULL UNIQUE,
     admin_password VARCHAR(255) NOT NULL,
     admin_fullname VARCHAR(150) NOT NULL
@@ -25,12 +21,13 @@ CREATE TABLE IF NOT EXISTS students (
     adviser_name     VARCHAR(150),
     grade_section    VARCHAR(50),
     email            VARCHAR(150) NOT NULL UNIQUE,
-    status           ENUM('Pending','Approved') NOT NULL DEFAULT 'Pending',
+    status           VARCHAR(20) NOT NULL DEFAULT 'Pending'
+                          CHECK (status IN ('Pending', 'Approved')),
     registered_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS reports (
-    report_no           INT AUTO_INCREMENT PRIMARY KEY,
+    report_no           INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     student_lrn          BIGINT NULL,
     is_anonymous          BOOLEAN NOT NULL DEFAULT FALSE,
     category              VARCHAR(100) NOT NULL,
@@ -44,22 +41,24 @@ CREATE TABLE IF NOT EXISTS reports (
 );
 
 CREATE TABLE IF NOT EXISTS sos_alerts (
-    sos_no          INT AUTO_INCREMENT PRIMARY KEY,
+    sos_no          INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     student_lrn     BIGINT NOT NULL,
     sos_location    VARCHAR(255) NOT NULL,
     sos_description TEXT,
     sos_datetime    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    sos_status      ENUM('Active','Dispatched','Responded') NOT NULL DEFAULT 'Active',
+    sos_status      VARCHAR(20) NOT NULL DEFAULT 'Active'
+                          CHECK (sos_status IN ('Active', 'Dispatched', 'Responded')),
     CONSTRAINT fk_sos_student
         FOREIGN KEY (student_lrn) REFERENCES students(student_lrn)
         ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS messages (
-    message_id     INT AUTO_INCREMENT PRIMARY KEY,
+    message_id     INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     student_lrn    BIGINT NOT NULL,
     admin_id       INT NULL,
-    sender_type    ENUM('Student','Admin') NOT NULL,
+    sender_type    VARCHAR(10) NOT NULL
+                          CHECK (sender_type IN ('Student', 'Admin')),
     message_text   TEXT NOT NULL,
     sent_datetime  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_messages_student

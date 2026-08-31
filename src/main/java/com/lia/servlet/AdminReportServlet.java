@@ -24,9 +24,11 @@ import java.util.List;
  *
  * POST action=approve&reportNo=123 -> Pending -> Active
  * POST action=investigate&reportNo=123 -> Active -> Under Investigation
- * POST action=resolve&reportNo=123 -> -> Resolved (deletes the row instead if
- * anonymous)
- * POST action=reject&reportNo=123 -> deletes the report entirely
+ * POST action=resolve&reportNo=123 -> -> Resolved (kept in Report Records
+ * regardless of whether the report is anonymous -- anonymous reports are
+ * never auto-deleted)
+ * POST action=reject&reportNo=123 -> deletes the report entirely (explicit
+ * admin action only, e.g. rejecting a new request or deleting a stored record)
  * POST action=dispatch&sosNo=123 -> Active -> Dispatched
  * POST action=respond&sosNo=123 -> -> Responded
  */
@@ -91,10 +93,11 @@ public class AdminReportServlet extends HttpServlet {
                     ok = reportDAO.updateStatus(requireReportNo(request), "Under Investigation");
                     break;
                 case "resolve": {
+                    // Anonymous reports are kept and marked Resolved just like any
+                    // other report, so they still show up in Report Records --
+                    // they are never auto-deleted just for being anonymous.
                     int reportNo = requireReportNo(request);
-                    boolean isAnon = "true".equals(request.getParameter("isAnonymous"));
-                    ok = isAnon ? reportDAO.deleteReport(reportNo)
-                            : reportDAO.updateStatus(reportNo, "Resolved");
+                    ok = reportDAO.updateStatus(reportNo, "Resolved");
                     break;
                 }
                 case "reject":

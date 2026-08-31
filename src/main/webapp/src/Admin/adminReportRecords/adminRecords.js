@@ -127,15 +127,8 @@ function closeModal() {
 // Delete Record Function
 function deleteRecord(rowId, caseId) {
   const reportNo = caseId.replace("#", "");
-  const report = cachedResolvedReports.find(
-    (item) => item.reportNo === reportNo,
-  );
-  const anonymousNotice =
-    report?.isAnonymous === "true"
-      ? " This anonymous report will be permanently deleted now that the case is resolved, so your data will not be stored."
-      : "";
   showPageConfirmation(
-    `Are you sure you want to delete record ${caseId}? This action cannot be undone.${anonymousNotice}`,
+    `Are you sure you want to delete record ${caseId}? This action cannot be undone.`,
     "Confirm Report Deletion",
     async () => {
       const res = await fetch("../../../AdminReportServlet", {

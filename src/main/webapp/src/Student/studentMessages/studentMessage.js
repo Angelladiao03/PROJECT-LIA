@@ -121,4 +121,8 @@ async function handleSendMessage(event) {
 // Auto scroll on load
 window.addEventListener("DOMContentLoaded", () => {
   renderStoredMessages();
+  // Refresh the thread periodically so a reply from an admin -- including
+  // the "You are connected with ..." status -- shows up automatically
+  // instead of requiring the student to reload the page.
+  setInterval(renderStoredMessages, 8000);
 });

@@ -1,0 +1,6 @@
+target
+.git
+.vscode
+nb-configuration.xml
+README.md
+*.md

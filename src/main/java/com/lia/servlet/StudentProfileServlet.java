@@ -99,7 +99,7 @@ public class StudentProfileServlet extends HttpServlet {
             }
 
             if (studentDAO.usernameTakenByOther(lrn, username)) {
-                out.print(JsonUtil.error("That username is already taken."));
+                out.print(JsonUtil.error("That username is already taken. Please choose another."));
                 return;
             }
 

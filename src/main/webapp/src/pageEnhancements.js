@@ -46,6 +46,8 @@
     message,
     title,
     onConfirm,
+    confirmLabel = "Delete",
+    cancelLabel = "Cancel",
   ) {
     window.showPagePopup(message, title);
     const popup = document.getElementById("liaPopup");
@@ -53,8 +55,8 @@
     const noButton = document.createElement("button");
     noButton.type = "button";
     noButton.className = "popup-no-button";
-    noButton.textContent = "Cancel";
-    okayButton.textContent = "Delete";
+    noButton.textContent = cancelLabel;
+    okayButton.textContent = confirmLabel;
     okayButton.insertAdjacentElement("afterend", noButton);
     noButton.onclick = () => popup.classList.add("hidden");
     okayButton.onclick = () => {

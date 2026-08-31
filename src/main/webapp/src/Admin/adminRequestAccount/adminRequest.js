@@ -111,28 +111,32 @@ async function approveStudent(id, name) {
 }
 
 // Reject Student
-async function rejectStudent(id, name) {
+function rejectStudent(id, name) {
   name = name || studentsData[id]?.fullName;
-  if (!confirm(`Are you sure you want to reject registration for ${name}?`))
-    return;
-
-  const ok = await sendDecision(id, "reject");
-  if (!ok) {
-    showPagePopup(
-      "Could not reject this student. Please try again.",
-      "Rejection Failed",
-    );
-    return;
-  }
-  const row = document.getElementById(`row-${id}`);
-  if (row) {
-    row.style.transition = "all 0.3s ease";
-    row.style.opacity = "0";
-    setTimeout(() => {
-      row.remove();
-      updatePendingCount();
-    }, 300);
-  }
+  showPageConfirmation(
+    `Are you sure you want to reject registration for ${name}?`,
+    "Confirm Rejection",
+    async () => {
+      const ok = await sendDecision(id, "reject");
+      if (!ok) {
+        showPagePopup(
+          "Could not reject this student. Please try again.",
+          "Rejection Failed",
+        );
+        return;
+      }
+      const row = document.getElementById(`row-${id}`);
+      if (row) {
+        row.style.transition = "all 0.3s ease";
+        row.style.opacity = "0";
+        setTimeout(() => {
+          row.remove();
+          updatePendingCount();
+        }, 300);
+      }
+    },
+    "Reject",
+  );
 }
 
 async function sendDecision(lrn, action) {

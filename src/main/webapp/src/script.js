@@ -50,12 +50,10 @@ function validateRequiredFields(form) {
     emptyInput.focus();
     return false;
   }
-  const invalidInput = form.querySelector("input:invalid");
-  if (invalidInput) {
-    setFormMessage(form, `Please input a valid ${invalidInput.dataset.field}.`);
-    invalidInput.focus();
-    return false;
-  }
+  // Format checks (LRN digit count, password strength, email shape, etc.)
+  // are handled separately by the field-specific validate*() functions below
+  // so the person sees the exact reason ("LRN must be 12 numbers!") instead
+  // of a generic "Please input a valid X." message.
   return true;
 }
 
@@ -180,7 +178,7 @@ async function handleRegistration(event) {
   ] = inputs.map((input) => input.value.trim());
 
   if (password !== confirmPassword) {
-    setFormMessage(form, "Passwords do not match.");
+    setFormMessage(form, "Password does not match!");
     return;
   }
 

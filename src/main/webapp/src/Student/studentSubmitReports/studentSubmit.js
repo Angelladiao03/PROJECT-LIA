@@ -63,7 +63,6 @@ async function handleReportSubmit(e) {
   const category = document.getElementById("category").value;
   const specifiedCategory = document.getElementById("otherCategory").value;
   const location = document.getElementById("location").value;
-  const date = document.getElementById("incidentDateTime").value;
   const description = document.getElementById("description").value.trim();
 
   const finalCategory =
@@ -95,27 +94,8 @@ async function handleReportSubmit(e) {
       return;
     }
 
-    let alertMessage =
-      `REPORT SUBMITTED SUCCESSFULLY!\n\n` +
-      `Type: ${isAnonymous ? "Anonymous" : "Non-Anonymous"}\n`;
-
-    if (!isAnonymous) {
-      const name = document.getElementById("fullName").value;
-      const gradeSection = document.getElementById("gradeSection").value;
-      alertMessage += `Reporter: ${name} (${gradeSection})\n`;
-    }
-
-    alertMessage +=
-      `Category: ${finalCategory}\n` +
-      `Location: ${location}\n` +
-      `Date: ${date}\n\n` +
-      `Your report has been received by the Guidance Office.` +
-      (isAnonymous
-        ? " Because this report is anonymous, it will be deleted after the case is resolved so your data will not be stored."
-        : "");
-
     showPagePopup(
-      alertMessage.replaceAll("\n", " "),
+      "Your report has been received by the Guidance Office. Please wait for status updates.",
       isAnonymous ? "Anonymous Report Submitted" : "Report Submitted",
       () => {
         document.getElementById("reportForm").reset();

@@ -5,25 +5,34 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
- * Central place that opens a connection to the lia_db MySQL database.
+ * Central place that opens a connection to the LIA PostgreSQL database.
  * Every DAO class calls DatabaseConnection.getConnection() to get a fresh
  * connection, then closes it when done (use try-with-resources).
+ *
+ * Reads its connection details from environment variables so the exact
+ * same build works both locally and once deployed (e.g. on Render, pointed
+ * at a Neon database):
+ *   DB_URL      e.g. jdbc:postgresql://<host>/<db>?sslmode=require
+ *   DB_USER     e.g. neondb_owner
+ *   DB_PASSWORD your Neon database password
+ *
+ * If those aren't set, it falls back to a local PostgreSQL instance on
+ * localhost so it still runs out of the box on a developer's machine.
  */
 public class DatabaseConnection {
 
-    // Change these three values to match your own MySQL setup
-    private static final String URL = "jdbc:mysql://localhost:3306/lia_db?useSSL=false&serverTimezone=Asia/Manila";
-    private static final String USER = "root";
-    private static final String PASSWORD = "";
+    private static final String URL = System.getenv().getOrDefault(
+            "DB_URL", "jdbc:postgresql://localhost:5432/lia_db?sslmode=disable");
+    private static final String USER = System.getenv().getOrDefault("DB_USER", "postgres");
+    private static final String PASSWORD = System.getenv().getOrDefault("DB_PASSWORD", "");
 
     public static Connection getConnection() throws SQLException {
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
+            Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
             throw new SQLException(
-                    "MySQL Connector/J driver not found. Right-click your project > "
-                            + "Properties > Libraries > Add JAR/Folder, and add the "
-                            + "mysql-connector-j-x.x.x.jar file.",
+                    "PostgreSQL JDBC driver not found. Make sure the org.postgresql:postgresql "
+                            + "dependency in pom.xml built into the WAR's WEB-INF/lib folder.",
                     e);
         }
         return DriverManager.getConnection(URL, USER, PASSWORD);

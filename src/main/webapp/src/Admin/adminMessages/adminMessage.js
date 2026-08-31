@@ -219,3 +219,11 @@ function closeModalOnOverlay(event) {
 }
 
 renderStudentList();
+
+// Keep the open conversation (and the sidebar's list of students/last
+// messages) fresh automatically, so a new message from a student shows up
+// without the admin needing to reload the page.
+setInterval(() => {
+  renderStudentList();
+  if (currentLrn) renderMessages();
+}, 8000);

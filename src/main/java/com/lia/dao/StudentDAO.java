@@ -157,7 +157,15 @@ public class StudentDAO {
             ps.setString(2, gradeSection);
             ps.setString(3, adviser);
             ps.setLong(4, lrn);
-            return ps.executeUpdate() == 1;
+            ps.executeUpdate();
+            // Not gated on the affected-row count: MySQL reports 0 "affected
+            // rows" whenever every new value equals what's already stored
+            // (e.g. saving the form again with only the grade & section
+            // actually changed still touches this row, but if nothing
+            // ultimately differs it's still a successful save, not a
+            // failure). The caller already confirmed lrn belongs to the
+            // logged-in student, so no exception here means it worked.
+            return true;
         }
     }
 

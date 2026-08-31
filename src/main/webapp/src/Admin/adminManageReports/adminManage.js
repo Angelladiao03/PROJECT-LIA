@@ -75,29 +75,33 @@ async function approveReport(btn) {
 }
 
 // Reject submitted report
-async function rejectReport(btn) {
+function rejectReport(btn) {
   const row = btn.closest("tr");
-  if (!confirm("Are you sure you want to reject this report?")) return;
-
-  const reportNo = row.dataset.reportId;
-  const ok = await postReportAction({ action: "reject", reportNo });
-  if (!ok) {
-    showPagePopup(
-      "Could not reject this report. Please try again.",
-      "Rejection Failed",
-    );
-    return;
-  }
-  row.style.transition = "all 0.3s ease";
-  row.style.opacity = "0";
-  setTimeout(() => row.remove(), 300);
+  showPageConfirmation(
+    "Are you sure you want to reject this report? This action cannot be undone.",
+    "Confirm Rejection",
+    async () => {
+      const reportNo = row.dataset.reportId;
+      const ok = await postReportAction({ action: "reject", reportNo });
+      if (!ok) {
+        showPagePopup(
+          "Could not reject this report. Please try again.",
+          "Rejection Failed",
+        );
+        return;
+      }
+      row.style.transition = "all 0.3s ease";
+      row.style.opacity = "0";
+      setTimeout(() => row.remove(), 300);
+    },
+    "Reject",
+  );
 }
 
 // Update Active Investigation Status
 async function updateStatus(btn, targetStatus) {
   const row = btn.closest("tr");
   const reportNo = row.dataset.reportId;
-  const report = cachedReports.find((item) => item.reportNo === reportNo);
 
   if (targetStatus === "Investigation") {
     const ok = await postReportAction({ action: "investigate", reportNo });
@@ -114,12 +118,7 @@ async function updateStatus(btn, targetStatus) {
     loadSavedReportsAndAlerts();
     showPagePopup("Case updated to In Investigation.", "Case Updated");
   } else if (targetStatus === "Resolved") {
-    const isAnonymous = report ? report.isAnonymous === "true" : false;
-    const ok = await postReportAction({
-      action: "resolve",
-      reportNo,
-      isAnonymous: String(isAnonymous),
-    });
+    const ok = await postReportAction({ action: "resolve", reportNo });
     if (!ok) {
       showPagePopup(
         "Could not resolve this case. Please try again.",
@@ -132,9 +131,7 @@ async function updateStatus(btn, targetStatus) {
     setTimeout(() => {
       row.remove();
       showPagePopup(
-        isAnonymous
-          ? "Anonymous case resolved. The report was deleted so no identifying data is stored."
-          : "Case marked as Resolved and moved to Report Records.",
+        "Case marked as Resolved and moved to Report Records.",
         "Case Resolved",
       );
     }, 300);
@@ -277,16 +274,17 @@ function suspendStudent(reportId) {
 
 // Ban Student Account Action
 function banStudent(reportId) {
-  if (
-    confirm(
-      `Are you sure you want to PERMANENTLY BAN the student who submitted ${reportId}? This will revoke their platform access.`,
-    )
-  ) {
-    showPagePopup(
-      `Account associated with ${reportId} has been permanently banned.`,
-      "Account Banned",
-    );
-  }
+  showPageConfirmation(
+    `Are you sure you want to PERMANENTLY BAN the student who submitted ${reportId}? This will revoke their platform access.`,
+    "Confirm Permanent Ban",
+    () => {
+      showPagePopup(
+        `Account associated with ${reportId} has been permanently banned.`,
+        "Account Banned",
+      );
+    },
+    "Ban Account",
+  );
 }
 
 async function loadSavedReportsAndAlerts() {

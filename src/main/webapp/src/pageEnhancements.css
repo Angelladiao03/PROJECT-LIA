@@ -332,9 +332,69 @@ body .sidebar.open {
   color: #fff;
   font-weight: 700;
   cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+.lia-popup-card button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0, 168, 89, 0.28);
+}
+.lia-popup-card button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 .lia-popup-card .popup-no-button {
   background: #eef2f0;
+  color: var(--lia-green);
+}
+.lia-popup-card .popup-no-button:hover {
+  box-shadow: 0 8px 18px rgba(15, 81, 50, 0.14);
+}
+/* When a Yes/No (confirm/cancel) pair is shown, sit them side by side
+   instead of stacked, so the two choices read as equally weighted options. */
+.lia-popup-card:has(.popup-no-button) {
+  display: flex;
+  flex-direction: column;
+}
+.lia-popup-card > button:not(.popup-no-button):has(+ .popup-no-button) {
+  display: inline-block;
+  width: calc(50% - 0.4rem);
+  margin-right: 0.8rem;
+}
+.lia-popup-card > .popup-no-button {
+  display: inline-block;
+  width: calc(50% - 0.4rem);
+  vertical-align: top;
+}
+
+/* Shared inline "under the form" validation message, reused by every form
+   and modal in the app (login, registration, edit profile, etc.) so invalid
+   input always shows a specific reason right where the person is typing,
+   instead of a popup that requires an extra dismissal. */
+.form-message {
+  display: none;
+  margin: 0.5rem 0 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(180, 35, 24, 0.08);
+  border-left: 3px solid #b42318;
+  color: #b42318;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: left;
+}
+.form-message.error {
+  display: block;
+  animation: lia-rise-in 0.2s ease both;
+}
+.form-message.success {
+  background: rgba(0, 168, 89, 0.1);
+  border-left-color: var(--lia-green-bright);
   color: var(--lia-green);
 }
 .lia-popup-card.is-loading::after {
