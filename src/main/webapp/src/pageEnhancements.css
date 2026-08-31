@@ -355,11 +355,11 @@ body .sidebar.open {
   box-shadow: 0 8px 18px rgba(15, 81, 50, 0.14);
 }
 /* When a Yes/No (confirm/cancel) pair is shown, sit them side by side
-   instead of stacked, so the two choices read as equally weighted options. */
-.lia-popup-card:has(.popup-no-button) {
-  display: flex;
-  flex-direction: column;
-}
+   instead of stacked, so the two choices read as equally weighted options.
+   Note: this relies on normal block flow + inline-block buttons below --
+   do NOT make this container flex, since flex-direction: column forces
+   its children (including the buttons) to stack full-width regardless
+   of their own display/width, which defeats the side-by-side layout. */
 .lia-popup-card > button:not(.popup-no-button):has(+ .popup-no-button) {
   display: inline-block;
   width: calc(50% - 0.4rem);

@@ -176,49 +176,6 @@ async function respondSOS(btn) {
   loadSavedReportsAndAlerts();
 }
 
-// Open Modal with specific data mode ('known' vs 'anon') -- static design preview only
-function openReportModal(type) {
-  const modal = document.getElementById("reportModal");
-  const accountSection = document.getElementById("accountInfoSection");
-  const divider = document.getElementById("modalDivider");
-  const caseHeader = document.getElementById("modalCaseNo");
-
-  if (type === "known") {
-    caseHeader.textContent = "REPORT CASE NO. #REP-1042";
-    accountSection.style.display = "block";
-    divider.style.display = "block";
-
-    document.getElementById("accFullName").textContent = "LeBronny Mouse";
-    document.getElementById("accGradeSec").textContent = "Grade 10 - Acacia";
-    document.getElementById("accUsername").textContent = "student123";
-    document.getElementById("accAdviser").textContent = "Mrs. Santos";
-    document.getElementById("accLRN").textContent = "123456789012";
-    document.getElementById("accEmail").textContent =
-      "lebronny@lagroschool.edu.ph";
-
-    document.getElementById("repCategory").textContent = "Verbal Harassment";
-    document.getElementById("repDateTime").textContent =
-      "August 18, 2026 - 10:30 AM";
-    document.getElementById("repLocation").textContent =
-      "2nd Floor Building B Corridor";
-    document.getElementById("repDescription").textContent =
-      "Student was repeatedly mocked and threatened by a group of classmates during recess near the stairwell.";
-  } else if (type === "anon") {
-    caseHeader.textContent = "REPORT CASE NO. #REP-1038 (ANONYMOUS)";
-    accountSection.style.display = "none";
-    divider.style.display = "none";
-
-    document.getElementById("repCategory").textContent = "Social Exclusion";
-    document.getElementById("repDateTime").textContent =
-      "August 17, 2026 - 2:15 PM";
-    document.getElementById("repLocation").textContent = "Cafeteria";
-    document.getElementById("repDescription").textContent =
-      "Group of students preventing victim from joining lunch table and spreading false rumours.";
-  }
-
-  modal.classList.add("active");
-}
-
 function openStoredReport(reportNo) {
   const report = cachedReports.find((item) => item.reportNo === reportNo);
   if (!report) return;
