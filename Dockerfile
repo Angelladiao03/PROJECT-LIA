@@ -16,6 +16,7 @@ RUN rm -rf /usr/local/tomcat/webapps/*
 # paths that assume that context path).
 COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/ROOT.war
 # Render's web services expect the container to listen on port 10000.
-RUN sed -i 's/port="8080"/port="10000"/' /usr/local/tomcat/conf/server.xml
+RUN sed -i 's/port="8080"/port="10000"/' /usr/local/tomcat/conf/server.xml && \
+    sed -i 's/port="8005" shutdown="SHUTDOWN"/port="-1" shutdown="SHUTDOWN"/' /usr/local/tomcat/conf/server.xml
 EXPOSE 10000
 CMD ["catalina.sh", "run"]
