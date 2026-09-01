@@ -113,13 +113,26 @@ If you used the defaults above (`lia_db` on port `5432`, user `postgres`),
 **you don't need to set anything** — it'll just work out of the box.
 
 If your setup is different (a different password, a different database
-name, etc.), set the environment variables before you start Tomcat, or set
-them in NetBeans under **Project Properties → Run → VM Options / Set
-Properties**. For example, if your `postgres` password is `mypassword`:
+name, etc.), you'll need to set these as actual **OS environment
+variables** — NetBeans doesn't have a VM Options field for Maven web
+projects, so they can't be set from inside the IDE's project settings.
 
-```
-DB_PASSWORD=mypassword
-```
+**Windows:**
+
+1. Search the Start menu for **"Environment Variables"** and open **Edit
+   environment variables for your account**.
+2. Under **User variables**, click **New** and add `DB_PASSWORD` (and
+   `DB_URL` / `DB_USER` if needed) with your value. For example, if your
+   `postgres` password is `mypassword`, add a variable named
+   `DB_PASSWORD` with the value `mypassword`.
+3. **Restart NetBeans completely** — it only picks up environment
+   variables that existed when it was launched, and its managed Tomcat
+   runs as a child process of the IDE.
+
+**macOS/Linux:** set the variables in your shell profile (e.g.
+`~/.zshrc` or `~/.bashrc`), then restart NetBeans from a terminal session
+that has them loaded — or set them before launching Tomcat directly if
+you're not using NetBeans's managed server.
 
 You don't need to (and shouldn't) hardcode your personal password into
 `DatabaseConnection.java` — that file is shared with the rest of the team.

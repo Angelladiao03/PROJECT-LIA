@@ -1,10 +1,6 @@
 -- Full schema for the LIA database (PostgreSQL / Neon), built from the
 -- columns every DAO class actually queries. Run this ONCE against a brand
 -- new Neon database (Neon's SQL Editor, or `psql`) to set it up from scratch.
---
--- If you already have a working database from before the account-approval /
--- SOS-status features were added, do NOT run this file -- run
--- migration_2026_08.sql instead, so you don't lose your existing data.
 
 CREATE TABLE IF NOT EXISTS admin_profile (
     admin_id       INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
