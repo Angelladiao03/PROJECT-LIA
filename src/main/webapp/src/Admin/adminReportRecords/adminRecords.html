@@ -10,7 +10,7 @@
     <script src="../../pageEnhancements.js" defer></script>
   </head>
   <body>
-    <!-- TOP NAVIGATION BAR -->
+    <!-- navbar -->
     <header class="topbar">
       <div class="topbar-left">
         <button onclick="toggleSidebar()" class="menu-btn" title="Toggle Menu">
@@ -37,9 +37,9 @@
       </div>
     </header>
 
-    <!-- MAIN BODY CONTAINER -->
+    <!-- main body wrapper -->
     <div class="app-body">
-      <!-- FIXED SIDEBAR -->
+      <!-- sidebar (fixed) -->
       <aside id="sidebar" class="sidebar closed">
         <ul class="nav-list">
           <li class="nav-item">
@@ -65,10 +65,10 @@
         </ul>
       </aside>
 
-      <!-- MAIN CONTENT AREA WITH FLOATING CARD WRAPPER -->
+      <!-- Main content area with floating card wrapper -->
       <main class="main-content">
         <div class="records-card">
-          <!-- CARD HEADER -->
+          <!-- Card header -->
           <div class="card-header">
             <div class="header-titles">
               <h2>Resolved Report Records</h2>
@@ -79,7 +79,7 @@
             </div>
           </div>
 
-          <!-- FILTER BAR -->
+          <!-- Filter bar -->
           <div class="filter-bar">
             <input
               type="text"
@@ -104,7 +104,7 @@
             </select>
           </div>
 
-          <!-- TABLE CONTAINER -->
+          <!-- Table container -->
           <div class="table-container">
             <table class="records-table">
               <thead>
@@ -125,7 +125,7 @@
       </main>
     </div>
 
-    <!-- REPORT CASE SCAN MODAL -->
+    <!-- Report case scan modal -->
     <div id="reportModal" class="modal-overlay">
       <div class="modal-card">
         <div class="modal-header">
@@ -147,7 +147,7 @@
         </div>
 
         <div class="modal-body">
-          <!-- SECTION 1: STUDENT ACCOUNT DETAILS -->
+          <!-- Section 1: Student Account Details -->
           <div class="modal-section-title">STUDENT ACCOUNT DETAILS</div>
 
           <div class="modal-grid-2col">
@@ -177,7 +177,7 @@
             </div>
           </div>
 
-          <!-- SECTION 2: INCIDENT REPORT DETAILS -->
+          <!-- Section 2: Incident Report Details -->
           <div class="modal-section-title">INCIDENT REPORT DETAILS</div>
 
           <div class="modal-grid-2col">
@@ -195,7 +195,7 @@
             </div>
           </div>
 
-          <!-- DESCRIPTION BOX -->
+          <!-- Description box -->
           <div class="description-box">
             <div class="desc-label">Description:</div>
             <div class="desc-text" id="modalDescription">-</div>

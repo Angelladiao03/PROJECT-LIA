@@ -10,7 +10,7 @@
     <script src="../../pageEnhancements.js" defer></script>
   </head>
   <body>
-    <!-- TOP NAVIGATION BAR -->
+    <!-- navbar -->
     <header class="topbar">
       <div class="topbar-left">
         <button onclick="toggleSidebar()" class="menu-btn" title="Toggle Menu">
@@ -37,9 +37,9 @@
       </div>
     </header>
 
-    <!-- MAIN BODY CONTAINER -->
+    <!-- main body wrapper -->
     <div class="app-body">
-      <!-- FIXED SIDEBAR -->
+      <!-- fixed sidebar nav -->
       <aside id="sidebar" class="sidebar closed">
         <ul class="nav-list">
           <li class="nav-item">
@@ -65,10 +65,10 @@
         </ul>
       </aside>
 
-      <!-- MAIN CONTENT AREA WITH FLOATING CARD WRAPPER -->
+      <!-- Main content area with floating card wrapper -->
       <main class="main-content">
         <div class="chat-card">
-          <!-- INBOX SIDEBAR (STUDENT LIST) -->
+          <!-- Inbox sidebar (student list) -->
           <div class="chat-sidebar">
             <div class="chat-search-box">
               <input
@@ -84,9 +84,9 @@
             </div>
           </div>
 
-          <!-- CHAT MAIN WORKSPACE -->
+          <!-- Chat main workspace -->
           <div class="chat-main">
-            <!-- CHAT HEADER -->
+            <!-- Chat header -->
             <div class="chat-header">
               <div class="active-student-details">
                 <h3 id="activeStudentName">No conversation selected</h3>
@@ -104,10 +104,10 @@
               </div>
             </div>
 
-            <!-- CHAT MESSAGES THREAD -->
+            <!-- Chat messages thread -->
             <div class="chat-messages" id="chatMessages"></div>
 
-            <!-- CHAT INPUT AREA -->
+            <!-- Chat input area -->
             <form class="chat-input-area" onsubmit="sendMessage(event)">
               <input
                 type="text"
@@ -123,7 +123,7 @@
       </main>
     </div>
 
-    <!-- STUDENT INFO MODAL (opened from "View Info" in the chat header) -->
+    <!-- Student Info Modal (opened from "View Info" in the chat header) -->
     <div
       id="studentInfoModal"
       class="modal-overlay hidden"

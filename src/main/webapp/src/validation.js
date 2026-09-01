@@ -1,13 +1,10 @@
-// Shared validation rules for registration and profile editing.
-// These mirror com.lia.util.Validation on the server -- the server is the
-// real source of truth (a request can always bypass this file), but
-// checking here first gives instant feedback instead of a round trip.
+// Same rules as com.lia.util.Validation on the server - the server is the
+// real source of truth, this just gives instant feedback before the round trip.
 
 const USERNAME_MIN_LENGTH = 8;
 const USERNAME_MAX_LENGTH = 24;
 const LRN_LENGTH = 12;
 
-// Returns an error message string, or null if the username is valid.
 function validateUsername(username) {
   const trimmed = (username || "").trim();
   if (!trimmed) {
@@ -22,7 +19,6 @@ function validateUsername(username) {
   return null;
 }
 
-// Returns an error message string, or null if the LRN is valid.
 function validateLrn(lrn) {
   const trimmed = (lrn || "").trim();
   if (!trimmed) {
@@ -37,7 +33,6 @@ function validateLrn(lrn) {
   return null;
 }
 
-// Returns an error message string, or null if the email is valid.
 function validateEmail(email) {
   if (!email || !/^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$/.test(email.trim())) {
     return "Please enter a valid email address!";
@@ -45,9 +40,7 @@ function validateEmail(email) {
   return null;
 }
 
-// Returns an error message string, or null if the password is strong enough.
-// Checked one rule at a time so the person sees exactly which requirement
-// they're missing, instead of one generic message covering all of them.
+// checked one rule at a time so the person knows exactly what's missing
 function validatePassword(password) {
   const value = password || "";
   if (value.length < 8) {

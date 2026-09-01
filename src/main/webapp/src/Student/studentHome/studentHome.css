@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Merriweather:wght@700&family=Montserrat:wght@700;800;900&display=swap");
 
 /* ==========================================
-   RESET & SYSTEM BASELINE
+   Reset & System Baseline
    ========================================== */
 * {
   box-sizing: border-box;
@@ -23,7 +23,7 @@ body {
 }
 
 /* ==========================================
-   TOP BAR (Master Navigation)
+   Top Bar (Master Navigation)
    ========================================== */
 .topbar {
   height: 60px;
@@ -106,7 +106,7 @@ body {
 }
 
 /* ==========================================
-   APP CONTAINER & SIDEBAR
+   App Container & Sidebar
    ========================================== */
 .app-body {
   display: flex;
@@ -114,7 +114,7 @@ body {
   min-height: calc(100vh - 60px);
 }
 
-/* SIDEBAR */
+/* Sidebar */
 .sidebar {
   width: 200px;
   background-color: #ffffff;
@@ -170,7 +170,7 @@ body {
   font-weight: 700;
 }
 
-/* SOS Alert Button at top of sidebar */
+/* Sos Alert Button at top of sidebar */
 .sos-container {
   padding: 0 1rem 1rem 1rem;
   text-align: center;
@@ -203,7 +203,7 @@ body {
 }
 
 /* ==========================================
-   MAIN CONTENT CONTAINER
+   Main Content Container
    ========================================== */
 .main-content {
   flex: 1;
@@ -482,7 +482,7 @@ body {
 }
 
 /* ==========================================
-   FOOTER (Master Footer)
+   Footer (Master Footer)
    ========================================== */
 .school-footer {
   background-color: #1b5e20;
@@ -532,7 +532,7 @@ body {
 }
 
 /* ==========================================
-   MODAL (Master SOS Popup)
+   Modal (Master Sos Popup)
    ========================================== */
 .modal-overlay {
   position: fixed;
@@ -636,7 +636,7 @@ body {
 }
 
 /* ==========================================
-   RESPONSIVE BREAKPOINTS
+   Responsive Breakpoints
    ========================================== */
 @media (max-width: 850px) {
   .content-grid {
@@ -653,6 +653,10 @@ body {
   }
   .sidebar.open {
     transform: translateX(0);
+  }
+  .smart-list {
+    flex-direction: column;
+    gap: 0.6rem;
   }
 }
 

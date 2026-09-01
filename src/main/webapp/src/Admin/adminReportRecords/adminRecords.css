@@ -1,5 +1,5 @@
 /* ==========================================================================
-   1. GLOBAL RESETS & BASE STYLES
+   1. Global Resets & Base Styles
    ========================================================================== */
 * {
   box-sizing: border-box;
@@ -18,7 +18,7 @@ body {
 }
 
 /* ==========================================================================
-   2. TOP NAVIGATION BAR
+   2. Top Navigation Bar
    ========================================================================== */
 .topbar {
   display: flex;
@@ -75,7 +75,7 @@ body {
 }
 
 /* ==========================================================================
-   3. LAYOUT & SIDEBAR
+   3. Layout & Sidebar
    ========================================================================== */
 .app-body {
   display: flex;
@@ -130,7 +130,7 @@ body {
 }
 
 /* ==========================================================================
-   4. MAIN CONTENT & FLOATING CARD WRAPPER
+   4. Main Content & Floating Card Wrapper
    ========================================================================== */
 .main-content {
   flex: 1;
@@ -172,7 +172,7 @@ body {
   margin-top: 2px;
 }
 
-/* FILTER BAR */
+/* Filter Bar */
 .filter-bar {
   display: flex;
   gap: 12px;
@@ -206,7 +206,7 @@ body {
 }
 
 /* ==========================================================================
-   5. TABLE STYLING & ACTION BUTTONS
+   5. Table Styling & Action Buttons
    ========================================================================== */
 .table-container {
   flex: 1;
@@ -280,7 +280,7 @@ body {
   color: #22543d;
 }
 
-/* ACTION BUTTONS */
+/* Action Buttons */
 .action-buttons {
   display: flex;
   gap: 8px;
@@ -331,7 +331,7 @@ body {
 }
 
 /* ==========================================================================
-   6. SCAN DETAILS MODAL (MATCHING IMAGE SPEC)
+   6. Scan Details Modal (Matching Image Spec)
    ========================================================================== */
 .modal-overlay {
   display: none;
@@ -371,7 +371,7 @@ body {
   }
 }
 
-/* MODAL HEADER */
+/* Modal Header */
 .modal-header {
   padding: 18px 24px 10px 24px;
   display: flex;
@@ -388,7 +388,7 @@ body {
 
 /* Close-button styling now lives in the shared modal system in pageEnhancements.css. */
 
-/* MODAL BODY */
+/* Modal Body */
 .modal-body {
   padding: 10px 24px 20px 24px;
 }
@@ -429,7 +429,7 @@ body {
   margin-left: 4px;
 }
 
-/* DESCRIPTION BOX */
+/* Description Box */
 .description-box {
   margin-top: 16px;
   background-color: #f7fafc;
@@ -450,7 +450,7 @@ body {
   line-height: 1.45;
 }
 
-/* MODAL FOOTER */
+/* Modal Footer */
 .modal-footer {
   padding: 12px 24px 18px 24px;
   display: flex;

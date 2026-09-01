@@ -5,7 +5,7 @@ import java.sql.*;
 
 public class StudentDAO {
 
-    /** Inserts a new student. Returns true if it worked. */
+    // adds a new student row from the sign-up form
     public boolean registerStudent(long lrn, String fullName, String username,
             String password, String adviser, String gradeSection,
             String email) throws SQLException {
@@ -29,12 +29,10 @@ public class StudentDAO {
         }
     }
 
-    /**
-     * Checks username + password against the students table.
-     * Returns the student's LRN if the login is correct, or -1 if not.
-     * Does NOT check approval status -- callers should check getStatus()
-     * separately so they can tell "wrong password" apart from "not approved yet".
-     */
+    // Returns the LRN on a correct username/password, -1 otherwise.
+    // Doesn't look at approval status - LoginServlet checks getStatus()
+    // right after, so a wrong password and "not approved yet" don't get
+    // mixed into the same error message.
     public long login(String username, String password) throws SQLException {
         String sql = "SELECT student_lrn FROM students "
                 + "WHERE student_username = ? AND student_password = ?";
@@ -54,10 +52,7 @@ public class StudentDAO {
         }
     }
 
-    /**
-     * Returns "Pending" or "Approved" for a student, or null if the LRN doesn't
-     * exist.
-     */
+    // "Pending" or "Approved", or null if the LRN doesn't exist
     public String getStatus(long lrn) throws SQLException {
         String sql = "SELECT status FROM students WHERE student_lrn = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -70,7 +65,7 @@ public class StudentDAO {
         }
     }
 
-    /** Every student still waiting on admin approval, oldest sign-up first. */
+    // oldest sign-up first, so admin works through the backlog in order
     public java.util.List<String[]> getPendingStudents() throws SQLException {
         String sql = "SELECT student_lrn, student_fullName, student_username, "
                 + "adviser_name, grade_section, email, registered_at "
@@ -95,7 +90,6 @@ public class StudentDAO {
         return results;
     }
 
-    /** Admin approves a pending sign-up. */
     public boolean approveStudent(long lrn) throws SQLException {
         String sql = "UPDATE students SET status = 'Approved' WHERE student_lrn = ? AND status = 'Pending'";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -105,9 +99,7 @@ public class StudentDAO {
         }
     }
 
-    /**
-     * Admin rejects a pending sign-up; the row is removed so they can re-register.
-     */
+    // deletes rather than flags rejected, so the LRN is free to sign up again
     public boolean rejectStudent(long lrn) throws SQLException {
         String sql = "DELETE FROM students WHERE student_lrn = ? AND status = 'Pending'";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -117,10 +109,7 @@ public class StudentDAO {
         }
     }
 
-    /**
-     * Fetches basic profile info for a logged-in student (used to fill the session
-     * and the My Account page).
-     */
+    // basic profile fields, used for My Account and for filling the session
     public String[] getProfile(long lrn) throws SQLException {
         String sql = "SELECT student_fullName, adviser_name, grade_section, email, student_username "
                 + "FROM students WHERE student_lrn = ?";
@@ -144,10 +133,11 @@ public class StudentDAO {
         }
     }
 
-    /**
-     * Updates the editable parts of a student's profile (username, grade & section,
-     * adviser).
-     */
+    // Updates username / grade & section / adviser.
+    // Return value isn't tied to the affected-row count on purpose - if the
+    // form is saved again with nothing actually different, the DB reports 0
+    // rows changed even though nothing failed. lrn is already verified to
+    // belong to the caller, so getting here without an exception is a win.
     public boolean updateProfile(long lrn, String username, String gradeSection, String adviser) throws SQLException {
         String sql = "UPDATE students SET student_username = ?, grade_section = ?, adviser_name = ? "
                 + "WHERE student_lrn = ?";
@@ -158,21 +148,11 @@ public class StudentDAO {
             ps.setString(3, adviser);
             ps.setLong(4, lrn);
             ps.executeUpdate();
-            // Not gated on the affected-row count: MySQL reports 0 "affected
-            // rows" whenever every new value equals what's already stored
-            // (e.g. saving the form again with only the grade & section
-            // actually changed still touches this row, but if nothing
-            // ultimately differs it's still a successful save, not a
-            // failure). The caller already confirmed lrn belongs to the
-            // logged-in student, so no exception here means it worked.
             return true;
         }
     }
 
-    /**
-     * Same duplicate check as registration, but excludes the student's own current
-     * row (for profile edits).
-     */
+    // same as usernameExists() but skips the student's own row, for profile edits
     public boolean usernameTakenByOther(long lrn, String username) throws SQLException {
         String sql = "SELECT student_lrn FROM students WHERE student_username = ? AND student_lrn != ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -185,10 +165,6 @@ public class StudentDAO {
         }
     }
 
-    /**
-     * True if this username is already taken by any student. Used by the register
-     * form.
-     */
     public boolean usernameExists(String username) throws SQLException {
         String sql = "SELECT student_lrn FROM students WHERE student_username = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -200,10 +176,6 @@ public class StudentDAO {
         }
     }
 
-    /**
-     * True if this email is already registered to any student. Used by the register
-     * form.
-     */
     public boolean emailExists(String email) throws SQLException {
         String sql = "SELECT student_lrn FROM students WHERE email = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -215,10 +187,7 @@ public class StudentDAO {
         }
     }
 
-    /**
-     * True if this LRN is already registered to a student (primary key clash on
-     * sign-up).
-     */
+    // primary key clash check for sign-up
     public boolean lrnExists(long lrn) throws SQLException {
         String sql = "SELECT student_lrn FROM students WHERE student_lrn = ?";
         try (Connection conn = DatabaseConnection.getConnection();

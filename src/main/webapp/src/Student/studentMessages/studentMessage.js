@@ -6,14 +6,13 @@ function toggleSidebar() {
   }
 }
 
-// Bounces the student back to login if the server-side session has expired
-// (or was never created), instead of leaving the chat stuck empty.
+// Bounces back to login if the session expired server-side (or never existed)
 function redirectToLoginOnSessionExpiry() {
   localStorage.removeItem("lagroInActionActiveUser");
   window.location.href = "../../../index.html";
 }
 
-// Converts the database's "2026-08-20 09:24:54" text into a readable clock time.
+// Converts db timestamps like "2026-08-20 09:24:54" into a clock time
 function formatTime(dbDateTime) {
   if (!dbDateTime) return "";
   const date = new Date(dbDateTime.replace(" ", "T"));
@@ -38,9 +37,8 @@ function appendMessageToChat(sender, text, time) {
   chatBody.appendChild(msgContainer);
 }
 
-// Loads the student's real conversation with the guidance office from MessageServlet,
-// and shows which admin they're currently connected with (whoever replied most
-// recently), or a generic "waiting for a reply" status if no admin has responded yet.
+// Pulls the real conversation from MessageServlet and shows who's currently
+// responding, or a "waiting" status if nobody's replied yet.
 async function renderStoredMessages() {
   const chatBody = document.getElementById("chatBody");
   if (!chatBody) return;
@@ -86,8 +84,7 @@ function updateConnectionStatus(connectedAdmin) {
     : "Waiting for a guidance admin to respond";
 }
 
-// Sends the student's typed message to MessageServlet, then reloads the
-// thread so it stays perfectly in sync with what's stored in the database.
+// Sends the typed message, then reloads the thread to stay in sync with the db.
 async function handleSendMessage(event) {
   event.preventDefault();
 
@@ -108,7 +105,7 @@ async function handleSendMessage(event) {
     const data = await res.json();
 
     if (data.success) {
-      // Reload the whole conversation so it stays perfectly in sync with the database
+      // reload so the thread matches what's actually stored
       await renderStoredMessages();
     } else {
       appendMessageToChat("System", data.message, "");
@@ -121,8 +118,6 @@ async function handleSendMessage(event) {
 // Auto scroll on load
 window.addEventListener("DOMContentLoaded", () => {
   renderStoredMessages();
-  // Refresh the thread periodically so a reply from an admin -- including
-  // the "You are connected with ..." status -- shows up automatically
-  // instead of requiring the student to reload the page.
+  // poll for new replies so the student doesn't have to refresh manually
   setInterval(renderStoredMessages, 8000);
 });

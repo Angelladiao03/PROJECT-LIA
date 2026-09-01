@@ -1,5 +1,5 @@
 /* ==========================================================================
-   1. GLOBAL RESETS & BASE STYLES
+   1. Global Resets & Base Styles
    ========================================================================== */
 * {
   box-sizing: border-box;
@@ -18,7 +18,7 @@ body {
 }
 
 /* ==========================================================================
-   1B. STUDENT INFO MODAL -- base structure
+   1B. Student Info Modal - base structure
    This page didn't have any modal before the "View Info" feature, so unlike
    the other pages, it needs its own .modal-overlay / .modal-box / .hidden
    definitions here (the shared pageEnhancements.css only adds the entrance
@@ -123,7 +123,7 @@ body {
 }
 
 /* ==========================================================================
-   3. LAYOUT & SIDEBAR
+   3. Layout & Sidebar
    ========================================================================== */
 .app-body {
   display: flex;
@@ -178,7 +178,7 @@ body {
 }
 
 /* ==========================================================================
-   4. MAIN CONTENT & FLOATING CARD
+   4. Main Content & Floating Card
    ========================================================================== */
 .main-content {
   flex: 1;
@@ -190,7 +190,7 @@ body {
   align-items: center;
 }
 
-/* FLOATING CONTAINER CARD */
+/* Floating Container Card */
 .chat-card {
   width: 100%;
   max-width: 1200px;
@@ -320,7 +320,7 @@ body {
 }
 
 /* ==========================================================================
-   5. CHAT MAIN WORKSPACE
+   5. Chat Main Workspace
    ========================================================================== */
 .chat-main {
   flex: 1;
@@ -394,7 +394,7 @@ body {
   background-color: #dbe7fe;
 }
 
-/* -- Student Info modal content (structure/animation shared via pageEnhancements.css) -- */
+/* - Student Info modal content (structure/animation shared via pageEnhancements.css) - */
 .info-avatar-row {
   display: flex;
   align-items: center;

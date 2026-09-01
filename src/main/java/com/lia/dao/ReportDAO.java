@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ReportDAO {
 
-    /** Inserts a new incident report. lrn can be null when isAnonymous = true. */
+    // lrn is null when isAnonymous is true
     public int submitReport(Long lrn, boolean isAnonymous, String location,
             String category, String description) throws SQLException {
 
@@ -36,9 +36,7 @@ public class ReportDAO {
         }
     }
 
-    /**
-     * Returns every report submitted by one student (used by "My Reports" page).
-     */
+    // for the "My Reports" page - just this student's own submissions
     public List<String[]> getReportsByStudent(long lrn) throws SQLException {
         String sql = "SELECT report_no, category, report_location, report_status, report_datetime "
                 + "FROM reports WHERE student_lrn = ? ORDER BY report_datetime DESC";
@@ -63,7 +61,6 @@ public class ReportDAO {
         return results;
     }
 
-    /** Returns every report in the system (used by the admin dashboard). */
     public List<String[]> getAllReports() throws SQLException {
         String sql = "SELECT report_no, student_lrn, is_anonymous, category, "
                 + "report_location, report_status, report_datetime FROM reports "
@@ -89,7 +86,6 @@ public class ReportDAO {
         return results;
     }
 
-    /** Admin updates the status of a report, e.g. to "Resolved". */
     public boolean updateStatus(int reportNo, String newStatus) throws SQLException {
         String sql = "UPDATE reports SET report_status = ? WHERE report_no = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -101,10 +97,7 @@ public class ReportDAO {
         }
     }
 
-    /**
-     * Permanently removes a report (used for rejecting new requests, and deleting
-     * anonymous resolved cases).
-     */
+    // hard delete - used both for rejecting new requests and clearing old records
     public boolean deleteReport(int reportNo) throws SQLException {
         String sql = "DELETE FROM reports WHERE report_no = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -114,11 +107,9 @@ public class ReportDAO {
         }
     }
 
-    /**
-     * Every report with full student details attached, for the admin dashboard.
-     * Columns: reportNo, isAnonymous, lrn, fullName, username, gradeSection,
-     * adviser, email, category, description, location, dateTime, status
-     */
+    // Same as getAllReports() but joined with student info for the admin
+    // dashboard. Column order: reportNo, isAnonymous, lrn, fullName, username,
+    // gradeSection, adviser, email, category, description, location, dateTime, status
     public List<String[]> getAllReportsDetailed() throws SQLException {
         String sql = "SELECT r.report_no, r.is_anonymous, r.student_lrn, s.student_fullName, "
                 + "s.student_username, s.grade_section, s.adviser_name, s.email, "

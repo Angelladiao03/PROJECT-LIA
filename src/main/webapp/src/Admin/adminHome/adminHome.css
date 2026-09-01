@@ -21,7 +21,7 @@ body {
   display: none !important;
 }
 
-/* ================= TOP BAR ================= */
+/* ================= Top Bar ================= */
 .topbar {
   height: 60px;
   background-color: #ffffff;
@@ -85,14 +85,14 @@ body {
   border: 1px solid #cbd5e1;
 }
 
-/* ================= MAIN CONTAINER & SIDEBAR ================= */
+/* ================= Main Container & Sidebar ================= */
 .app-body {
   display: flex;
   margin-top: 60px; /* Space below topbar */
   min-height: calc(100vh - 60px);
 }
 
-/* SIDEBAR */
+/* Sidebar */
 .sidebar {
   width: 200px;
   background-color: #ffffff;
@@ -148,7 +148,7 @@ body {
   font-weight: 700;
 }
 
-/* SOS Alert Button at top of sidebar */
+/* Sos Alert Button at top of sidebar */
 .sos-container {
   padding: 0 1rem 1rem 1rem;
   text-align: center;
@@ -180,7 +180,7 @@ body {
   text-transform: uppercase;
 }
 
-/* MAIN CONTENT AREA */
+/* Main Content Area */
 .main-content {
   flex: 1;
   padding: 1.5rem;
@@ -197,7 +197,7 @@ body {
   margin-left: 0;
 }
 
-/* BANNER / INTRODUCTION CONTAINER */
+/* Banner / Introduction Container */
 .intro-banner {
   background-color: #ffffff;
   border-radius: 8px;
@@ -234,7 +234,7 @@ body {
   line-height: 1.4;
 }
 
-/* TWO-COLUMN FLEXIBLE SECTION (Articles & Videos) */
+/* Two-Column Flexible Section (Articles & Videos) */
 .content-grid {
   display: flex;
   gap: 1.5rem;
@@ -442,7 +442,7 @@ body {
 }
 
 /* Video Containers */
-/* VIDEOS COLUMN */
+/* Videos Column */
 .videos-column {
   display: flex;
   flex-direction: column;
@@ -503,7 +503,7 @@ body {
   pointer-events: none;
 }
 
-/* SCHOOL FOOTER */
+/* School Footer */
 .school-footer {
   background-color: #1b5e20;
   color: #ffffff;
@@ -556,7 +556,7 @@ body {
   color: #cbd5e1;
 }
 
-/* ================= SOS POPUP MODAL ================= */
+/* ================= Sos Popup Modal ================= */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -670,6 +670,10 @@ body {
 @media (max-width: 768px) {
   .main-content {
     margin-left: 0;
+  }
+  .smart-list {
+    flex-direction: column;
+    gap: 0.6rem;
   }
 }
 

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   EXACT MATCH DESIGN SYSTEM (WHITE NAVBAR, LIGHT GREY-BLUE SIDEBAR, GREEN ACCENTS)
+   Exact Match Design System (White Navbar, Light Grey-Blue Sidebar, Green Accents)
    ========================================================================== */
 * {
   box-sizing: border-box;
@@ -16,7 +16,7 @@ body {
   min-height: 100vh;
 }
 
-/* TOPBAR */
+/* Topbar */
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -76,7 +76,7 @@ body {
   object-fit: cover;
 }
 
-/* APP BODY & SIDEBAR */
+/* App Body & Sidebar */
 .app-body {
   display: flex;
   flex: 1;
@@ -151,7 +151,7 @@ body {
   font-weight: 700;
 }
 
-/* MAIN CONTENT CONTAINER */
+/* Main Content Container */
 .main-content {
   flex: 1;
   padding: 30px;
@@ -160,7 +160,7 @@ body {
 }
 
 /* ==========================================================================
-   CHAT CARD STYLING (MATCHED TO PROJECT CARDS)
+   Chat Card Styling (Matched To Project Cards)
    ========================================================================== */
 .chat-container-wrapper {
   max-width: 1100px;
@@ -179,7 +179,7 @@ body {
   border: 1px solid #e0e5ea;
 }
 
-/* CHAT HEADER */
+/* Chat Header */
 .chat-header {
   background-color: #ffffff;
   color: #1e4620;
@@ -211,7 +211,7 @@ body {
   color: #666;
 }
 
-/* CHAT BODY */
+/* Chat Body */
 .chat-body {
   flex: 1;
   padding: 20px;
@@ -248,7 +248,7 @@ body {
   margin-bottom: 10px;
 }
 
-/* BUBBLES */
+/* Bubbles */
 .message {
   display: flex;
   flex-direction: column;
@@ -290,7 +290,7 @@ body {
   padding: 0 4px;
 }
 
-/* CHAT FOOTER */
+/* Chat Footer */
 .chat-footer {
   padding: 15px 20px;
   background-color: #ffffff;
@@ -332,7 +332,7 @@ body {
   background-color: #144718;
 }
 
-/* SOS MODAL */
+/* Sos Modal */
 .modal-overlay {
   position: fixed;
   top: 0;

@@ -10,7 +10,7 @@ body {
   color: #333;
 }
 
-/* TOPBAR */
+/* Topbar */
 .topbar {
   height: 60px;
   background-color: #ffffff;
@@ -71,14 +71,14 @@ body {
   object-fit: cover;
 }
 
-/* APP CONTAINER WITH FIXED SIDEBAR */
+/* App Container With Fixed Sidebar */
 .app-body {
   display: flex;
   margin-top: 60px; /* Offset for fixed topbar */
   min-height: calc(100vh - 60px);
 }
 
-/* SIDEBAR FIXED TO LEFT */
+/* Sidebar Fixed To Left */
 .sidebar {
   width: 200px;
   background-color: #ffffff;
@@ -153,7 +153,7 @@ body {
   font-weight: 700;
 }
 
-/* MAIN CONTENT OFFSET FOR SIDEBAR */
+/* Main Content Offset For Sidebar */
 .main-content {
   margin-left: 200px;
   flex: 1;
@@ -168,7 +168,7 @@ body {
   margin-left: 0;
 }
 
-/* PROFILE CARD */
+/* Profile Card */
 .user-profile-card {
   background-color: #ffffff;
   border-radius: 8px;
@@ -231,7 +231,7 @@ body {
   cursor: pointer;
 }
 
-/* STATS CARDS */
+/* Stats Cards */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -273,7 +273,7 @@ body {
   font-weight: bold;
 }
 
-/* TABLE STYLING */
+/* Table Styling */
 .table-card {
   background: white;
   border-radius: 6px;
@@ -329,7 +329,7 @@ body {
   font-weight: bold;
 }
 
-/* EXACT ORIGINAL STATUS TEXT COLOR STYLING */
+/* Exact Original Status Text Color Styling */
 .status-text {
   font-weight: 900;
   font-size: 0.85rem;
@@ -348,7 +348,7 @@ body {
   color: #10b981;
 }
 
-/* ORIGINAL FOOTER DESIGN */
+/* Original Footer Design */
 .school-footer {
   background-color: #154c24;
   color: white;
@@ -393,7 +393,7 @@ body {
   font-size: 0.78rem;
 }
 
-/* MODAL OVERLAY & BOX */
+/* Modal Overlay & Box */
 .modal-overlay {
   position: fixed;
   top: 0;

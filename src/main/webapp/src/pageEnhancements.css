@@ -19,12 +19,8 @@ body {
   color: var(--lia-ink);
   min-height: 100vh;
   overflow-x: hidden;
-  /* Prevents the fixed topbar's 60px offset (set via .app-body's margin-top
-     below) from "collapsing through" body into html. Without this, body is
-     the first in-flow child's parent with no border/padding of its own, so
-     that top margin escapes body entirely -- html ends up 60px taller than
-     body, which shows up as blank space below the footer on any page whose
-     content is shorter than the viewport (e.g. Student > My Account). */
+  /* stops the topbar's margin-top from collapsing through into html and
+     leaving blank space below the footer on short pages */
   padding-top: 1px;
   margin-top: -1px;
 }
@@ -357,7 +353,7 @@ body .sidebar.open {
 /* When a Yes/No (confirm/cancel) pair is shown, sit them side by side
    instead of stacked, so the two choices read as equally weighted options.
    Note: this relies on normal block flow + inline-block buttons below --
-   do NOT make this container flex, since flex-direction: column forces
+   do Not make this container flex, since flex-direction: column forces
    its children (including the buttons) to stack full-width regardless
    of their own display/width, which defeats the side-by-side layout. */
 .lia-popup-card > button:not(.popup-no-button):has(+ .popup-no-button) {
@@ -461,10 +457,7 @@ body:has(#sosModal) .modal-header p {
   font-size: 0.75rem;
   opacity: 0.9;
 }
-/* NOTE: the close button itself now uses the single shared .close-modal-btn
-   style further down this file (dark-header contrast included), so no
-   SOS-specific override is defined here anymore -- one consistent X button
-   across every modal in the app, including this one. */
+/* close button uses the shared .close-modal-btn style below, no Sos-specific override needed */
 body:has(#sosModal) .modal-body {
   padding: 2rem;
   gap: 1.25rem;
@@ -563,16 +556,9 @@ a:active {
 .chat-card {
   width: 100% !important;
 }
-/* ==========================================================================
-   SHARED MODAL SYSTEM (close button + open/closing animation)
-   Every modal in the app -- SOS, Edit Profile, Report Details, Student Scan,
-   Student Info, etc. -- shares this same entrance/exit animation and the
-   same circular "X" close button, no matter which page it lives on or
-   whether that page toggles the modal with the ".hidden" class or the
-   ".active" class. Keeping this in one place (instead of copy-pasted,
-   slightly-different button styles per page) is what makes the whole app
-   feel consistent instead of like ten different modals bolted together.
-   ========================================================================== */
+/* shared modal system - close button + open/close animation, used by every
+   modal (Sos, Edit Profile, Report Details, Student Scan, Student Info...)
+   regardless of whether the page toggles it via .hidden or .active */
 .modal-overlay:not(.hidden),
 .modal-overlay.active {
   animation: lia-modal-fade 0.2s ease both;
@@ -625,9 +611,9 @@ a:active {
 }
 
 /* The circular "X" close button used by every modal header. Markup is a
-   small inline SVG (see any .modal-header in the HTML) so it stays crisp at
+   small inline Svg (see any .modal-header in the Html) so it stays crisp at
    any size and always inherits `currentColor`, meaning it automatically
-   reads correctly on both dark headers (e.g. the SOS dialog) and plain
+   reads correctly on both dark headers (e.g. the Sos dialog) and plain
    white ones (e.g. Student Info) without needing a page-specific override. */
 .close-modal-btn {
   position: absolute;

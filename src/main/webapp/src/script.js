@@ -50,10 +50,8 @@ function validateRequiredFields(form) {
     emptyInput.focus();
     return false;
   }
-  // Format checks (LRN digit count, password strength, email shape, etc.)
-  // are handled separately by the field-specific validate*() functions below
-  // so the person sees the exact reason ("LRN must be 12 numbers!") instead
-  // of a generic "Please input a valid X." message.
+  // field-specific validate*() calls below handle the actual format checks
+  // (LRN digit count, password strength, etc) with a more specific message
   return true;
 }
 
@@ -77,11 +75,8 @@ function showPopup(message, title, onOkay) {
   okayButton.focus();
 }
 
-// Handles both the Student and Admin login forms. Which servlet gets called
-// (and which fields the session ends up carrying) depends on the "role"
-// argument passed in from the form's onsubmit handler in index.html. Both
-// forms share the same shape (username, then password), so no per-role
-// field indexing is needed.
+// Handles both Student and Admin login forms - which servlet gets called
+// depends on the "role" passed in from the form's onsubmit in index.html.
 async function handleLogin(event, role) {
   event.preventDefault();
 
@@ -158,8 +153,7 @@ async function handleLogin(event, role) {
   );
 }
 
-// Handles the student sign-up form: validates the fields client-side, then
-// sends them to RegisterServlet and waits for the database to confirm.
+// Client-side check, then hands off to RegisterServlet
 async function handleRegistration(event) {
   event.preventDefault();
 

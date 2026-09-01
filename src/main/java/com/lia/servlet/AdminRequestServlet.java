@@ -12,14 +12,12 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.List;
 
-/**
- * Used by the admin "Request Account" page to approve or reject student
- * sign-ups before they're allowed to log in.
- *
- * GET -> every student still waiting on approval, as JSON
- * POST action=approve&lrn=123456789012 -> Pending -> Approved
- * POST action=reject&lrn=123456789012 -> deletes the pending sign-up
- */
+// Backs the admin "Request Account" page - approving or rejecting student
+// sign-ups before they can log in.
+//
+// GET                            every student still waiting on approval
+// POST action=approve&lrn=..     Pending -> Approved
+// POST action=reject&lrn=..      deletes the pending sign-up
 @WebServlet("/AdminRequestServlet")
 public class AdminRequestServlet extends HttpServlet {
 

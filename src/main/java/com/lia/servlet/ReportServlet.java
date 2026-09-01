@@ -11,15 +11,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 
-/**
- * Handles the "Submit Incident Report" form.
- * Expects a POST with form fields: isAnonymous ("true"/"false"), location,
- * category, description
- *
- * If isAnonymous is false, the student must be logged in (session must
- * contain "studentLrn") — this mirrors the wireframe's "Submit Anonymously?
- * Yes/No" toggle.
- */
+// Submit Incident Report form. POST fields: isAnonymous ("true"/"false"),
+// location, category, description. Non-anonymous reports require a logged-in
+// student session.
 @WebServlet("/ReportServlet")
 public class ReportServlet extends HttpServlet {
 
@@ -56,8 +50,7 @@ public class ReportServlet extends HttpServlet {
                 }
                 lrn = (Long) session.getAttribute("studentLrn");
             } else if (session != null && session.getAttribute("studentLrn") != null) {
-                // Still record who sent it internally even if displayed as anonymous later,
-                // per the original design's is_anonymous flag on the reports table.
+                // still logged: is_anonymous just controls how it's displayed later
                 lrn = (Long) session.getAttribute("studentLrn");
             }
 

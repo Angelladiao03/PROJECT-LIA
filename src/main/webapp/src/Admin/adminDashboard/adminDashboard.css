@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ADMIN DASHBOARD DESIGN SYSTEM (MATCHES STUDENT INTERFACE COLORS)
+   Admin Dashboard Design System (Matches Student Interface Colors)
    ========================================================================== */
 * {
   box-sizing: border-box;
@@ -16,7 +16,7 @@ body {
   min-height: 100vh;
 }
 
-/* TOPBAR */
+/* Topbar */
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -76,13 +76,13 @@ body {
   object-fit: cover;
 }
 
-/* APP BODY & SIDEBAR */
+/* App Body & Sidebar */
 .app-body {
   display: flex;
   flex: 1;
 }
 
-/* SIDEBAR */
+/* Sidebar */
 .sidebar {
   width: 200px;
   background-color: #ffffff;
@@ -129,7 +129,7 @@ body {
   font-weight: 700;
 }
 
-/* MAIN CONTENT */
+/* Main Content */
 .main-content {
   flex: 1;
   padding: 30px;
@@ -150,7 +150,7 @@ body {
   margin-top: 4px;
 }
 
-/* METRICS CARDS */
+/* Metrics Cards */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -215,7 +215,7 @@ body {
   color: #888888;
 }
 
-/* CHARTS GRID */
+/* Charts Grid */
 .charts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
@@ -246,7 +246,7 @@ body {
   max-width: 100% !important;
 }
 
-/* TABLES */
+/* Tables */
 .table-card {
   background: #ffffff;
   border-radius: 10px;

@@ -5,10 +5,7 @@ import java.sql.*;
 
 public class AdminDAO {
 
-    /**
-     * Checks admin username + password against admin_profile.
-     * Returns the admin_id if correct, or -1 if not.
-     */
+    // returns admin_id on a correct login, -1 otherwise
     public int login(String username, String password) throws SQLException {
         String sql = "SELECT admin_id FROM admin_profile "
                 + "WHERE admin_username = ? AND admin_password = ?";
@@ -25,7 +22,6 @@ public class AdminDAO {
         }
     }
 
-    /** Fetches the admin's display name, used for the session and chat header. */
     public String getFullName(int adminId) throws SQLException {
         String sql = "SELECT admin_fullname FROM admin_profile WHERE admin_id = ?";
         try (Connection conn = DatabaseConnection.getConnection();

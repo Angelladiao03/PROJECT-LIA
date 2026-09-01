@@ -10,7 +10,7 @@
     <script src="../../pageEnhancements.js" defer></script>
   </head>
   <body>
-    <!-- TOP NAVIGATION BAR -->
+    <!-- top nav -->
     <header class="topbar">
       <div class="topbar-left">
         <button onclick="toggleSidebar()" class="menu-btn" title="Toggle Menu">
@@ -37,9 +37,9 @@
       </div>
     </header>
 
-    <!-- MAIN BODY CONTAINER -->
+    <!-- page body -->
     <div class="app-body">
-      <!-- FIXED SIDEBAR (MATCHES ADMIN DASHBOARD STYLE) -->
+      <!-- Fixed sidebar (matches admin dashboard style) -->
       <aside id="sidebar" class="sidebar closed">
         <ul class="nav-list">
           <li class="nav-item">
@@ -65,7 +65,7 @@
         </ul>
       </aside>
 
-      <!-- MAIN CONTENT AREA -->
+      <!-- main content -->
       <main class="main-content">
         <div class="dashboard-header">
           <h2>Manage Incident Reports & Verification</h2>
@@ -75,7 +75,7 @@
           </p>
         </div>
 
-        <!-- TABLE 1: REPORT REQUEST APPROVALS -->
+        <!-- Table 1: Report Request Approvals -->
         <section class="table-card">
           <div class="table-card-header">
             <h3>New Report Approval Requests</h3>
@@ -98,7 +98,7 @@
           </div>
         </section>
 
-        <!-- TABLE 2: PENDING & IN INVESTIGATION REPORTS -->
+        <!-- Table 2: Pending & In Investigation Reports -->
         <section class="table-card">
           <div class="table-card-header">
             <h3>Active Incident Tracking & Status Updates</h3>
@@ -120,7 +120,7 @@
           </div>
         </section>
 
-        <!-- TABLE 3: SOS EMERGENCY ALERTS -->
+        <!-- Table 3: Sos Emergency Alerts -->
         <section class="table-card border-card-danger">
           <div class="table-card-header">
             <h3 class="sos">Emergency SOS Verification & Dispatch</h3>
@@ -145,7 +145,7 @@
       </main>
     </div>
 
-    <!-- MODAL POPUP FOR SCANNING REPORT DETAILS -->
+    <!-- Modal popup for scanning report details -->
     <div
       id="reportModal"
       class="modal-overlay"
@@ -170,7 +170,7 @@
           </button>
         </div>
 
-        <!-- ACCOUNT INFO SECTION -->
+        <!-- Account info section -->
         <div id="accountInfoSection" class="modal-section">
           <h4 class="section-title">Student Account Details</h4>
           <div class="info-grid">
@@ -201,7 +201,7 @@
 
         <hr class="modal-divider" id="modalDivider" />
 
-        <!-- SUBMITTED INCIDENT REPORT INFO SECTION -->
+        <!-- Submitted incident report info section -->
         <div class="modal-section">
           <h4 class="section-title">Incident Report Details</h4>
           <div class="info-grid">

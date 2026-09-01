@@ -13,25 +13,20 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.List;
 
-/**
- * Used by admin pages that manage reports (New Requests, Active Tracking,
- * Report Records) and view SOS alerts.
- *
- * GET ?type=sos -> all SOS alerts as JSON
- * GET (no params) -> all reports (every status) as JSON, with student
- * info attached. The admin pages filter by status
- * in JavaScript, same as before.
- *
- * POST action=approve&reportNo=123 -> Pending -> Active
- * POST action=investigate&reportNo=123 -> Active -> Under Investigation
- * POST action=resolve&reportNo=123 -> -> Resolved (kept in Report Records
- * regardless of whether the report is anonymous -- anonymous reports are
- * never auto-deleted)
- * POST action=reject&reportNo=123 -> deletes the report entirely (explicit
- * admin action only, e.g. rejecting a new request or deleting a stored record)
- * POST action=dispatch&sosNo=123 -> Active -> Dispatched
- * POST action=respond&sosNo=123 -> -> Responded
- */
+// Backs the admin New Requests / Active Tracking / Report Records pages,
+// plus SOS alerts.
+//
+// GET ?type=sos      all SOS alerts as JSON
+// GET (no params)    all reports (any status), with student info attached;
+//                     the admin UI filters by status client-side
+//
+// POST action=approve&reportNo=..     Pending -> Active
+// POST action=investigate&reportNo=.. Active -> Under Investigation
+// POST action=resolve&reportNo=..     -> Resolved (anonymous reports are
+//                                       kept, never auto-deleted)
+// POST action=reject&reportNo=..      deletes the report row entirely
+// POST action=dispatch&sosNo=..       Active -> Dispatched
+// POST action=respond&sosNo=..        -> Responded
 @WebServlet("/AdminReportServlet")
 public class AdminReportServlet extends HttpServlet {
 
@@ -93,9 +88,8 @@ public class AdminReportServlet extends HttpServlet {
                     ok = reportDAO.updateStatus(requireReportNo(request), "Under Investigation");
                     break;
                 case "resolve": {
-                    // Anonymous reports are kept and marked Resolved just like any
-                    // other report, so they still show up in Report Records --
-                    // they are never auto-deleted just for being anonymous.
+                    // stays in Report Records either way - being anonymous
+                    // doesn't get it auto-deleted
                     int reportNo = requireReportNo(request);
                     ok = reportDAO.updateStatus(reportNo, "Resolved");
                     break;

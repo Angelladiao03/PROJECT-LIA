@@ -1,5 +1,5 @@
-// In-memory cache of the last fetched reports/alerts, so modals and message
-// links can look up details without a second request.
+// caches the last fetched reports/alerts so modals and message links don't
+// need a second request
 let cachedReports = [];
 let cachedAlerts = [];
 
@@ -9,8 +9,7 @@ function toggleSidebar() {
   sidebar.classList.toggle("collapsed");
 }
 
-// Bounces the admin back to login if the server-side session has expired
-// (or was never created), instead of leaving these tables stuck empty.
+// same session-expiry redirect used across the admin pages
 function redirectToLoginOnSessionExpiry() {
   localStorage.removeItem("lagroInActionActiveUser");
   window.location.href = "../../../index.html";
@@ -262,7 +261,7 @@ async function loadSavedReportsAndAlerts() {
     reports = await reportsRes.json();
     alerts = await alertsRes.json();
   } catch (err) {
-    // Server unreachable -- leave the tables empty / show the empty-state message below.
+    // couldn't reach the server - tables stay empty, empty-state message shows
   }
   cachedReports = reports;
   cachedAlerts = alerts;
@@ -343,8 +342,7 @@ function messageReporter(lrn) {
   window.location.href = `../adminMessages/adminMessage.html?lrn=${encodeURIComponent(lrn)}`;
 }
 
-// If we arrived here via "View Linked Case" from the Messages page, jump
-// straight to that student's row and highlight it.
+// came here via "View Linked Case" from Messages - jump to and highlight that row
 function focusLinkedCase() {
   const targetLrn = new URLSearchParams(window.location.search).get("lrn");
   if (!targetLrn) return;

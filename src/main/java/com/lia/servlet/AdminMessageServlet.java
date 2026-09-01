@@ -13,14 +13,11 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.List;
 
-/**
- * Used by the ADMIN messages page.
- * GET (no params) -> list of every student conversation (sidebar), latest
- * message each
- * GET ?lrn=123 -> full conversation with that one student
- * GET ?info=123 -> that student's profile details, for the "View Info" panel
- * POST lrn=123&text=... -> admin sends a message to that student
- */
+// Backs the admin Messages page.
+// GET (no params)  every student conversation for the sidebar, latest msg each
+// GET ?lrn=123     full conversation with that student
+// GET ?info=123    that student's profile, for the "View Info" panel
+// POST lrn=123&text=...  admin sends a message to that student
 @WebServlet("/AdminMessageServlet")
 public class AdminMessageServlet extends HttpServlet {
 
@@ -73,10 +70,7 @@ public class AdminMessageServlet extends HttpServlet {
         }
     }
 
-    /**
-     * Builds the JSON payload for the "View Info" panel: same fields as the
-     * student's own My Account page.
-     */
+    // same fields as the student's own My Account page
     private String studentInfoToJson(long lrn) throws SQLException {
         String[] profile = studentDAO.getProfile(lrn);
         if (profile == null) {

@@ -4,8 +4,7 @@ function toggleSidebar() {
   sidebar.classList.toggle("collapsed");
 }
 
-// Bounces the admin back to login if the server-side session has expired
-// (or was never created), instead of leaving the table stuck empty.
+// admin session expired - back to login instead of a stuck empty table
 function redirectToLoginOnSessionExpiry() {
   localStorage.removeItem("lagroInActionActiveUser");
   window.location.href = "../../../index.html";

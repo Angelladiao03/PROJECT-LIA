@@ -11,10 +11,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 
-/**
- * Handles the admin/guidance-office login form.
- * Expects a POST with form fields: username, password
- */
+// Admin / guidance-office login. POST fields: username, password.
 @WebServlet("/AdminLoginServlet")
 public class AdminLoginServlet extends HttpServlet {
 

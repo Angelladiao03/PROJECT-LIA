@@ -52,8 +52,8 @@ function resetCustomFields() {
   }, 10);
 }
 
-// Handle Incident Report Form Submission -- sends the form to ReportServlet
-// and waits for the database to confirm before showing a result popup.
+// Sends the report to ReportServlet and waits for confirmation before
+// showing the result popup.
 async function handleReportSubmit(e) {
   e.preventDefault();
 
@@ -88,8 +88,7 @@ async function handleReportSubmit(e) {
     window.hidePageLoading?.();
 
     if (!data.success) {
-      // Something went wrong (e.g. not logged in, missing fields) — show the
-      // error and stop here instead of showing the success popup.
+      // not logged in, missing fields, etc - show the error and stop
       showPagePopup(data.message, "Could Not Submit Report", () => {});
       return;
     }

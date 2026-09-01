@@ -4,18 +4,15 @@ function toggleSidebar() {
     sidebar.classList.toggle('collapsed');
 }
 
-// Every fetch() on this page that reads private student data can come back
-// with a 401 if the server-side session has expired (or was never created,
-// e.g. the tab was left open past the 30-minute session timeout). Bounce the
-// student back to login instead of leaving the page stuck showing nothing.
+// A 401 here means the session expired (or the tab sat open past the
+// timeout) - send the student back to login instead of a blank page.
 function redirectToLoginOnSessionExpiry() {
     localStorage.removeItem('lagroInActionActiveUser');
     window.location.href = '../../../index.html';
 }
 
-// Loads the logged-in student's real profile from StudentProfileServlet so
-// the "My Account" card always shows what's actually in the database,
-// instead of the stale copy cached in localStorage at login time.
+// Pulls the student's real profile so "My Account" reflects the db,
+// not the stale copy cached in localStorage at login time.
 async function loadActiveStudent() {
     const activeUser = JSON.parse(localStorage.getItem('lagroInActionActiveUser') || 'null');
     if (!activeUser || activeUser.role !== 'student') return;
@@ -27,8 +24,7 @@ async function loadActiveStudent() {
         const data = await res.json();
         if (data.success) profile = data;
     } catch (error) {
-        // Server unreachable -- fall back to whatever's cached in localStorage below
-        // instead of leaving the profile card blank.
+        // couldn't reach the server - fall back to the cached copy below
     }
 
     const fields = {
@@ -46,7 +42,7 @@ async function loadActiveStudent() {
         if (element && value) element.textContent = value;
     });
 
-    // Keep localStorage in sync so other pages (topbar name, etc.) stay accurate too.
+    // keep localStorage in sync so other pages (topbar name, etc.) stay accurate
     if (profile) {
         Object.assign(activeUser, {
             fullName: profile.fullName,
@@ -62,8 +58,7 @@ async function loadActiveStudent() {
 
 loadActiveStudent();
 
-// Converts the database's status text into the short status codes this page's
-// stat cards and filter tabs already expect (requested / pending / submitted / resolved).
+// Maps db status text to the short codes the stat cards / filter tabs use
 function mapDbStatus(dbStatus) {
     const map = {
         'Pending': 'requested',
@@ -74,8 +69,7 @@ function mapDbStatus(dbStatus) {
     return map[dbStatus] || 'requested';
 }
 
-// Loads this student's own report history from MyReportsServlet and fills
-// in both the status-count cards and the report table below them.
+// Loads this student's report history and fills in the status cards + table
 async function loadSubmittedReports() {
     const tableBody = document.getElementById('reportsTableBody');
     if (!tableBody) return;
@@ -188,8 +182,7 @@ function handleProfileUpdate(e) {
     const newAdviser = document.getElementById('editAdviser').value.trim();
     const currentUsername = document.getElementById('displayUsername').textContent.replace('@', '');
 
-    // Show the exact reason under the form instead of a popup, so the
-    // student sees precisely what's wrong without an extra dismiss step.
+    // show the exact reason under the form instead of a popup
     if (!newGradeSection) {
         setEditProfileMessage('Please enter your grade and section.');
         return;
@@ -205,8 +198,7 @@ function handleProfileUpdate(e) {
     }
     setEditProfileMessage('');
 
-    // Changing the username changes what the student logs in with, so make
-    // sure that's really what they want before saving it.
+    // changing the username changes their login, so confirm first
     if (newUsername !== currentUsername) {
         showPageConfirmation(
             'Do you want to proceed? The username will change.',

@@ -12,12 +12,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 
-/**
- * Used by the student "My Account" page.
- * GET -> the logged-in student's own profile (fullName, username, lrn,
- * gradeSection, adviser, email), as JSON
- * POST username=...&gradeSection=...&adviser=... -> updates the editable fields
- */
+// Backs the student "My Account" page.
+// GET returns the logged-in student's own profile as JSON.
+// POST (username, gradeSection, adviser) updates the editable fields.
 @WebServlet("/StudentProfileServlet")
 public class StudentProfileServlet extends HttpServlet {
 

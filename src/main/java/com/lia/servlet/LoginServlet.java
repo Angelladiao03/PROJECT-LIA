@@ -11,13 +11,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 
-/**
- * Handles the student login form.
- * Expects a POST with form fields: username, password
- * On success it stores the student's LRN in the HttpSession so every other
- * servlet (ReportServlet, SosServlet, MessageServlet...) can find out who is
- * logged in.
- */
+// Student login. POST fields: username, password.
+// On success, stashes the LRN in the session - that's how ReportServlet,
+// SosServlet, MessageServlet etc. know who's currently logged in.
 @WebServlet("/LoginServlet")
 public class LoginServlet extends HttpServlet {
 

@@ -1,8 +1,7 @@
 const studentsData = {};
 let currentPendingCount = 0;
 
-// Bounces the admin back to login if the server-side session has expired
-// (or was never created), instead of leaving the table stuck empty.
+// kick back to login once the session's gone
 function redirectToLoginOnSessionExpiry() {
   localStorage.removeItem("lagroInActionActiveUser");
   window.location.href = "../../../index.html";

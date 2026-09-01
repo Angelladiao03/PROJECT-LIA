@@ -4,21 +4,12 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-/**
- * Central place that opens a connection to the LIA PostgreSQL database.
- * Every DAO class calls DatabaseConnection.getConnection() to get a fresh
- * connection, then closes it when done (use try-with-resources).
- *
- * Reads its connection details from environment variables so the exact
- * same build works both locally and once deployed (e.g. on Render, pointed
- * at a Neon database):
- *   DB_URL      e.g. jdbc:postgresql://<host>/<db>?sslmode=require
- *   DB_USER     e.g. neondb_owner
- *   DB_PASSWORD your Neon database password
- *
- * If those aren't set, it falls back to a local PostgreSQL instance on
- * localhost so it still runs out of the box on a developer's machine.
- */
+// Opens a connection to the Postgres database. Every DAO calls
+// getConnection() to grab one and closes it via try-with-resources.
+//
+// Reads DB_URL / DB_USER / DB_PASSWORD from the environment so the same
+// build works locally and on Render pointed at Neon. Falls back to a local
+// Postgres instance if those aren't set, so it still runs out of the box.
 public class DatabaseConnection {
 
     private static final String URL = System.getenv().getOrDefault(

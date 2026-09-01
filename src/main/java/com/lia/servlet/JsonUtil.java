@@ -1,15 +1,7 @@
 package com.lia.servlet;
 
-/**
- * Minimal helper to build JSON strings by hand.
- * This project keeps things dependency-free, so instead of adding the Gson
- * library we just build small JSON objects ourselves.
- *
- * Every servlet in this app shares the same "who's logged in" pattern: check
- * the HttpSession for studentLrn/adminId, and if it's missing, tell the
- * caller instead of quietly pretending there's just no data. That's what
- * sessionExpired() is for -- see its Javadoc below.
- */
+// Small hand-rolled JSON helper - didn't want to pull in Gson just for a
+// handful of small response objects.
 public class JsonUtil {
 
     public static String success(String message) {
@@ -25,34 +17,20 @@ public class JsonUtil {
         return "{\"success\": false, \"message\": \"" + escapeJson(message) + "\"}";
     }
 
-    /**
-     * Used whenever a GET endpoint that normally returns a JSON array (reports,
-     * SOS alerts, conversations, etc.) discovers the caller has no valid
-     * session. Older code just printed "[]" here with a 200 OK, which made an
-     * expired/missing login look identical to "there's genuinely no data" --
-     * the page would just render empty with no clue why. Callers should pair
-     * this with response.setStatus(HttpServletResponse.SC_UNAUTHORIZED) so the
-     * frontend can tell the difference and send the user back to the login
-     * page instead of silently showing nothing.
-     */
+    // For GET endpoints that normally return a JSON array once the session
+    // check fails. Used to just print "[]" with a 200, so an expired login
+    // looked identical to "no data yet" and the page rendered empty with no
+    // explanation. Pair with SC_UNAUTHORIZED so the frontend can actually
+    // tell the difference and bounce back to the login page.
     public static String sessionExpired() {
         return "{\"success\": false, \"sessionExpired\": true, "
                 + "\"message\": \"Your session has expired. Please log in again.\"}";
     }
 
-    /**
-     * Publicly reusable JSON string escaper, shared by every servlet that
-     * hand-builds JSON. Handles the two "obvious" characters (backslash and
-     * double quote) plus every other character JSON actually requires to be
-     * escaped: newlines, carriage returns, tabs, and any other raw control
-     * character. This matters a lot here because several fields in this app
-     * come straight from a <textarea> (SOS description, report description,
-     * chat messages) where the student can just press Enter -- if a raw
-     * newline slips into the JSON unescaped, the string literal breaks and
-     * the browser's JSON.parse() throws, which silently empties out
-     * whatever list was being loaded (that's exactly what was happening to
-     * the SOS table whenever an alert's description had a line break in it).
-     */
+    // Escapes backslash/quote plus the usual control characters (newline,
+    // tab, etc). Needed because fields like the SOS description or a chat
+    // message come from a <textarea>, and an unescaped newline breaks the
+    // JSON string and makes JSON.parse() throw on the frontend.
     public static String escapeJson(String s) {
         if (s == null)
             return "";

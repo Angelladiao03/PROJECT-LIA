@@ -5,7 +5,6 @@ import java.sql.*;
 
 public class SosDAO {
 
-    /** Inserts a new SOS alert for a logged-in student. */
     public int submitSos(long lrn, String location, String description) throws SQLException {
 
         String sql = "INSERT INTO sos_alerts (student_lrn, sos_location, sos_description) "
@@ -26,10 +25,7 @@ public class SosDAO {
         }
     }
 
-    /**
-     * Every SOS alert with the student's name attached, newest first, for the admin
-     * dashboard.
-     */
+    // newest first, joined with student name for the admin dashboard
     public java.util.List<String[]> getAllAlerts() throws SQLException {
         String sql = "SELECT a.sos_no, a.student_lrn, s.student_fullName, s.student_username, "
                 + "a.sos_location, a.sos_description, a.sos_datetime, a.sos_status "
@@ -56,7 +52,6 @@ public class SosDAO {
         return results;
     }
 
-    /** Admin marks an SOS alert as Dispatched or Responded. */
     public boolean updateStatus(int sosNo, String newStatus) throws SQLException {
         String sql = "UPDATE sos_alerts SET sos_status = ? WHERE sos_no = ?";
         try (Connection conn = DatabaseConnection.getConnection();

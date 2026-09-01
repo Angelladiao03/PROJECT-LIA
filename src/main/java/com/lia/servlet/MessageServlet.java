@@ -12,13 +12,10 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.List;
 
-/**
- * Used by the STUDENT messages page.
- * GET -> { "connectedAdmin": "<name>" | null, "messages": [...] } for the
- * logged-in student's conversation. connectedAdmin is the name of
- * whichever admin most recently replied, or null if none has yet.
- * POST -> sends a new message from the student (form field: text)
- */
+// Backs the student Messages page.
+// GET returns { "connectedAdmin": "<name>" | null, "messages": [...] } for
+// the logged-in student's conversation.
+// POST (form field: text) sends a new message from the student.
 @WebServlet("/MessageServlet")
 public class MessageServlet extends HttpServlet {
 
@@ -90,10 +87,8 @@ public class MessageServlet extends HttpServlet {
         return json.append("]").toString();
     }
 
-    // Kept as a short alias so the other servlets in this package (which were
-    // already calling MessageServlet.esc(...) all over the place) don't need
-    // to change -- it just forwards to the shared escaper in JsonUtil now,
-    // instead of duplicating the same replace() calls in every file.
+    // short alias so other servlets can call MessageServlet.esc(...) without
+    // importing JsonUtil directly - just forwards to the real escaper
     static String esc(String s) {
         return JsonUtil.escapeJson(s);
     }

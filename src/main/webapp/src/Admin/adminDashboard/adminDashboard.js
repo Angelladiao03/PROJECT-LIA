@@ -2,8 +2,6 @@ function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("collapsed");
 }
 
-// Bounces the admin back to login if the server-side session has expired
-// (or was never created), instead of leaving the dashboard stuck empty.
 function redirectToLoginOnSessionExpiry() {
   localStorage.removeItem("lagroInActionActiveUser");
   window.location.href = "../../../index.html";
@@ -11,8 +9,8 @@ function redirectToLoginOnSessionExpiry() {
 
 let cachedDashboardReports = [];
 
-// Loads every dashboard widget in parallel: report/SOS counts, the recent
-// SOS table, and the trend charts, all sourced from the live database.
+// Loads every dashboard widget at once: report/SOS counts, the recent
+// SOS table, and the trend charts.
 async function loadDashboardData() {
   let reports = [];
   let alerts = [];
@@ -34,7 +32,7 @@ async function loadDashboardData() {
     alerts = await alertsRes.json();
     pending = await pendingRes.json();
   } catch (err) {
-    // Server unreachable -- fall through with empty arrays so the page still renders.
+    // couldn't reach the server - render with whatever's empty
   }
   cachedDashboardReports = reports;
 

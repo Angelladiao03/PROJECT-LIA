@@ -30,11 +30,8 @@ public class MessageDAO {
         }
     }
 
-    /**
-     * Full name of the admin who most recently replied to this student, or
-     * null if no admin has replied yet. Lets the student's Message page show
-     * "You are connected with [Admin Name]" instead of a generic label.
-     */
+    // name of whoever last replied, or null - drives the "You are connected
+    // with [Admin Name]" line on the student's Messages page
     public String getLatestRespondingAdminName(long lrn) throws SQLException {
         String sql = "SELECT a.admin_fullname FROM messages m "
                 + "JOIN admin_profile a ON a.admin_id = m.admin_id "
@@ -50,7 +47,7 @@ public class MessageDAO {
         }
     }
 
-    /** Full conversation with one student, oldest first (for chat display). */
+    // oldest first, so it renders top-to-bottom like a normal chat
     public List<String[]> getConversation(long lrn) throws SQLException {
         String sql = "SELECT sender_type, message_text, sent_datetime FROM messages "
                 + "WHERE student_lrn = ? ORDER BY sent_datetime ASC";
@@ -72,10 +69,7 @@ public class MessageDAO {
         return results;
     }
 
-    /**
-     * One row per approved student, showing their latest message if they have one
-     * (for the admin sidebar list).
-     */
+    // sidebar list: one row per approved student, plus their latest message if any
     public List<String[]> getConversationList() throws SQLException {
         String sql = "SELECT s.student_lrn, s.student_fullName, m.message_text, m.sent_datetime "
                 + "FROM students s "

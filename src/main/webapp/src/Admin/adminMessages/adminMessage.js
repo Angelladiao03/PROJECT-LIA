@@ -2,8 +2,6 @@ function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("collapsed");
 }
 
-// Bounces the admin back to login if the server-side session has expired
-// (or was never created), instead of leaving the chat stuck empty.
 function redirectToLoginOnSessionExpiry() {
   localStorage.removeItem("lagroInActionActiveUser");
   window.location.href = "../../../index.html";
@@ -18,9 +16,8 @@ function formatTime(dbDateTime) {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-// Loads the sidebar list of every student conversation from AdminMessageServlet,
-// and auto-selects a student if we arrived here via ?lrn=... (e.g. from the
-// "Message Student" button on Manage Reports).
+// Loads the sidebar conversation list, auto-selecting a student if we
+// arrived via ?lrn=... (e.g. from the "Message Student" button on Manage Reports).
 async function renderStudentList() {
   const list = document.getElementById("studentList");
   list.innerHTML = "";
@@ -108,8 +105,7 @@ async function renderMessages() {
   }
 }
 
-// Sends the admin's typed reply to AdminMessageServlet, then reloads both
-// the thread and the sidebar preview text so everything stays in sync.
+// Sends the admin's reply, then reloads the thread + sidebar preview
 async function sendMessage(event) {
   event.preventDefault();
   const input = document.getElementById("messageInput");
@@ -157,8 +153,7 @@ function viewCaseDetails() {
   window.location.href = `../adminManageReports/adminManage.html?lrn=${encodeURIComponent(currentLrn)}`;
 }
 
-// Opens the "View Info" modal with the selected student's full profile,
-// fetched fresh from AdminMessageServlet?info=<lrn> so it's always accurate.
+// Opens the "View Info" modal with the student's full profile
 async function viewStudentInfo() {
   if (!currentLrn) {
     showPagePopup(
@@ -210,8 +205,7 @@ function closeStudentInfoModal() {
   document.getElementById("studentInfoModal").classList.add("hidden");
 }
 
-// Closes the Student Info modal when the darkened backdrop (not the card
-// itself) is clicked -- matches the same pattern used by other modals in the app.
+// closes the Student Info modal on backdrop click, same as the other modals
 function closeModalOnOverlay(event) {
   if (event.target.id === "studentInfoModal") {
     closeStudentInfoModal();
@@ -220,9 +214,7 @@ function closeModalOnOverlay(event) {
 
 renderStudentList();
 
-// Keep the open conversation (and the sidebar's list of students/last
-// messages) fresh automatically, so a new message from a student shows up
-// without the admin needing to reload the page.
+// auto-refresh the open thread + sidebar so new messages show up without a reload
 setInterval(() => {
   renderStudentList();
   if (currentLrn) renderMessages();

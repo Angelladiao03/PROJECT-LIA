@@ -19,8 +19,7 @@ function closeSosModal() {
   }, 200);
 }
 
-// Shared by every Student page's SOS button (the modal markup and this
-// script are identical everywhere it appears). Sends the alert to SosServlet
+// Shared by every Student page's SOS button - sends the alert to SosServlet
 // and waits for confirmation before closing the dialog.
 async function handleSosSubmit(event) {
   event.preventDefault();
