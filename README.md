@@ -53,9 +53,10 @@ Download and run the installer for your OS from
 setup:
 
 - Keep the default **port `5432`**.
-- When it asks for a **password for the `postgres` superuser**, pick
-  something simple you'll remember (e.g. `postgres`) — this is only for
-  your own machine, not a shared secret.
+- When it asks for a **password for the `postgres` superuser**, set it to
+  **`1234`**. The app is set up to use that as the local default for
+  everyone on the team, so setting it here means zero extra configuration
+  later.
 - The installer also installs **pgAdmin**, a graphical tool for managing
   the database. You'll use it in the next step.
 
@@ -99,43 +100,19 @@ psql -U postgres -d lia_db -f schema.sql
 Either way, you should now see tables like `students`, `reports`,
 `sos_alerts`, `messages`, and `admin_profile` under `lia_db`.
 
-### 4. Point the app at your local database
+### 4. That's it — no extra configuration needed
 
-The app reads its database settings from three environment variables:
+The app's default database settings already match this setup:
+`jdbc:postgresql://localhost:5432/lia_db`, user `postgres`, password
+`1234`. As long as you used those same values in steps 1–2, it connects
+with zero setup on your end — no environment variables, no config files
+to edit.
 
-| Variable      | Default if not set                                      |
-|----------------|-----------------------------------------------------------|
-| `DB_URL`      | `jdbc:postgresql://localhost:5432/lia_db?sslmode=disable` |
-| `DB_USER`     | `postgres`                                                 |
-| `DB_PASSWORD` | *(empty)*                                                  |
-
-If you used the defaults above (`lia_db` on port `5432`, user `postgres`),
-**you don't need to set anything** — it'll just work out of the box.
-
-If your setup is different (a different password, a different database
-name, etc.), you'll need to set these as actual **OS environment
-variables** — NetBeans doesn't have a VM Options field for Maven web
-projects, so they can't be set from inside the IDE's project settings.
-
-**Windows:**
-
-1. Search the Start menu for **"Environment Variables"** and open **Edit
-   environment variables for your account**.
-2. Under **User variables**, click **New** and add `DB_PASSWORD` (and
-   `DB_URL` / `DB_USER` if needed) with your value. For example, if your
-   `postgres` password is `mypassword`, add a variable named
-   `DB_PASSWORD` with the value `mypassword`.
-3. **Restart NetBeans completely** — it only picks up environment
-   variables that existed when it was launched, and its managed Tomcat
-   runs as a child process of the IDE.
-
-**macOS/Linux:** set the variables in your shell profile (e.g.
-`~/.zshrc` or `~/.bashrc`), then restart NetBeans from a terminal session
-that has them loaded — or set them before launching Tomcat directly if
-you're not using NetBeans's managed server.
-
-You don't need to (and shouldn't) hardcode your personal password into
-`DatabaseConnection.java` — that file is shared with the rest of the team.
+(If you genuinely need different local settings, they're the
+`URL`/`USER`/`PASSWORD` constants at the top of
+`src/main/java/com/lia/db/DatabaseConnection.java` — but changing them
+there affects everyone who pulls your commit, so it's best to just match
+steps 1–2 above instead.)
 
 ### 5. Create an admin account
 
