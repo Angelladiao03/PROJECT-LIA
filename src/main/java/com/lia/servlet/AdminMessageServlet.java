@@ -76,14 +76,15 @@ public class AdminMessageServlet extends HttpServlet {
         if (profile == null) {
             return JsonUtil.error("Student not found.");
         }
-        // profile = [fullName, adviser, gradeSection, email, username]
+        // profile = [fullName, adviser, gradeSection, email, username, contactNumber]
         return "{\"success\": true, "
                 + "\"lrn\": \"" + lrn + "\", "
                 + "\"fullName\": \"" + JsonUtil.escapeJson(profile[0]) + "\", "
                 + "\"adviser\": \"" + JsonUtil.escapeJson(profile[1]) + "\", "
                 + "\"gradeSection\": \"" + JsonUtil.escapeJson(profile[2]) + "\", "
                 + "\"email\": \"" + JsonUtil.escapeJson(profile[3]) + "\", "
-                + "\"username\": \"" + JsonUtil.escapeJson(profile[4]) + "\"}";
+                + "\"username\": \"" + JsonUtil.escapeJson(profile[4]) + "\", "
+                + "\"contactNumber\": \"" + JsonUtil.escapeJson(profile[5]) + "\"}";
     }
 
     @Override

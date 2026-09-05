@@ -197,6 +197,7 @@ async function viewStudentInfo() {
     info.gradeSection || "-";
   document.getElementById("infoAdviser").textContent = info.adviser || "-";
   document.getElementById("infoEmail").textContent = info.email || "-";
+  document.getElementById("infoContact").textContent = info.contactNumber || "-";
 
   document.getElementById("studentInfoModal").classList.remove("hidden");
 }
