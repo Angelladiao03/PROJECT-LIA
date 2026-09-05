@@ -42,13 +42,14 @@ public class StudentProfileServlet extends HttpServlet {
                 return;
             }
 
-            // profile = [fullName, adviser, gradeSection, email, username]
+            // profile = [fullName, adviser, gradeSection, email, username, contactNumber]
             out.print("{\"success\": true, "
                     + "\"fullName\": \"" + MessageServlet.esc(profile[0]) + "\", "
                     + "\"adviser\": \"" + MessageServlet.esc(profile[1]) + "\", "
                     + "\"gradeSection\": \"" + MessageServlet.esc(profile[2]) + "\", "
                     + "\"email\": \"" + MessageServlet.esc(profile[3]) + "\", "
                     + "\"username\": \"" + MessageServlet.esc(profile[4]) + "\", "
+                    + "\"contactNumber\": \"" + MessageServlet.esc(profile[5]) + "\", "
                     + "\"lrn\": \"" + lrn + "\"}");
 
         } catch (SQLException e) {

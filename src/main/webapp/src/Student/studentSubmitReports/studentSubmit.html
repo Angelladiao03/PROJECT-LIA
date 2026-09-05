@@ -200,6 +200,36 @@
               </div>
 
               <div class="form-group">
+                <label for="involvedPersonKnown" class="form-label"
+                  >Do you know the person(s) involved?
+                  <span class="required">*</span></label
+                >
+                <select
+                  id="involvedPersonKnown"
+                  class="form-select"
+                  required
+                  onchange="toggleInvolvedPersonField()"
+                >
+                  <option value="" disabled selected>Select an answer...</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+
+              <div id="involvedPersonContainer" class="form-group hidden">
+                <label for="involvedPersonDescription" class="form-label"
+                  >Describe the Person(s) Involved
+                  <span class="required">*</span></label
+                >
+                <textarea
+                  id="involvedPersonDescription"
+                  class="form-textarea"
+                  rows="3"
+                  placeholder="e.g. Name/nickname if known, grade & section, physical description, or how you know them"
+                ></textarea>
+              </div>
+
+              <div class="form-group">
                 <label for="description" class="form-label"
                   >Description of What Happened
                   <span class="required">*</span></label
@@ -209,7 +239,7 @@
                   class="form-textarea"
                   rows="5"
                   required
-                  placeholder="Provide details about what happened, people involved, or witnesses..."
+                  placeholder="Preferred format: (1) What happened, (2) When and where it happened, (3) Who was involved, (4) Any witnesses..."
                 ></textarea>
               </div>
             </div>

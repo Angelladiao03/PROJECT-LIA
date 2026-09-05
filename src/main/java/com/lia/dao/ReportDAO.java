@@ -9,11 +9,13 @@ public class ReportDAO {
 
     // lrn is null when isAnonymous is true
     public int submitReport(Long lrn, boolean isAnonymous, String location,
-            String category, String description) throws SQLException {
+            String category, String description, boolean involvedPersonKnown,
+            String involvedPersonDescription) throws SQLException {
 
         String sql = "INSERT INTO reports "
-                + "(student_lrn, is_anonymous, report_location, category, report_description) "
-                + "VALUES (?, ?, ?, ?, ?)";
+                + "(student_lrn, is_anonymous, report_location, category, report_description, "
+                + " involved_person_known, involved_person_description) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -27,6 +29,12 @@ public class ReportDAO {
             ps.setString(3, location);
             ps.setString(4, category);
             ps.setString(5, description);
+            ps.setBoolean(6, involvedPersonKnown);
+            if (involvedPersonKnown && involvedPersonDescription != null) {
+                ps.setString(7, involvedPersonDescription);
+            } else {
+                ps.setNull(7, Types.VARCHAR);
+            }
 
             ps.executeUpdate();
 
@@ -109,11 +117,14 @@ public class ReportDAO {
 
     // Same as getAllReports() but joined with student info for the admin
     // dashboard. Column order: reportNo, isAnonymous, lrn, fullName, username,
-    // gradeSection, adviser, email, category, description, location, dateTime, status
+    // gradeSection, adviser, email, contactNumber, category, description,
+    // location, involvedPersonKnown, involvedPersonDescription, dateTime, status
     public List<String[]> getAllReportsDetailed() throws SQLException {
         String sql = "SELECT r.report_no, r.is_anonymous, r.student_lrn, s.student_fullName, "
-                + "s.student_username, s.grade_section, s.adviser_name, s.email, "
-                + "r.category, r.report_description, r.report_location, r.report_datetime, r.report_status "
+                + "s.student_username, s.grade_section, s.adviser_name, s.email, s.contact_number, "
+                + "r.category, r.report_description, r.report_location, "
+                + "r.involved_person_known, r.involved_person_description, "
+                + "r.report_datetime, r.report_status "
                 + "FROM reports r LEFT JOIN students s ON s.student_lrn = r.student_lrn "
                 + "ORDER BY r.report_datetime DESC";
 
@@ -133,9 +144,12 @@ public class ReportDAO {
                         anon ? "" : rs.getString("grade_section"),
                         anon ? "" : rs.getString("adviser_name"),
                         anon ? "" : rs.getString("email"),
+                        anon ? "" : rs.getString("contact_number"),
                         rs.getString("category"),
                         rs.getString("report_description"),
                         rs.getString("report_location"),
+                        rs.getBoolean("involved_person_known") ? "true" : "false",
+                        rs.getString("involved_person_description"),
                         rs.getString("report_datetime"),
                         rs.getString("report_status")
                 });

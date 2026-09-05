@@ -12,8 +12,9 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 
 // Submit Incident Report form. POST fields: isAnonymous ("true"/"false"),
-// location, category, description. Non-anonymous reports require a logged-in
-// student session.
+// location, category, description, involvedPersonKnown ("true"/"false"),
+// involvedPersonDescription (required when involvedPersonKnown is "true").
+// Non-anonymous reports require a logged-in student session.
 @WebServlet("/ReportServlet")
 public class ReportServlet extends HttpServlet {
 
@@ -31,12 +32,20 @@ public class ReportServlet extends HttpServlet {
         String location = request.getParameter("location");
         String category = request.getParameter("category");
         String description = request.getParameter("description");
+        boolean involvedPersonKnown = "true".equalsIgnoreCase(request.getParameter("involvedPersonKnown"));
+        String involvedPersonDescription = request.getParameter("involvedPersonDescription");
 
         try (PrintWriter out = response.getWriter()) {
 
             if (location == null || category == null || description == null
                     || location.isBlank() || category.isBlank() || description.isBlank()) {
                 out.print(JsonUtil.error("Please fill out location, category, and description."));
+                return;
+            }
+
+            if (involvedPersonKnown
+                    && (involvedPersonDescription == null || involvedPersonDescription.isBlank())) {
+                out.print(JsonUtil.error("Please describe the person(s) involved."));
                 return;
             }
 
@@ -54,7 +63,8 @@ public class ReportServlet extends HttpServlet {
                 lrn = (Long) session.getAttribute("studentLrn");
             }
 
-            int reportNo = reportDAO.submitReport(lrn, isAnonymous, location, category, description);
+            int reportNo = reportDAO.submitReport(lrn, isAnonymous, location, category, description,
+                    involvedPersonKnown, involvedPersonDescription);
 
             if (reportNo != -1) {
                 out.print(JsonUtil.success("Report submitted. Please wait for status updates.",

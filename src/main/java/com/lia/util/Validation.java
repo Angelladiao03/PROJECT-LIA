@@ -18,6 +18,7 @@ public final class Validation {
     public static final int USERNAME_MIN_LENGTH = 8;
     public static final int USERNAME_MAX_LENGTH = 24;
     public static final int LRN_LENGTH = 12;
+    public static final int CONTACT_NUMBER_LENGTH = 11;
 
     private Validation() {
     }
@@ -42,6 +43,28 @@ public final class Validation {
 
     public static boolean isValidEmail(String email) {
         return email != null && EMAIL_PATTERN.matcher(email).matches();
+    }
+
+    /**
+     * Returns a specific reason a contact number is invalid, or null if it's
+     * valid. Philippine mobile numbers: exactly 11 digits, starting with
+     * "09" (e.g. 09171234567).
+     */
+    public static String contactNumberError(String contactNumber) {
+        String trimmed = contactNumber == null ? "" : contactNumber.trim();
+        if (trimmed.isEmpty()) {
+            return "Contact number is required!";
+        }
+        if (!DIGITS_ONLY.matcher(trimmed).matches()) {
+            return "Contact number must contain numbers only!";
+        }
+        if (trimmed.length() != CONTACT_NUMBER_LENGTH) {
+            return "Contact number must be " + CONTACT_NUMBER_LENGTH + " numbers!";
+        }
+        if (!trimmed.startsWith("09")) {
+            return "Contact number must start with 09!";
+        }
+        return null;
     }
 
     /**

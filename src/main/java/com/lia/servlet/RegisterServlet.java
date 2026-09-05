@@ -12,8 +12,8 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 
 // Student sign-up form. POST fields: lrn, fullName, username, password,
-// rePassword, adviser, gradeSection, email. New accounts sit as "Pending"
-// until an admin approves them from the Request Account page.
+// rePassword, adviser, gradeSection, email, contactNumber. New accounts sit
+// as "Pending" until an admin approves them from the Request Account page.
 @WebServlet("/RegisterServlet")
 public class RegisterServlet extends HttpServlet {
 
@@ -35,6 +35,7 @@ public class RegisterServlet extends HttpServlet {
         String adviser = request.getParameter("adviser");
         String gradeSection = request.getParameter("gradeSection");
         String email = request.getParameter("email");
+        String contactNumber = request.getParameter("contactNumber");
 
         try (PrintWriter out = response.getWriter()) {
 
@@ -64,6 +65,10 @@ public class RegisterServlet extends HttpServlet {
                 out.print(JsonUtil.error("Please enter your email address."));
                 return;
             }
+            if (contactNumber == null || contactNumber.isBlank()) {
+                out.print(JsonUtil.error("Please enter your contact number."));
+                return;
+            }
             if (password == null || password.isBlank()) {
                 out.print(JsonUtil.error("Please enter a password."));
                 return;
@@ -82,6 +87,12 @@ public class RegisterServlet extends HttpServlet {
 
             if (!Validation.isValidEmail(email)) {
                 out.print(JsonUtil.error("Please enter a valid email address!"));
+                return;
+            }
+
+            String contactNumberError = Validation.contactNumberError(contactNumber);
+            if (contactNumberError != null) {
+                out.print(JsonUtil.error(contactNumberError));
                 return;
             }
 
@@ -122,7 +133,7 @@ public class RegisterServlet extends HttpServlet {
             }
 
             boolean created = studentDAO.registerStudent(
-                    lrn, fullName, username, password, adviser, gradeSection, email);
+                    lrn, fullName, username, password, adviser, gradeSection, email, contactNumber.trim());
 
             if (created) {
                 out.print(JsonUtil.success("Account registered! Please wait for approval."));

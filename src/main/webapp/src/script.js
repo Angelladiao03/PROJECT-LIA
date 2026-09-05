@@ -167,6 +167,7 @@ async function handleRegistration(event) {
     gradeSection,
     adviser,
     email,
+    contactNumber,
     password,
     confirmPassword,
   ] = inputs.map((input) => input.value.trim());
@@ -179,6 +180,7 @@ async function handleRegistration(event) {
   const validationError =
     validateLrn(lrn) ||
     validateEmail(email) ||
+    validateContactNumber(contactNumber) ||
     validateUsername(username) ||
     validatePassword(password);
   if (validationError) {
@@ -197,6 +199,7 @@ async function handleRegistration(event) {
     adviser,
     gradeSection,
     email,
+    contactNumber,
   });
 
   try {

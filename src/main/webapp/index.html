@@ -48,16 +48,16 @@
             novalidate
           >
             <div class="form-group">
-              <label class="form-label">Username:</label>
+              <label class="form-label">Username or LRN:</label>
               <input
                 type="text"
                 required
-                data-field="username"
-                placeholder="Enter your username"
+                data-field="username or LRN"
+                placeholder="Enter your username or LRN"
                 class="form-input"
                 autocomplete="username"
                 onfocus="this.removeAttribute('placeholder')"
-                onblur="this.placeholder = 'Enter your username'"
+                onblur="this.placeholder = 'Enter your username or LRN'"
               />
             </div>
 
@@ -172,6 +172,20 @@
             </div>
 
             <div class="form-group">
+              <label class="form-label form-label-wide">Contact Number:</label>
+              <input
+                type="tel"
+                required
+                pattern="09\d{9}"
+                maxlength="11"
+                inputmode="numeric"
+                data-field="contact number"
+                placeholder="e.g. 09171234567"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
               <label class="form-label form-label-wide">Password:</label>
               <input
                 type="password"
@@ -270,7 +284,7 @@
           onclick="showForm('adminLoginSection')"
           class="secret-admin-trigger"
         >
-          v1.1.3
+          v1.2.0
         </button>
       </div>
     </div>

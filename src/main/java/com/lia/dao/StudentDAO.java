@@ -8,11 +8,11 @@ public class StudentDAO {
     // adds a new student row from the sign-up form
     public boolean registerStudent(long lrn, String fullName, String username,
             String password, String adviser, String gradeSection,
-            String email) throws SQLException {
+            String email, String contactNumber) throws SQLException {
 
         String sql = "INSERT INTO students "
                 + "(student_lrn, student_fullName, student_username, student_password, "
-                + " adviser_name, grade_section, email) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                + " adviser_name, grade_section, email, contact_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -24,24 +24,30 @@ public class StudentDAO {
             ps.setString(5, adviser);
             ps.setString(6, gradeSection);
             ps.setString(7, email);
+            ps.setString(8, contactNumber);
 
             return ps.executeUpdate() == 1;
         }
     }
 
-    // Returns the LRN on a correct username/password, -1 otherwise.
+    // Returns the LRN on a correct username-or-LRN + password, -1 otherwise.
+    // "identifier" can be either the student's username or their LRN - the
+    // login form accepts both in the same field, so we match against
+    // whichever one it looks like.
     // Doesn't look at approval status - LoginServlet checks getStatus()
     // right after, so a wrong password and "not approved yet" don't get
     // mixed into the same error message.
-    public long login(String username, String password) throws SQLException {
+    public long login(String identifier, String password) throws SQLException {
         String sql = "SELECT student_lrn FROM students "
-                + "WHERE student_username = ? AND student_password = ?";
+                + "WHERE (student_username = ? OR CAST(student_lrn AS TEXT) = ?) "
+                + "AND student_password = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, username);
-            ps.setString(2, password);
+            ps.setString(1, identifier);
+            ps.setString(2, identifier);
+            ps.setString(3, password);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -68,7 +74,7 @@ public class StudentDAO {
     // oldest sign-up first, so admin works through the backlog in order
     public java.util.List<String[]> getPendingStudents() throws SQLException {
         String sql = "SELECT student_lrn, student_fullName, student_username, "
-                + "adviser_name, grade_section, email, registered_at "
+                + "adviser_name, grade_section, email, contact_number, registered_at "
                 + "FROM students WHERE status = 'Pending' ORDER BY registered_at ASC";
 
         java.util.List<String[]> results = new java.util.ArrayList<>();
@@ -83,6 +89,7 @@ public class StudentDAO {
                         rs.getString("adviser_name"),
                         rs.getString("grade_section"),
                         rs.getString("email"),
+                        rs.getString("contact_number"),
                         rs.getString("registered_at")
                 });
             }
@@ -111,7 +118,7 @@ public class StudentDAO {
 
     // basic profile fields, used for My Account and for filling the session
     public String[] getProfile(long lrn) throws SQLException {
-        String sql = "SELECT student_fullName, adviser_name, grade_section, email, student_username "
+        String sql = "SELECT student_fullName, adviser_name, grade_section, email, student_username, contact_number "
                 + "FROM students WHERE student_lrn = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -125,7 +132,8 @@ public class StudentDAO {
                             rs.getString("adviser_name"),
                             rs.getString("grade_section"),
                             rs.getString("email"),
-                            rs.getString("student_username")
+                            rs.getString("student_username"),
+                            rs.getString("contact_number")
                     };
                 }
                 return null;

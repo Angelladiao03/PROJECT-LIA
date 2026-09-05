@@ -34,6 +34,7 @@ async function loadActiveStudent() {
         displayGradeSection: profile?.gradeSection || activeUser.gradeSection,
         displayAdviser: profile?.adviser || activeUser.adviser,
         displayGmail: profile?.email || activeUser.email,
+        displayContact: profile?.contactNumber || activeUser.contactNumber,
         topbarUsername: profile?.username || activeUser.username
     };
 
@@ -50,7 +51,8 @@ async function loadActiveStudent() {
             lrn: profile.lrn,
             gradeSection: profile.gradeSection,
             adviser: profile.adviser,
-            email: profile.email
+            email: profile.email,
+            contactNumber: profile.contactNumber
         });
         localStorage.setItem('lagroInActionActiveUser', JSON.stringify(activeUser));
     }
@@ -164,6 +166,7 @@ function openEditProfileModal() {
     document.getElementById('editGradeSection').value = document.getElementById('displayGradeSection').textContent;
     document.getElementById('editAdviser').value = document.getElementById('displayAdviser').textContent;
     document.getElementById('editGmail').value = document.getElementById('displayGmail').textContent;
+    document.getElementById('editContact').value = document.getElementById('displayContact').textContent;
     setEditProfileMessage('');
 
     document.getElementById('editProfileModal').classList.remove('hidden');

@@ -126,8 +126,8 @@ public class AdminReportServlet extends HttpServlet {
     private String reportListToJson(List<String[]> rows) {
         StringBuilder json = new StringBuilder("[");
         String[] keys = { "reportNo", "isAnonymous", "lrn", "fullName", "username",
-                "gradeSection", "adviser", "email", "category", "description",
-                "location", "dateTime", "status" };
+                "gradeSection", "adviser", "email", "contactNumber", "category", "description",
+                "location", "involvedPersonKnown", "involvedPersonDescription", "dateTime", "status" };
         for (int i = 0; i < rows.size(); i++) {
             String[] r = rows.get(i);
             if (i > 0)

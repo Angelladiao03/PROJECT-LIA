@@ -44,11 +44,29 @@ function toggleOthersField() {
   }
 }
 
+// Toggle the "describe the person(s) involved" textbox depending on
+// whether the reporter says they know who was involved
+function toggleInvolvedPersonField() {
+  const knownSelect = document.getElementById("involvedPersonKnown");
+  const container = document.getElementById("involvedPersonContainer");
+  const descriptionInput = document.getElementById("involvedPersonDescription");
+
+  if (knownSelect.value === "yes") {
+    container.classList.remove("hidden");
+    descriptionInput.setAttribute("required", "true");
+  } else {
+    container.classList.add("hidden");
+    descriptionInput.removeAttribute("required");
+    descriptionInput.value = "";
+  }
+}
+
 // Clear custom dynamic fields when clicking the Reset button
 function resetCustomFields() {
   setTimeout(() => {
     toggleAnonymityFields();
     toggleOthersField();
+    toggleInvolvedPersonField();
   }, 10);
 }
 
@@ -64,6 +82,11 @@ async function handleReportSubmit(e) {
   const specifiedCategory = document.getElementById("otherCategory").value;
   const location = document.getElementById("location").value;
   const description = document.getElementById("description").value.trim();
+  const involvedPersonKnown =
+    document.getElementById("involvedPersonKnown").value === "yes";
+  const involvedPersonDescription = document
+    .getElementById("involvedPersonDescription")
+    .value.trim();
 
   const finalCategory =
     category === "Others" ? `Others (${specifiedCategory})` : category;
@@ -75,6 +98,8 @@ async function handleReportSubmit(e) {
     location,
     category: finalCategory,
     description,
+    involvedPersonKnown: involvedPersonKnown ? "true" : "false",
+    involvedPersonDescription: involvedPersonKnown ? involvedPersonDescription : "",
   });
 
   try {

@@ -4,6 +4,7 @@
 const USERNAME_MIN_LENGTH = 8;
 const USERNAME_MAX_LENGTH = 24;
 const LRN_LENGTH = 12;
+const CONTACT_NUMBER_LENGTH = 11;
 
 function validateUsername(username) {
   const trimmed = (username || "").trim();
@@ -29,6 +30,24 @@ function validateLrn(lrn) {
   }
   if (trimmed.length !== LRN_LENGTH) {
     return `LRN must be ${LRN_LENGTH} numbers!`;
+  }
+  return null;
+}
+
+// Philippine mobile numbers: exactly 11 digits, starting with "09"
+function validateContactNumber(contactNumber) {
+  const trimmed = (contactNumber || "").trim();
+  if (!trimmed) {
+    return "Contact number is required!";
+  }
+  if (!/^\d+$/.test(trimmed)) {
+    return "Contact number must contain numbers only!";
+  }
+  if (trimmed.length !== CONTACT_NUMBER_LENGTH) {
+    return `Contact number must be ${CONTACT_NUMBER_LENGTH} numbers!`;
+  }
+  if (!trimmed.startsWith("09")) {
+    return "Contact number must start with 09!";
   }
   return null;
 }

@@ -11,7 +11,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 
-// Student login. POST fields: username, password.
+// Student login. POST fields: username (accepts either the student's
+// username or their LRN), password.
 // On success, stashes the LRN in the session - that's how ReportServlet,
 // SosServlet, MessageServlet etc. know who's currently logged in.
 @WebServlet("/LoginServlet")
@@ -33,7 +34,7 @@ public class LoginServlet extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
 
             if (username == null || username.isBlank()) {
-                out.print(JsonUtil.error("Please enter your username."));
+                out.print(JsonUtil.error("Please enter your username or LRN."));
                 return;
             }
             if (password == null || password.isBlank()) {
@@ -44,7 +45,7 @@ public class LoginServlet extends HttpServlet {
             long lrn = studentDAO.login(username, password);
 
             if (lrn == -1) {
-                out.print(JsonUtil.error("Invalid Username or Password!"));
+                out.print(JsonUtil.error("Invalid Username/LRN or Password!"));
                 return;
             }
 
@@ -55,10 +56,12 @@ public class LoginServlet extends HttpServlet {
 
             HttpSession session = request.getSession(true);
             session.setAttribute("studentLrn", lrn);
-            session.setAttribute("username", username);
 
             String[] profile = studentDAO.getProfile(lrn);
             String fullName = profile != null ? profile[0] : "";
+            // profile[4] is the actual username - store that rather than the
+            // raw login input, since the student may have typed their LRN instead
+            session.setAttribute("username", profile != null ? profile[4] : username);
 
             out.print("{\"success\": true, \"message\": \"Login successful.\", "
                     + "\"lrn\": \"" + lrn + "\", "

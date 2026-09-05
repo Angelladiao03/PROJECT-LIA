@@ -169,9 +169,6 @@ You can now log in on the Admin Log In tab with that username/password.
 - Always **pull** the latest changes before starting work.
 - Create a **branch** for whatever you're working on instead of committing
   straight to `main`, so it's easy to review each other's changes.
-- If you change anything in the database schema, add a new
-  `migration_YYYY_MM.sql` file rather than editing `schema.sql` directly,
-  and mention it in your PR/commit message so teammates know to run it.
 - Don't commit the `target/` folder or your personal NetBeans private
   settings — the included `.gitignore` already excludes these.
 

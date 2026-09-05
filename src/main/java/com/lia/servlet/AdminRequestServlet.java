@@ -88,7 +88,7 @@ public class AdminRequestServlet extends HttpServlet {
 
     private String pendingListToJson(List<String[]> rows) {
         StringBuilder json = new StringBuilder("[");
-        String[] keys = { "lrn", "fullName", "username", "adviser", "gradeSection", "email", "registeredAt" };
+        String[] keys = { "lrn", "fullName", "username", "adviser", "gradeSection", "email", "contactNumber", "registeredAt" };
         for (int i = 0; i < rows.size(); i++) {
             String[] r = rows.get(i);
             if (i > 0)

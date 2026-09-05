@@ -67,6 +67,7 @@ function scanStudent(id) {
   document.getElementById("modalGradeSec").textContent = student.gradeSection;
   document.getElementById("modalAdviser").textContent = student.adviser;
   document.getElementById("modalEmail").textContent = student.email;
+  document.getElementById("modalContact").textContent = student.contactNumber;
 
   document.getElementById("studentModal").classList.add("active");
 }

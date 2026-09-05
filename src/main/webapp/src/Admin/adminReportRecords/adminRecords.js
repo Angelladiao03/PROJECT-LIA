@@ -61,10 +61,13 @@ function viewStoredRecord(reportNo) {
     adviser: report.adviser || "-",
     lrn: report.lrn,
     email: report.email || "-",
+    contactNumber: report.contactNumber || "-",
     category: report.category,
     dateTime: report.dateTime,
     location: report.location,
     description: report.description,
+    involvedPersonKnown: report.involvedPersonKnown === "true",
+    involvedPersonDescription: report.involvedPersonDescription || "-",
   });
 }
 
@@ -109,11 +112,18 @@ function viewRecord(data) {
   document.getElementById("modalAdviser").textContent = data.adviser;
   document.getElementById("modalLrn").textContent = data.lrn;
   document.getElementById("modalEmail").textContent = data.email;
+  document.getElementById("modalContact").textContent = data.contactNumber;
 
   document.getElementById("modalCategory").textContent = data.category;
   document.getElementById("modalDateTime").textContent = data.dateTime;
   document.getElementById("modalLocation").textContent = data.location;
   document.getElementById("modalDescription").textContent = data.description;
+  document.getElementById("modalInvolvedKnown").textContent =
+    data.involvedPersonKnown ? "Yes" : "No";
+  document.getElementById("modalInvolvedDescriptionBox").style.display =
+    data.involvedPersonKnown ? "block" : "none";
+  document.getElementById("modalInvolvedDescription").textContent =
+    data.involvedPersonDescription;
 
   document.getElementById("reportModal").classList.add("active");
 }

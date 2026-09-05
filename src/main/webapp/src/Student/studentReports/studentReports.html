@@ -101,6 +101,10 @@
               <strong>Gmail:</strong>
               <span id="displayGmail">-</span>
             </p>
+            <p class="user-info-text">
+              <strong>Contact Number:</strong>
+              <span id="displayContact">-</span>
+            </p>
           </div>
           <div class="user-actions">
             <button onclick="openEditProfileModal()" class="btn-edit-profile">
@@ -345,6 +349,17 @@
               readonly
               aria-readonly="true"
               placeholder="e.g. user@deped.gov.ph"
+            />
+          </div>
+          <div class="field-group">
+            <label for="editContact">Contact Number</label>
+            <input
+              type="tel"
+              id="editContact"
+              required
+              readonly
+              aria-readonly="true"
+              placeholder="e.g. 09171234567"
             />
           </div>
           <p class="form-message" id="editProfileMessage" aria-live="polite"></p>

@@ -194,10 +194,19 @@ function openStoredReport(reportNo) {
   document.getElementById("accAdviser").textContent = report.adviser || "-";
   document.getElementById("accLRN").textContent = report.lrn || "-";
   document.getElementById("accEmail").textContent = report.email || "-";
+  document.getElementById("accContact").textContent = report.contactNumber || "-";
   document.getElementById("repCategory").textContent = report.category;
   document.getElementById("repDateTime").textContent = report.dateTime;
   document.getElementById("repLocation").textContent = report.location;
   document.getElementById("repDescription").textContent = report.description;
+  const involvedKnown = report.involvedPersonKnown === "true";
+  document.getElementById("repInvolvedKnown").textContent = involvedKnown
+    ? "Yes"
+    : "No";
+  document.getElementById("repInvolvedDescriptionBox").style.display =
+    involvedKnown ? "block" : "none";
+  document.getElementById("repInvolvedDescription").textContent =
+    report.involvedPersonDescription || "-";
   document.getElementById("reportModal").classList.add("active");
 }
 

@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS students (
     adviser_name     VARCHAR(150),
     grade_section    VARCHAR(50),
     email            VARCHAR(150) NOT NULL UNIQUE,
+    contact_number   VARCHAR(11) NOT NULL,
     status           VARCHAR(20) NOT NULL DEFAULT 'Pending'
                           CHECK (status IN ('Pending', 'Approved')),
     registered_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -29,6 +30,8 @@ CREATE TABLE IF NOT EXISTS reports (
     category              VARCHAR(100) NOT NULL,
     report_description    TEXT NOT NULL,
     report_location        VARCHAR(255) NOT NULL,
+    involved_person_known         BOOLEAN NOT NULL DEFAULT FALSE,
+    involved_person_description   TEXT,
     report_status          VARCHAR(30) NOT NULL DEFAULT 'Pending',
     report_datetime         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_reports_student
