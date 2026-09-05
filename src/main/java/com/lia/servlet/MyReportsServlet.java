@@ -24,7 +24,10 @@ public class MyReportsServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        try (PrintWriter out = response.getWriter()) {
+        // Not try-with-resources on purpose - see LoginServlet for why.
+        PrintWriter out = response.getWriter();
+
+        try {
 
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("studentLrn") == null) {
@@ -54,7 +57,7 @@ public class MyReportsServlet extends HttpServlet {
             out.print(json.toString());
 
         } catch (SQLException e) {
-            response.getWriter().print("[]");
+            out.print("[]");
         }
     }
 }

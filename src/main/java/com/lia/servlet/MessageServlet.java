@@ -28,7 +28,10 @@ public class MessageServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        try (PrintWriter out = response.getWriter()) {
+        // Not try-with-resources on purpose - see LoginServlet for why.
+        PrintWriter out = response.getWriter();
+
+        try {
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("studentLrn") == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -42,7 +45,7 @@ public class MessageServlet extends HttpServlet {
                     + (connectedAdmin == null ? "null" : "\"" + esc(connectedAdmin) + "\"") + ", "
                     + "\"messages\": " + toJsonArray(messageDAO.getConversation(lrn)) + "}");
         } catch (SQLException e) {
-            response.getWriter().print("{\"connectedAdmin\": null, \"messages\": []}");
+            out.print("{\"connectedAdmin\": null, \"messages\": []}");
         }
     }
 
@@ -56,7 +59,10 @@ public class MessageServlet extends HttpServlet {
 
         String text = request.getParameter("text");
 
-        try (PrintWriter out = response.getWriter()) {
+        // Not try-with-resources on purpose - see LoginServlet for why.
+        PrintWriter out = response.getWriter();
+
+        try {
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("studentLrn") == null) {
                 out.print(JsonUtil.error("You must be logged in to send messages."));
@@ -70,7 +76,7 @@ public class MessageServlet extends HttpServlet {
             boolean sent = messageDAO.sendStudentMessage(lrn, text);
             out.print(sent ? JsonUtil.success("Sent.") : JsonUtil.error("Could not send message."));
         } catch (SQLException e) {
-            response.getWriter().print(JsonUtil.error("Database error: " + e.getMessage()));
+            out.print(JsonUtil.error("Database error: " + e.getMessage()));
         }
     }
 

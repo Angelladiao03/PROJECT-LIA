@@ -27,7 +27,10 @@ public class SosServlet extends HttpServlet {
         String location = request.getParameter("location");
         String description = request.getParameter("description");
 
-        try (PrintWriter out = response.getWriter()) {
+        // Not try-with-resources on purpose - see LoginServlet for why.
+        PrintWriter out = response.getWriter();
+
+        try {
 
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("studentLrn") == null) {
@@ -55,7 +58,7 @@ public class SosServlet extends HttpServlet {
             }
 
         } catch (SQLException e) {
-            response.getWriter().print(JsonUtil.error("Database error: " + e.getMessage()));
+            out.print(JsonUtil.error("Database error: " + e.getMessage()));
         }
     }
 }

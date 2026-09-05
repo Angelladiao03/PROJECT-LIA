@@ -35,7 +35,10 @@ public class ReportServlet extends HttpServlet {
         boolean involvedPersonKnown = "true".equalsIgnoreCase(request.getParameter("involvedPersonKnown"));
         String involvedPersonDescription = request.getParameter("involvedPersonDescription");
 
-        try (PrintWriter out = response.getWriter()) {
+        // Not try-with-resources on purpose - see LoginServlet for why.
+        PrintWriter out = response.getWriter();
+
+        try {
 
             if (location == null || category == null || description == null
                     || location.isBlank() || category.isBlank() || description.isBlank()) {
@@ -74,7 +77,7 @@ public class ReportServlet extends HttpServlet {
             }
 
         } catch (SQLException e) {
-            response.getWriter().print(JsonUtil.error("Database error: " + e.getMessage()));
+            out.print(JsonUtil.error("Database error: " + e.getMessage()));
         }
     }
 }

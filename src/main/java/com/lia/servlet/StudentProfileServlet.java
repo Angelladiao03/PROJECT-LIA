@@ -27,7 +27,10 @@ public class StudentProfileServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        try (PrintWriter out = response.getWriter()) {
+        // Not try-with-resources on purpose - see LoginServlet for why.
+        PrintWriter out = response.getWriter();
+
+        try {
             HttpSession session = request.getSession(false);
             Long lrn = session != null ? (Long) session.getAttribute("studentLrn") : null;
             if (lrn == null) {
@@ -53,7 +56,7 @@ public class StudentProfileServlet extends HttpServlet {
                     + "\"lrn\": \"" + lrn + "\"}");
 
         } catch (SQLException e) {
-            response.getWriter().print(JsonUtil.error("Database error: " + e.getMessage()));
+            out.print(JsonUtil.error("Database error: " + e.getMessage()));
         }
     }
 
@@ -65,7 +68,10 @@ public class StudentProfileServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        try (PrintWriter out = response.getWriter()) {
+        // Not try-with-resources on purpose - see LoginServlet for why.
+        PrintWriter out = response.getWriter();
+
+        try {
             HttpSession session = request.getSession(false);
             Long lrn = session != null ? (Long) session.getAttribute("studentLrn") : null;
             if (lrn == null) {
@@ -108,7 +114,7 @@ public class StudentProfileServlet extends HttpServlet {
             out.print(updated ? JsonUtil.success("Profile updated.") : JsonUtil.error("Update failed."));
 
         } catch (SQLException e) {
-            response.getWriter().print(JsonUtil.error("Database error: " + e.getMessage()));
+            out.print(JsonUtil.error("Database error: " + e.getMessage()));
         }
     }
 }

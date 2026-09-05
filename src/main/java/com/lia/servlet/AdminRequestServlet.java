@@ -30,7 +30,10 @@ public class AdminRequestServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        try (PrintWriter out = response.getWriter()) {
+        // Not try-with-resources on purpose - see LoginServlet for why.
+        PrintWriter out = response.getWriter();
+
+        try {
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("adminId") == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -39,7 +42,7 @@ public class AdminRequestServlet extends HttpServlet {
             }
             out.print(pendingListToJson(studentDAO.getPendingStudents()));
         } catch (SQLException e) {
-            response.getWriter().print("[]");
+            out.print("[]");
         }
     }
 
@@ -51,7 +54,10 @@ public class AdminRequestServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        try (PrintWriter out = response.getWriter()) {
+        // Not try-with-resources on purpose - see LoginServlet for why.
+        PrintWriter out = response.getWriter();
+
+        try {
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("adminId") == null) {
                 out.print(JsonUtil.error("You must be logged in as admin."));
@@ -82,7 +88,7 @@ public class AdminRequestServlet extends HttpServlet {
             out.print(ok ? JsonUtil.success("Done.") : JsonUtil.error("Update failed."));
 
         } catch (SQLException | NumberFormatException e) {
-            response.getWriter().print(JsonUtil.error("Database error: " + e.getMessage()));
+            out.print(JsonUtil.error("Database error: " + e.getMessage()));
         }
     }
 

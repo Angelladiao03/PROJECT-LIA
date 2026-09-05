@@ -37,7 +37,14 @@ public class RegisterServlet extends HttpServlet {
         String email = request.getParameter("email");
         String contactNumber = request.getParameter("contactNumber");
 
-        try (PrintWriter out = response.getWriter()) {
+        // Not try-with-resources on purpose: closing `out` early (which
+        // try-with-resources does the instant an exception is thrown, before
+        // any catch block runs) meant the "Database error: ..." message in
+        // the catch below was being written to an already-closed writer and
+        // silently discarded - the browser just saw an empty response.
+        PrintWriter out = response.getWriter();
+
+        try {
 
             // Check each required field individually so the message tells the
             // student exactly what's missing, instead of one generic notice.
@@ -143,7 +150,7 @@ public class RegisterServlet extends HttpServlet {
 
         } catch (SQLException e) {
             // Most common cause here: duplicate LRN (primary key) already exists
-            response.getWriter().print(JsonUtil.error("Database error: " + e.getMessage()));
+            out.print(JsonUtil.error("Database error: " + e.getMessage()));
         }
     }
 }

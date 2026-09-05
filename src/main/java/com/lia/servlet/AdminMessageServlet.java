@@ -31,7 +31,10 @@ public class AdminMessageServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        try (PrintWriter out = response.getWriter()) {
+        // Not try-with-resources on purpose - see LoginServlet for why.
+        PrintWriter out = response.getWriter();
+
+        try {
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("adminId") == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -66,7 +69,7 @@ public class AdminMessageServlet extends HttpServlet {
                 out.print(json.toString());
             }
         } catch (SQLException | NumberFormatException e) {
-            response.getWriter().print("[]");
+            out.print("[]");
         }
     }
 
@@ -98,7 +101,10 @@ public class AdminMessageServlet extends HttpServlet {
         String lrnParam = request.getParameter("lrn");
         String text = request.getParameter("text");
 
-        try (PrintWriter out = response.getWriter()) {
+        // Not try-with-resources on purpose - see LoginServlet for why.
+        PrintWriter out = response.getWriter();
+
+        try {
             HttpSession session = request.getSession(false);
             if (session == null || session.getAttribute("adminId") == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -117,7 +123,7 @@ public class AdminMessageServlet extends HttpServlet {
             out.print(sent ? JsonUtil.success("Sent.") : JsonUtil.error("Could not send message."));
 
         } catch (SQLException | NumberFormatException e) {
-            response.getWriter().print(JsonUtil.error("Database error: " + e.getMessage()));
+            out.print(JsonUtil.error("Database error: " + e.getMessage()));
         }
     }
 }

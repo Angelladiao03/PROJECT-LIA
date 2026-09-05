@@ -28,7 +28,10 @@ public class AdminLoginServlet extends HttpServlet {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
 
-        try (PrintWriter out = response.getWriter()) {
+        // Not try-with-resources on purpose - see LoginServlet for why.
+        PrintWriter out = response.getWriter();
+
+        try {
 
             if (username == null || username.isBlank()) {
                 out.print(JsonUtil.error("Please enter your username."));
@@ -57,7 +60,7 @@ public class AdminLoginServlet extends HttpServlet {
                     + "\"fullName\": \"" + (fullName == null ? "" : fullName.replace("\"", "\\\"")) + "\"}");
 
         } catch (SQLException e) {
-            response.getWriter().print(JsonUtil.error("Database error: " + e.getMessage()));
+            out.print(JsonUtil.error("Database error: " + e.getMessage()));
         }
     }
 }

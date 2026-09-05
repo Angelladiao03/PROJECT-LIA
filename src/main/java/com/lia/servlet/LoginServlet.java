@@ -31,7 +31,14 @@ public class LoginServlet extends HttpServlet {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
 
-        try (PrintWriter out = response.getWriter()) {
+        // Not try-with-resources on purpose: closing `out` early (which
+        // try-with-resources does the instant an exception is thrown, before
+        // any catch block runs) meant the "Database error: ..." message in
+        // the catch below was being written to an already-closed writer and
+        // silently discarded - the browser just saw an empty response.
+        PrintWriter out = response.getWriter();
+
+        try {
 
             if (username == null || username.isBlank()) {
                 out.print(JsonUtil.error("Please enter your username or LRN."));
@@ -68,7 +75,7 @@ public class LoginServlet extends HttpServlet {
                     + "\"fullName\": \"" + MessageServlet.esc(fullName) + "\"}");
 
         } catch (SQLException e) {
-            response.getWriter().print(JsonUtil.error("Database error: " + e.getMessage()));
+            out.print(JsonUtil.error("Database error: " + e.getMessage()));
         }
     }
 }
