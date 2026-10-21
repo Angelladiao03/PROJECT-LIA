@@ -1,6 +1,7 @@
-target
 .git
+.github
 .vscode
-nb-configuration.xml
-README.md
+target
+includes/config.local.php
+.env
 *.md

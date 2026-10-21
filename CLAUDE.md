@@ -9,12 +9,24 @@ Team "Innovators": Culajara, Kurt Vinz D.; Francisco, Precious Rhian Brien R.;
 Ladiao III, Angel O.; Ocampo, Sheldrick John E.
 
 ## Current state of the code
-- This repo (v1.2.1) is a **prototype**, not the final system. Expect large changes.
-- Prototype stack: Java 17, Jakarta EE servlets, Maven, Tomcat 10+, PostgreSQL (`schema.sql`),
-  plain HTML/CSS/vanilla JS.
-- **Decision: the final backend moves from Java to PHP.** The frontend stays HTML/CSS/JS.
-  When porting, map `com.lia.servlet.*` → PHP endpoints and `com.lia.dao.*` → PHP data-access
-  classes using PDO with prepared statements.
+- **PHP alpha.** The backend was ported from Java to plain PHP 8.3 (no framework). The Java
+  prototype is preserved under the Git tag `prototype-v1.2.1`.
+- Stack: PHP 8.3 + PDO (`pdo_pgsql`), PostgreSQL on **Neon**, plain HTML/CSS/vanilla JS,
+  deployed to **Render** via `Dockerfile` (php:8.3-apache, document root `public/`).
+- Layout: `public/` = web root (`index.html`, `src/` pages, `api/*.php` endpoints);
+  `includes/` = private helpers (`bootstrap.php`, `db.php`, `session.php`, `json.php`,
+  `validation.php`, `passwords.php`). Every endpoint starts with
+  `require_once __DIR__ . '/../../includes/bootstrap.php';`.
+- DB connection: `DATABASE_URL` env var (Render) or `includes/config.local.php` (local, gitignored).
+  Never hard-code credentials.
+- Sessions are stored in the `php_sessions` table (Render's disk is ephemeral).
+- API responses keep the Java prototype's JSON shapes (all values as strings) so the existing
+  frontend works. Admin GET endpoints return 401 + `sessionExpired` when not logged in.
+- Rules for new code: prepared statements only; `password_hash`/`password_verify`;
+  `require_admin()` on every admin endpoint; validate input server-side; never send raw DB
+  errors to the browser (use `json_server_error`).
+- Run locally: `php -S localhost:8000 -t public`. The team are students learning as they go:
+  keep code simple and commented, and explain changes in plain language.
 
 ## User roles (target design)
 - **Student:** submit a regular or SOS report (optional anonymity), track status, message the

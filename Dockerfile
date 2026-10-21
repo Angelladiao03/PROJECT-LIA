@@ -1,22 +1,28 @@
-# ---- Build stage: compile the WAR with Maven ----
-FROM maven:3.9-eclipse-temurin-17 AS build
-WORKDIR /app
-COPY pom.xml .
-# Download dependencies first so they're cached across rebuilds unless
-# pom.xml itself changes (much faster re-deploys).
-RUN mvn -B dependency:go-offline
-COPY src ./src
-RUN mvn -B clean package -DskipTests
+# LagroInAction (LIA) - PHP + Apache, for Render.
+FROM php:8.3-apache
 
-# ---- Runtime stage: run the WAR on Tomcat ----
-FROM tomcat:11.0-jdk17-temurin
-# Remove Tomcat's default sample apps -- we only want ours.
-RUN rm -rf /usr/local/tomcat/webapps/*
-# Deploy as ROOT so the app is served at "/" (its frontend uses relative
-# paths that assume that context path).
-COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/ROOT.war
-# Render's web services expect the container to listen on port 10000.
-RUN sed -i 's/port="8080"/port="10000"/' /usr/local/tomcat/conf/server.xml && \
-    sed -i 's/port="8005" shutdown="SHUTDOWN"/port="-1" shutdown="SHUTDOWN"/' /usr/local/tomcat/conf/server.xml
+# PostgreSQL driver for PDO (Neon is PostgreSQL)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libpq-dev \
+    && docker-php-ext-install pdo_pgsql \
+    && rm -rf /var/lib/apt/lists/*
+
+# Use PHP's production settings (hides error details from visitors)
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
+# Only the public/ folder is reachable from the web.
+# includes/ (database code, settings) stays private.
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
+        /etc/apache2/sites-available/*.conf /etc/apache2/apache2.conf \
+    && echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Render sends traffic to the port in $PORT (10000 by default)
+ENV PORT=10000
+RUN sed -ri 's/Listen 80/Listen ${PORT}/' /etc/apache2/ports.conf \
+    && sed -ri 's/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/' /etc/apache2/sites-available/000-default.conf
+
+COPY public/ /var/www/html/public/
+COPY includes/ /var/www/html/includes/
+
 EXPOSE 10000
-CMD ["catalina.sh", "run"]

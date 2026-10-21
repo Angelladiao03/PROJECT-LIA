@@ -1,13 +1,9 @@
-# Maven build output
+# Local database settings (contains your Neon password) - NEVER commit
+includes/config.local.php
+.env
+
+# Old Java/Maven build output (from the prototype)
 /target/
-
-# NetBeans private/local IDE settings (per-machine, not shared)
-/nbproject/private/
-/nbproject/Makefile-*.mk
-/nbproject/Package-*.bash
-
-# Compiled class files (in case anything builds outside target/)
-*.class
 
 # OS / editor junk
 .DS_Store

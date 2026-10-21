@@ -1,7 +1,7 @@
--- Full schema for the LIA database (PostgreSQL / Neon), built from the
--- columns every DAO class actually queries. Run this ONCE against a brand
--- new Neon database (Neon's SQL Editor, or `psql`) to set it up from scratch.
-
+-- Full schema for the LIA database (PostgreSQL / Neon).
+-- Every statement uses IF NOT EXISTS, so it is safe to run again on an
+-- existing database: it only creates what is missing. Run it in Neon's
+-- SQL Editor (or with psql).
 CREATE TABLE IF NOT EXISTS admin_profile (
     admin_id       INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     admin_username VARCHAR(50)  NOT NULL UNIQUE,
@@ -68,7 +68,19 @@ CREATE TABLE IF NOT EXISTS messages (
         ON DELETE SET NULL
 );
 
+-- Login sessions for the PHP backend (Render's disk is wiped on every
+-- deploy, so sessions are kept here instead of in files).
+-- Safe to run on an existing database: it only adds this one table.
+CREATE TABLE IF NOT EXISTS php_sessions (
+    id         VARCHAR(128) PRIMARY KEY,
+    data       TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_php_sessions_expires ON php_sessions (expires_at);
+
 -- Optional: create one admin account to log in with right away.
 -- Change the username/password before you actually use this!
+-- (A plain-text password here is upgraded to a secure hash automatically
+-- the first time that admin logs in.)
 -- INSERT INTO admin_profile (admin_username, admin_password, admin_fullname)
 -- VALUES ('admin', 'admin123', 'Admin Name');

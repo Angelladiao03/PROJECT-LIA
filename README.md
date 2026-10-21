@@ -1,159 +1,141 @@
 # LagroInAction (PROJECT LIA)
 
-LagroInAction is a student guidance and incident-reporting web app built for
-Lagro High School. It gives students a safe, simple way to report bullying
-or other incidents (named or anonymous), send an emergency SOS alert to the
-guidance office, and message a guidance admin directly. Admins get a
-dashboard to review and act on incoming reports, respond to SOS alerts,
-approve new student accounts, and chat back with students — all backed by a
-real database instead of spreadsheets or paper forms.
+LagroInAction is a web-based bullying incident reporting and case management
+system for Lagro High School. Students can report incidents (named or
+anonymous), send an SOS alert, track their reports, and message the guidance
+office. Guidance staff get a dashboard to review reports, respond to SOS
+alerts, approve new student accounts, and reply to students.
 
-It's built with Jakarta EE servlets on the backend, PostgreSQL for storage,
-and plain HTML/CSS/JS on the frontend (no frontend framework, no build
-step).
-
-**Main features:**
-
-- Student sign-up with admin approval before a new account can log in
-- Incident reporting, either under the student's name or fully anonymous
-- One-tap SOS alerts that go straight to the guidance office
-- Two-way messaging between a student and the guidance office
-- An admin dashboard with report/SOS stats, charts, and a full report
-  history
+> **Version:** PHP alpha (rewrite of the Java prototype). The original Java
+> version is saved in Git under the tag `prototype-v1.2.1`.
 
 ## Tech stack
 
-- **Backend:** Java 17, Jakarta EE (Servlets), built with Maven
-- **Database:** PostgreSQL
-- **Frontend:** HTML, CSS, and vanilla JavaScript (no framework)
-- **Server:** Apache Tomcat
-
-## Prerequisites
-
-Install these once per machine:
-
-- **JDK 17** (or newer) — [adoptium.net](https://adoptium.net/)
-- **Maven** — usually bundled with your IDE; only needed standalone if
-  you're not using NetBeans
-- **NetBeans** (with Java EE / Maven web app support) — or any IDE you're
-  comfortable with, this guide just uses NetBeans as the example
-- **Apache Tomcat 10 or newer**, registered as a server in NetBeans
-  (Services tab → Servers → Add Server)
-- **PostgreSQL** — see the setup steps below
-
-## Connecting to a local database (step-by-step)
-
-This is the part that trips people up the most, so here it is in full,
-assuming you've never set up a local Postgres database before.
-
-### 1. Install PostgreSQL
-
-Download and run the installer for your OS from
-[postgresql.org/download](https://www.postgresql.org/download/). During
-setup:
-
-- Keep the default **port `5432`**.
-- When it asks for a **password for the `postgres` superuser**, set it to
-  **`1234`**. The app is set up to use that as the local default for
-  everyone on the team, so setting it here means zero extra configuration
-  later.
-- The installer also installs **pgAdmin**, a graphical tool for managing
-  the database. You'll use it in the next step.
-
-### 2. Create the `lia_db` database
-
-You can do this with pgAdmin (easiest for beginners) or the `psql` command
-line — pick whichever you're comfortable with.
-
-**Using pgAdmin:**
-
-1. Open pgAdmin and connect to your local server (it'll ask for the
-   password you set during install).
-2. Right-click **Databases** → **Create** → **Database...**
-3. Name it `lia_db` and click **Save**.
-
-**Using the command line (`psql`):**
-
-```bash
-psql -U postgres -c "CREATE DATABASE lia_db;"
-```
-
-### 3. Run `schema.sql` against your new database
-
-This creates every table the app needs (students, reports, SOS alerts,
-messages, admin accounts).
-
-**Using pgAdmin:**
-
-1. Click on `lia_db` in the left sidebar to select it.
-2. Open the **Query Tool** (Tools → Query Tool, or the toolbar icon).
-3. Open `schema.sql` from this project (File → Open, or just copy-paste
-   its contents into the query editor).
-4. Click **Execute/Run** (the ▶ button, or F5).
-
-**Using the command line:**
-
-```bash
-psql -U postgres -d lia_db -f schema.sql
-```
-
-Either way, you should now see tables like `students`, `reports`,
-`sos_alerts`, `messages`, and `admin_profile` under `lia_db`.
-
-### 4. That's it — no extra configuration needed
-
-The app's default database settings already match this setup:
-`jdbc:postgresql://localhost:5432/lia_db`, user `postgres`, password
-`1234`. As long as you used those same values in steps 1–2, it connects
-with zero setup on your end — no environment variables, no config files
-to edit.
-
-(If you genuinely need different local settings, they're the
-`URL`/`USER`/`PASSWORD` constants at the top of
-`src/main/java/com/lia/db/DatabaseConnection.java` — but changing them
-there affects everyone who pulls your commit, so it's best to just match
-steps 1–2 above instead.)
-
-### 5. Create an admin account
-
-`schema.sql` doesn't insert a default admin for you, so add one yourself
-after running it (via pgAdmin's Query Tool or `psql`):
-
-```sql
-INSERT INTO admin_profile (admin_username, admin_password, admin_fullname)
-VALUES ('admin', 'admin123', 'Guidance Admin');
-```
-
-You can now log in on the Admin Log In tab with that username/password.
-(Passwords aren't hashed yet in this version — see the `TODO` in
-`StudentDAO.java` — so don't reuse a real password here.)
-
-## Running the project
-
-1. **Clone the repo** and open the `PROJECTLIA` folder as a project in
-   NetBeans (File → Open Project — NetBeans recognizes it as a Maven web
-   app).
-2. Make sure PostgreSQL is running and `lia_db` is set up (see above).
-3. **Register Tomcat in NetBeans** if you haven't already (Services tab →
-   Servers → right-click → Add Server → Apache Tomcat, point it at your
-   Tomcat install folder).
-4. **Run the project**: right-click `PROJECTLIA` in the Projects tab → Run.
-   NetBeans builds the WAR, deploys it to Tomcat, and opens it in your
-   browser at `http://localhost:8080/PROJECTLIA/`.
-
-## Day-to-day workflow
-
-- Always **pull** the latest changes before starting work.
-- Create a **branch** for whatever you're working on instead of committing
-  straight to `main`, so it's easy to review each other's changes.
-- Don't commit the `target/` folder or your personal NetBeans private
-  settings — the included `.gitignore` already excludes these.
+- **Backend:** PHP 8.3 (plain PHP, no framework) with PDO
+- **Database:** PostgreSQL, hosted on [Neon](https://neon.tech)
+- **Frontend:** HTML, CSS, vanilla JavaScript
+- **Hosting:** [Render](https://render.com), using the `Dockerfile`
 
 ## Project structure
 
-- `src/main/java/com/lia/servlet/` — servlets (one per API endpoint)
-- `src/main/java/com/lia/dao/` — database access classes
-- `src/main/java/com/lia/db/` — the shared DB connection helper
-- `src/main/webapp/` — all frontend HTML/CSS/JS, split into `Admin/` and
-  `Student/`
-- `schema.sql` — creates the database from scratch
+```
+PROJECT-LIA/
+├── public/                 ← everything the browser can open
+│   ├── index.html          ← login / sign-up page
+│   ├── src/                ← student and admin pages (HTML, CSS, JS)
+│   └── api/                ← PHP endpoints the JavaScript calls
+│       ├── login.php            student login
+│       ├── admin_login.php      admin login
+│       ├── logout.php           log out
+│       ├── register.php         student sign-up
+│       ├── report.php           submit an incident report
+│       ├── my_reports.php       student's own reports
+│       ├── sos.php              send an SOS alert
+│       ├── messages.php         student messages
+│       ├── student_profile.php  student "My Account"
+│       ├── admin_reports.php    admin: reports + SOS (view, approve, resolve...)
+│       ├── admin_requests.php   admin: approve/reject new accounts
+│       └── admin_messages.php   admin: messages
+├── includes/               ← private PHP code (not reachable from the browser)
+│   ├── bootstrap.php       loads everything below
+│   ├── config.php          finds the database connection string
+│   ├── db.php              connects to PostgreSQL
+│   ├── session.php         login sessions (saved in the database)
+│   ├── passwords.php       password hashing
+│   ├── validation.php      form validation rules
+│   ├── json.php            sends JSON responses
+│   ├── students.php        shared student queries
+│   └── conversations.php   shared message queries
+├── schema.sql              creates the database tables
+└── Dockerfile              how Render builds and runs the site
+```
+
+## Running it on your computer (Windows)
+
+### 1. Install PHP
+
+1. Download PHP 8.3 for Windows (**VS17 x64 Thread Safe**, zip) from
+   <https://windows.php.net/download/>.
+2. Unzip it to `C:\php`.
+3. In `C:\php`, copy `php.ini-development` and rename the copy to `php.ini`.
+4. Open `php.ini` in Notepad and remove the `;` at the start of these lines:
+   ```
+   extension_dir = "ext"
+   extension=mbstring
+   extension=pdo_pgsql
+   extension=openssl
+   ```
+5. Add `C:\php` to your PATH (Start → "Edit the system environment
+   variables" → Environment Variables → Path → New → `C:\php`).
+6. Open a **new** terminal and check: `php -v`
+
+### 2. Connect to your Neon dev database
+
+1. In Neon, open your project → **Branches** → `dev` → **Connect**, and copy
+   the connection string.
+2. In `includes/`, copy `config.local.example.php` and name the copy
+   `config.local.php`.
+3. Paste the connection string into `config.local.php`.
+
+`config.local.php` is in `.gitignore`, so your password is never uploaded to
+GitHub. **Never put the connection string anywhere else in the code.**
+
+### 3. Set up the tables (first time only)
+
+In Neon, open the **SQL Editor** (on the `dev` branch), paste the whole
+`schema.sql`, and click **Run**. It's safe to run again later; it only creates
+what's missing.
+
+To make an admin account, run this in the SQL Editor (use your own values):
+
+```sql
+INSERT INTO admin_profile (admin_username, admin_password, admin_fullname)
+VALUES ('yourusername', 'TemporaryPass123', 'Your Full Name');
+```
+
+The password is converted to a secure hash the first time you log in.
+
+### 4. Start the site
+
+In VS Code, open a terminal in the project folder and run:
+
+```
+php -S localhost:8000 -t public
+```
+
+Then open <http://localhost:8000> in your browser. Press `Ctrl+C` in the
+terminal to stop it.
+
+## Deploying to Render
+
+1. In Render, open the web service → **Settings** and make sure it uses
+   **Docker** and the `Dockerfile` in the project root.
+2. Go to **Environment** and add:
+   - `DATABASE_URL` = your Neon **main/production** connection string
+     (must include `sslmode=require`).
+   - You can delete the old Java variables `DB_URL`, `DB_USER`, and
+     `DB_PASSWORD`.
+3. Run `schema.sql` once in Neon's SQL Editor on the **production** branch
+   (this adds the new `php_sessions` table).
+4. Push to GitHub. Render rebuilds automatically.
+
+## Security notes
+
+- All database queries use prepared statements (protects against SQL injection).
+- Passwords are stored as hashes. Old plain-text passwords from the prototype
+  are upgraded automatically when that person logs in.
+- Login sessions are kept in the database, so a Render restart doesn't log
+  everyone out. Session cookies are `HttpOnly` and `SameSite=Lax`.
+- Only `public/` is reachable from the web; `includes/` stays private.
+- Use **made-up test data only** while developing.
+
+## Known items still to do
+
+See `CLAUDE.md` for the full list. The most important:
+
+- Separate login per staff member (no shared admin account)
+- "Reject" and "Delete" currently delete a report; change these to a
+  Rejected status plus archiving, with an audit log
+- Decide how anonymous reports work (unlinked + tracking code, or
+  "identity hidden from staff")
+- Privacy notice and consent at sign-up
