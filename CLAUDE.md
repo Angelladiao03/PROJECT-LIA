@@ -9,10 +9,10 @@ Team "Innovators": Culajara, Kurt Vinz D.; Francisco, Precious Rhian Brien R.;
 Ladiao III, Angel O.; Ocampo, Sheldrick John E.
 
 ## Current state of the code
-- **PHP alpha.** The backend was ported from Java to plain PHP 8.3 (no framework). The Java
+- **PHP alpha.** The backend was ported from Java to plain PHP 8.5 (no framework). The Java
   prototype is preserved under the Git tag `prototype-v1.2.1`.
-- Stack: PHP 8.3 + PDO (`pdo_pgsql`), PostgreSQL on **Neon**, plain HTML/CSS/vanilla JS,
-  deployed to **Render** via `Dockerfile` (php:8.3-apache, document root `public/`).
+- Stack: PHP 8.5 + PDO (`pdo_pgsql`), PostgreSQL on **Neon**, plain HTML/CSS/vanilla JS,
+  deployed to **Render** via `Dockerfile` (php:8.5-apache, document root `public/`).
 - Layout: `public/` = web root (`index.html`, `src/` pages, `api/*.php` endpoints);
   `includes/` = private helpers (`bootstrap.php`, `db.php`, `session.php`, `json.php`,
   `validation.php`, `passwords.php`). Every endpoint starts with

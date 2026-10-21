@@ -11,7 +11,7 @@ alerts, approve new student accounts, and reply to students.
 
 ## Tech stack
 
-- **Backend:** PHP 8.3 (plain PHP, no framework) with PDO
+- **Backend:** PHP 8.5 (plain PHP, no framework) with PDO
 - **Database:** PostgreSQL, hosted on [Neon](https://neon.tech)
 - **Frontend:** HTML, CSS, vanilla JavaScript
 - **Hosting:** [Render](https://render.com), using the `Dockerfile`
@@ -54,7 +54,7 @@ PROJECT-LIA/
 
 ### 1. Install PHP
 
-1. Download PHP 8.3 for Windows (**VS17 x64 Thread Safe**, zip) from
+1. Download PHP 8.5 for Windows (**VS17 x64 Thread Safe**, the **Zip** link) from
    <https://windows.php.net/download/>.
 2. Unzip it to `C:\php`.
 3. In `C:\php`, copy `php.ini-development` and rename the copy to `php.ini`.

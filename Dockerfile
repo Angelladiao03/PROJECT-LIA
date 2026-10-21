@@ -1,5 +1,5 @@
 # LagroInAction (LIA) - PHP + Apache, for Render.
-FROM php:8.3-apache
+FROM php:8.5-apache
 
 # PostgreSQL driver for PDO (Neon is PostgreSQL)
 RUN apt-get update \
