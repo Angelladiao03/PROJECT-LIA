@@ -50,7 +50,7 @@ $_SESSION['guestSignup'] = [
 
 $sent = send_email(
     $email,
-    "Your LagroInAction code: $code",
+    'Your LagroInAction verification code', // the code is only in the email body, never in the subject (subjects are saved in email_outbox)
     "Your verification code is: $code\n\n"
     . "Enter it on the LagroInAction page to finish creating your guest account. "
     . "The code works for " . CODE_VALID_MINUTES . " minutes.\n\n"
