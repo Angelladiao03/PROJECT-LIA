@@ -22,6 +22,10 @@ ENV PORT=10000
 RUN sed -ri 's/Listen 80/Listen ${PORT}/' /etc/apache2/ports.conf \
     && sed -ri 's/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/' /etc/apache2/sites-available/000-default.conf
 
+# Browser caching rules (see docker/apache-lia.conf)
+COPY docker/apache-lia.conf /etc/apache2/conf-available/lia.conf
+RUN a2enmod headers && a2enconf lia
+
 COPY public/ /var/www/html/public/
 COPY includes/ /var/www/html/includes/
 

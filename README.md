@@ -47,6 +47,7 @@ PROJECT-LIA/
 │   ├── students.php        shared student queries
 │   └── conversations.php   shared message queries
 ├── schema.sql              creates the database tables
+├── docker/apache-lia.conf  browser caching rules for Apache
 └── Dockerfile              how Render builds and runs the site
 ```
 
