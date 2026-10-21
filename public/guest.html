@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LagroInAction · Create a guest account</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/lia.css">
+</head>
+<body>
+  <div class="auth-page">
+    <section class="auth-side">
+      <a class="brand" href="/index.html">
+        <img src="/assets/img/lagro-seal.png" alt="Lagro High School seal">
+        <span class="brand-word">Lagro<b>In</b>Action</span>
+      </a>
+      <div>
+        <h1 class="auth-headline">Create a guest account</h1>
+        <p>A guest account only needs your email address. Guidance staff will not see your name on your reports. You can still check your reports and message the guidance office.</p>
+      </div>
+      <p class="auth-foot">Guest accounts last 30 days. Your reports are kept even after that.</p>
+    </section>
+
+    <main class="auth-main">
+      <div class="wizard">
+        <ol class="wizard-steps" aria-label="Progress">
+          <li data-step="1"></li><li data-step="2"></li><li data-step="3"></li><li data-step="4"></li>
+        </ol>
+
+        <!-- Step 1: Terms -->
+        <section class="card" data-panel="1">
+          <p class="step-label">Step 1 of 4</p>
+          <h2>Read the terms</h2>
+          <p>Before you create an account, read how LagroInAction keeps you safe and what happens to the information you share.</p>
+          <button class="btn btn-big btn-block" id="openTerms" type="button">Read the Terms &amp; Privacy Notice</button>
+          <p class="small muted" style="margin:14px 0 0;text-align:center">Already have an account? <a href="/index.html">Sign in</a></p>
+        </section>
+
+        <!-- Step 2: Email -->
+        <section class="card" data-panel="2" hidden>
+          <p class="step-label">Step 2 of 4</p>
+          <h2>Verify your email</h2>
+          <p>We'll send a 6-digit code to your email. We use your email only to verify your account and send important notices.</p>
+          <form id="emailForm" novalidate>
+            <div class="field">
+              <label for="email">Email address</label>
+              <input class="input" id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="name@gmail.com" required>
+            </div>
+            <button class="btn btn-big btn-block" type="submit">Send code</button>
+          </form>
+        </section>
+
+        <!-- Step 3: Code -->
+        <section class="card" data-panel="3" hidden>
+          <p class="step-label">Step 3 of 4</p>
+          <h2>Enter the code</h2>
+          <p id="codeSentTo"></p>
+          <div class="form-note warn small" id="devCode" hidden></div>
+          <form id="codeForm" novalidate style="margin-top:14px">
+            <div class="field">
+              <label for="code">6-digit code</label>
+              <input class="input code-input" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="\d{6}" required>
+            </div>
+            <button class="btn btn-big btn-block" type="submit">Create my guest account</button>
+          </form>
+          <div style="display:flex;justify-content:space-between;gap:10px;margin-top:14px;flex-wrap:wrap">
+            <button class="btn btn-ghost" id="changeEmail" type="button">Use a different email</button>
+            <button class="btn btn-ghost" id="resend" type="button" disabled>Send a new code</button>
+          </div>
+        </section>
+
+        <!-- Step 4: Done -->
+        <section class="card" data-panel="4" hidden>
+          <div class="congrats">
+            <img class="seal-big" src="/assets/img/lagro-seal.png" alt="">
+            <h2>Congrats! You now have a guest account.</h2>
+            <p class="muted">Save your guest ID and password now. For your safety, <b>the password won't be shown again</b> and isn't sent by email.</p>
+          </div>
+          <div class="cred">
+            <div><span class="k">Guest ID</span><span class="v" id="newGuestId"></span></div>
+            <button class="btn btn-quiet" id="copyId" type="button">Copy</button>
+          </div>
+          <div class="cred">
+            <div><span class="k">Password</span><span class="v" id="newPassword"></span></div>
+            <button class="btn btn-quiet" id="copyPw" type="button">Copy</button>
+          </div>
+          <p class="small muted" id="expiresNote"></p>
+
+          <h3 style="margin-top:18px">How to use LagroInAction</h3>
+          <ol class="how-to">
+            <li><span><b>Report</b> anything that happened to you or that you saw. Guest reports never show who sent them.</span></li>
+            <li><span><b>My reports</b> shows what the guidance office is doing with each report.</span></li>
+            <li><span><b>Messages</b> lets you talk with guidance staff privately.</span></li>
+            <li><span>Tap the red <b>SOS</b> button if you are in danger right now.</span></li>
+            <li><span>Want a permanent account? Go to <b>Account</b> and ask to become a student account.</span></li>
+          </ol>
+
+          <div class="go-home-row">
+            <button class="btn btn-quiet" id="changePw" type="button">Change password</button>
+            <a class="btn" href="/app/home.html">Go Home</a>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/assets/js/core.js"></script>
+  <script src="/assets/js/pages/guest.js"></script>
+</body>
+</html>

@@ -40,5 +40,7 @@ function db(): PDO
             PDO::ATTR_EMULATE_PREPARES => false,               // real prepared statements
         ]
     );
+    // All times are stored and sent in UTC; the pages convert them to Philippine time.
+    $pdo->exec("SET TIME ZONE 'UTC'");
     return $pdo;
 }

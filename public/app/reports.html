@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My reports · LagroInAction</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/lia.css">
+</head>
+<body data-area="user" data-page="reports">
+  <main>
+    <div class="narrow">
+      <div class="page-head">
+        <div>
+          <h1>My reports</h1>
+          <p>See what the guidance office is doing with each report.</p>
+        </div>
+        <a class="btn" href="/app/report.html">New report</a>
+      </div>
+      <div class="list" id="list">
+        <div class="skeleton"></div><div class="skeleton"></div>
+      </div>
+    </div>
+  </main>
+  <script src="/assets/js/core.js"></script>
+  <script>
+    (async () => {
+      await LIA.start();
+      const list = document.getElementById('list');
+      const STEPS = ['Sent', 'Accepted', 'Investigating', 'Resolved'];
+      const reached = { 'Pending': 1, 'Active': 2, 'Under Investigation': 3, 'Resolved': 4, 'Rejected': 1 };
+
+      try {
+        const { reports } = await LIA.api('reports/mine.php');
+        if (!reports.length) {
+          list.innerHTML = `<div class="empty"><strong>No reports yet</strong><span>When you send a report, you can follow it here.</span><a class="btn" href="/app/report.html">Report something</a></div>`;
+          return;
+        }
+        list.innerHTML = reports.map((r) => `
+          <article class="row-card">
+            <div class="row-top"><strong>Report #${r.reportNo}</strong>${LIA.chip(r.status)}</div>
+            <div class="row-meta">
+              <span>${LIA.esc(r.category)}</span><span>${LIA.esc(r.location)}</span>
+              <span>Happened ${LIA.esc(LIA.fmtDate(r.incidentDate))}</span><span>Sent ${LIA.esc(LIA.timeAgo(r.submittedAt))}</span>
+              ${r.anonymous ? '<span>Name hidden from staff</span>' : ''}
+            </div>
+            <p class="row-text">${LIA.esc(r.description)}</p>
+            ${r.status === 'Rejected'
+              ? `<div class="reason"><b>Why it wasn't accepted:</b> ${LIA.esc(r.rejectReason || 'No reason given.')}<br><span class="small muted">You can send a new report or message the guidance office.</span></div>`
+              : `<ol class="steps" aria-label="Progress">${STEPS.map((s, i) => `<li class="${i < reached[r.status] ? 'done' : ''}">${s}</li>`).join('')}</ol>`}
+          </article>`).join('');
+      } catch (e) {
+        list.innerHTML = `<div class="empty"><strong>Couldn't load your reports</strong><span>${LIA.esc(e.message)}</span></div>`;
+      }
+    })();
+  </script>
+</body>
+</html>

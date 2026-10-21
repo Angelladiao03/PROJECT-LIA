@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard · LagroInAction staff</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/lia.css">
+</head>
+<body data-area="admin" data-page="dashboard">
+  <main>
+    <div class="wide">
+      <div class="page-head">
+        <div>
+          <h1>Dashboard</h1>
+          <p id="signedInAs">What needs attention, and where bullying is happening.</p>
+        </div>
+      </div>
+
+      <div class="tiles" id="tiles">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+      </div>
+
+      <div class="dash-grid">
+        <section class="card">
+          <div class="card-title"><h2>Reports per month</h2><span class="small muted">Last 6 months</span></div>
+          <div class="cols" id="monthly"></div>
+        </section>
+        <section class="card">
+          <div class="card-title"><h2>Where it happens</h2><span class="small muted">All reports</span></div>
+          <div class="bars" id="byLocation"></div>
+        </section>
+        <section class="card">
+          <div class="card-title"><h2>Kinds of bullying</h2><span class="small muted">All reports</span></div>
+          <div class="bars" id="byCategory"></div>
+        </section>
+        <section class="card">
+          <div class="card-title"><h2>Who is reporting</h2><span class="small muted">All reports</span></div>
+          <div class="bars" id="byRole"></div>
+        </section>
+      </div>
+
+      <section class="card" style="margin-top:16px">
+        <div class="card-title"><h2>Recent SOS alerts</h2><a class="small" href="/admin/sos.html">See all</a></div>
+        <div class="table-scroll" id="recentSos"></div>
+      </section>
+    </div>
+  </main>
+  <script src="/assets/js/core.js"></script>
+  <script src="/assets/js/pages/admin-dashboard.js"></script>
+</body>
+</html>

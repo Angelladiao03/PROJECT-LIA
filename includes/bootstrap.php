@@ -1,37 +1,34 @@
 <?php
 // Every file in public/api/ starts with:
-//     require_once __DIR__ . '/../../includes/bootstrap.php';
+//     require_once __DIR__ . '/../../../includes/bootstrap.php';
 // so they all get the same helpers.
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/json.php';
 require_once __DIR__ . '/validation.php';
 require_once __DIR__ . '/session.php';
 require_once __DIR__ . '/passwords.php';
+require_once __DIR__ . '/accounts.php';
+require_once __DIR__ . '/mailer.php';
 
-// Any error we didn't catch becomes a clean JSON error instead of a PHP error page.
+// Any error we didn't catch becomes a clean JSON message instead of a PHP error page.
 set_exception_handler('json_server_error');
 
+// Only allow the listed request methods (GET, POST).
+// POST requests must also carry the "X-LIA: 1" header, which our own
+// pages always send. Other websites can't add it, so they can't make
+// a signed-in person's browser submit things without them knowing.
 function require_method(string ...$allowed): void
 {
-    if (!in_array($_SERVER['REQUEST_METHOD'], $allowed, true)) {
+    $method = $_SERVER['REQUEST_METHOD'];
+    if (!in_array($method, $allowed, true)) {
         header('Allow: ' . implode(', ', $allowed));
-        json_error('Method not allowed.', 405);
+        json_error('This address does not accept ' . $method . ' requests.', 405);
     }
-}
-
-// Stops the request unless an admin is logged in.
-// GET pages get a 401 so the frontend sends them back to the login page.
-function require_admin(): int
-{
-    $adminId = current_admin_id();
-    if ($adminId === null) {
-        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-            json_session_expired();
-        }
-        json_error('You must be logged in as admin.');
+    if ($method === 'POST' && ($_SERVER['HTTP_X_LIA'] ?? '') !== '1') {
+        json_error('Request blocked. Please reload the page and try again.', 403);
     }
-    return $adminId;
 }

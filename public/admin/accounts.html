@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Account requests · LagroInAction staff</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/lia.css">
+</head>
+<body data-area="admin" data-page="accounts">
+  <main>
+    <div class="wide">
+      <div class="page-head">
+        <div><h1>Account requests</h1><p>Guests asking for a permanent student account. Check the ID photo matches the details, then approve or decline.</p></div>
+      </div>
+      <div class="form-note small" style="margin-bottom:16px">The ID photo is deleted as soon as you approve or decline. The student is emailed the result, and the reason if declined.</div>
+      <div class="list" id="pending"><div class="skeleton"></div></div>
+      <h2 style="margin-top:28px">Recently reviewed</h2>
+      <div class="card table-scroll" id="recent" style="padding:8px 12px"></div>
+    </div>
+  </main>
+  <script src="/assets/js/core.js"></script>
+  <script>
+    (async () => {
+      await LIA.start();
+      const pendingEl = document.getElementById('pending');
+      const recentEl = document.getElementById('recent');
+
+      async function load() {
+        try {
+          const { pending, recent } = await LIA.api('admin/activations.php');
+          pendingEl.innerHTML = pending.length ? pending.map((r) => `
+            <article class="card request-card">
+              <button class="id-photo" data-photo="${r.requestId}" aria-label="View ID photo larger">
+                <img src="/api/admin/activations.php?photo=${r.requestId}" alt="School ID photo sent by ${LIA.esc(r.fullName)}">
+              </button>
+              <div>
+                <div class="row-top"><strong style="font-size:1.2rem">${LIA.esc(r.fullName)}</strong><span class="chip pending">Waiting</span></div>
+                <dl class="facts" style="margin:10px 0 14px">
+                  <dt>Grade and section</dt><dd>${LIA.esc(r.gradeSection)}</dd>
+                  <dt>Adviser</dt><dd>${LIA.esc(r.adviser)}</dd>
+                  <dt>Contact number</dt><dd>${LIA.esc(r.contactNumber)}</dd>
+                  <dt>Email</dt><dd>${LIA.esc(r.email)}</dd>
+                  <dt>Username wanted</dt><dd>${LIA.esc(r.username)}</dd>
+                  <dt>Guest ID</dt><dd>${LIA.esc(r.guestId)}</dd>
+                  <dt>Sent</dt><dd>${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</dd>
+                </dl>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                  <button class="btn" data-approve="${r.requestId}">Approve</button>
+                  <button class="btn btn-danger" data-decline="${r.requestId}">Decline</button>
+                </div>
+              </div>
+            </article>`).join('')
+            : '<div class="empty"><strong>No requests waiting</strong><span>When a guest asks for a permanent account, it shows up here.</span></div>';
+
+          recentEl.innerHTML = recent.length ? `<table class="plain"><thead><tr><th>Student</th><th>Result</th><th>Reviewed</th><th>By</th></tr></thead><tbody>
+            ${recent.map((r) => `<tr><td>${LIA.esc(r.fullName)}<br><span class="small muted">${LIA.esc(r.gradeSection)}</span></td>
+              <td><span class="chip ${r.status === 'Approved' ? 'resolved' : 'rejected'}">${LIA.esc(r.status)}</span>${r.declineReason ? `<br><span class="small muted">${LIA.esc(r.declineReason)}</span>` : ''}</td>
+              <td>${LIA.esc(LIA.fmtDateTime(r.reviewedAt))}</td><td>${LIA.esc(r.reviewedBy || '')}</td></tr>`).join('')}
+            </tbody></table>` : '<p class="small muted" style="margin:8px">Nothing reviewed yet.</p>';
+        } catch (e) { pendingEl.innerHTML = `<div class="empty"><strong>Couldn't load requests</strong><span>${LIA.esc(e.message)}</span></div>`; }
+      }
+
+      pendingEl.addEventListener('click', async (e) => {
+        const photo = e.target.closest('[data-photo]');
+        if (photo) {
+          LIA.openModal({ title: 'School ID photo', wide: true, body: `<img src="/api/admin/activations.php?photo=${photo.dataset.photo}" alt="School ID photo" style="width:100%;border-radius:10px">` });
+          return;
+        }
+        const ap = e.target.closest('[data-approve]');
+        if (ap) {
+          const ok = await LIA.confirmBox({ title: 'Approve this account?', text: 'The account becomes a permanent student account, the ID photo is deleted, and the student is emailed.', confirmLabel: 'Approve' });
+          if (!ok) return;
+          try { const r = await LIA.busy(ap, () => LIA.api('admin/activations.php', { body: { action: 'approve', requestId: ap.dataset.approve } })); LIA.toast(r.message); load(); }
+          catch (err) { LIA.toast(err.message, 'error'); load(); }
+          return;
+        }
+        const de = e.target.closest('[data-decline]');
+        if (de) {
+          LIA.openModal({
+            title: 'Decline this request',
+            body: `<form id="decForm" novalidate><div class="field"><label for="decReason">Reason (emailed to the student)</label>
+              <textarea class="input" id="decReason" maxlength="1000" placeholder="e.g. The ID photo is blurry. Please send a clearer photo."></textarea></div></form>`,
+            foot: `<button class="btn btn-quiet" data-close>Cancel</button><button class="btn btn-sos" form="decForm" type="submit">Decline and email</button>`,
+            onOpen: (el, close) => {
+              el.querySelector('#decForm').addEventListener('submit', async (ev) => {
+                ev.preventDefault();
+                const reason = el.querySelector('#decReason').value.trim();
+                if (reason.length < 5) return LIA.showFormError(ev.target, 'Write the reason. The student will receive it by email.');
+                try {
+                  const r = await LIA.busy(el.querySelector('button[type=submit]'), () => LIA.api('admin/activations.php', { body: { action: 'decline', requestId: de.dataset.decline, reason } }));
+                  close(); LIA.toast(r.message); load();
+                } catch (err) { LIA.showFormError(ev.target, err.message); }
+              });
+            },
+          });
+        }
+      });
+
+      await load();
+      setInterval(load, 60000);
+    })();
+  </script>
+</body>
+</html>

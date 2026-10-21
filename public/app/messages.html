@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Messages · LagroInAction</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/lia.css">
+</head>
+<body data-area="user" data-page="messages">
+  <main>
+    <div class="narrow">
+      <section class="card chat">
+        <header class="chat-head">
+          <img src="/assets/img/lagro-seal.png" alt="" style="width:40px;height:40px">
+          <div><strong>Guidance office</strong><span class="small muted" id="chatSub">Messages are private between you and guidance staff.</span></div>
+        </header>
+        <div class="chat-log" id="log" aria-live="polite"></div>
+        <form class="chat-form" id="chatForm">
+          <label class="visually-hidden" for="text">Message</label>
+          <textarea class="input" id="text" name="text" rows="1" maxlength="2000" placeholder="Write a message"></textarea>
+          <button class="btn" type="submit" aria-label="Send"><span class="hide-sm">Send</span></button>
+        </form>
+      </section>
+    </div>
+  </main>
+  <script src="/assets/js/core.js"></script>
+  <script>
+    (async () => {
+      const me = await LIA.start();
+      const log = document.getElementById('log');
+      const form = document.getElementById('chatForm');
+      if (me.account.accountType === 'guest') {
+        document.getElementById('chatSub').textContent = 'Staff see you only as Guest ' + me.account.guestId + '.';
+      }
+      form.querySelector('button').insertAdjacentHTML('afterbegin', LIA.icon('send'));
+      let lastCount = -1;
+
+      async function load() {
+        try {
+          const { messages } = await LIA.api('messages/thread.php');
+          if (messages.length === lastCount) return;
+          lastCount = messages.length;
+          log.innerHTML = messages.length ? messages.map((m) => `
+            <div class="bubble ${m.from === 'me' ? 'mine' : 'theirs'}">${LIA.esc(m.text)}</div>
+            <div class="bubble-meta ${m.from === 'me' ? 'mine' : ''}">${m.from === 'me' ? 'You' : LIA.esc(m.staffName || 'Guidance office')} · ${LIA.esc(LIA.fmtDateTime(m.sentAt))}</div>
+          `).join('') : `<div class="empty" style="margin:auto"><strong>Start a conversation</strong><span>Ask a question or tell the guidance office what's going on. A staff member will reply here.</span></div>`;
+          log.scrollTop = log.scrollHeight;
+        } catch (e) { /* try again soon */ }
+      }
+
+      form.text.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+      });
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = form.text.value.trim();
+        if (!text) return;
+        try {
+          await LIA.busy(form.querySelector('button'), () => LIA.api('messages/thread.php', { body: { text } }));
+          form.text.value = '';
+          await load();
+        } catch (err) { LIA.toast(err.message, 'error'); }
+      });
+
+      await load();
+      setInterval(load, 10000); // check for replies every 10 seconds
+    })();
+  </script>
+</body>
+</html>

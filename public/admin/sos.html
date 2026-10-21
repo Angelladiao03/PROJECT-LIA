@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SOS alerts · LagroInAction staff</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/lia.css">
+</head>
+<body data-area="admin" data-page="sos">
+  <main>
+    <div class="wide">
+      <div class="page-head">
+        <div><h1>SOS alerts</h1><p>New alerts make a sound and show a red bar on every staff page. Keep this page open during school hours.</p></div>
+        <button class="btn btn-quiet" id="testSound" type="button">Test the alert sound</button>
+      </div>
+      <div class="form-note small" style="margin-bottom:16px"><b>Dispatched</b> means someone (a guard or staff member) is on the way. <b>Responded</b> means the student was reached and the situation was handled.</div>
+      <div class="list" id="list"><div class="skeleton"></div><div class="skeleton"></div></div>
+    </div>
+  </main>
+  <script src="/assets/js/core.js"></script>
+  <script>
+    (async () => {
+      await LIA.start();
+      const list = document.getElementById('list');
+      async function load() {
+        try {
+          const { alerts } = await LIA.api('admin/sos.php');
+          if (!alerts.length) { list.innerHTML = '<div class="empty"><strong>No SOS alerts</strong><span>When a student sends one, it appears here right away.</span></div>'; return; }
+          list.innerHTML = alerts.map((a) => `
+            <article class="row-card" style="${a.status === 'Active' ? 'border-color:var(--sos);border-width:2px' : ''}">
+              <div class="row-top"><strong>${LIA.esc(a.location)}</strong>
+                <span class="chip ${a.status === 'Active' ? 'sos' : a.status === 'Dispatched' ? 'active' : 'resolved'}">${LIA.esc(a.status)}</span></div>
+              <div class="row-meta"><span>${LIA.esc(a.name)}</span>${a.gradeSection ? `<span>${LIA.esc(a.gradeSection)}</span>` : ''}
+                ${a.contactNumber ? `<span><a href="tel:${LIA.esc(a.contactNumber)}">${LIA.esc(a.contactNumber)}</a></span>` : ''}
+                <span>${LIA.esc(LIA.fmtDateTime(a.sentAt))} (${LIA.esc(LIA.timeAgo(a.sentAt))})</span></div>
+              <p style="margin:4px 0 0">${LIA.esc(a.description)}</p>
+              ${a.status !== 'Responded' ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+                ${a.status === 'Active' ? `<button class="btn btn-sos" data-act="dispatch" data-id="${a.sosNo}">Mark dispatched</button>` : ''}
+                <button class="btn btn-quiet" data-act="respond" data-id="${a.sosNo}">Mark responded</button>
+                ${a.userId ? `<a class="btn btn-ghost" href="/admin/messages.html?userId=${a.userId}">Message</a>` : ''}
+              </div>` : ''}
+            </article>`).join('');
+        } catch (e) { list.innerHTML = `<div class="empty"><strong>Couldn't load alerts</strong><span>${LIA.esc(e.message)}</span></div>`; }
+      }
+      list.addEventListener('click', async (e) => {
+        const b = e.target.closest('[data-act]');
+        if (!b) return;
+        try {
+          const res = await LIA.busy(b, () => LIA.api('admin/sos.php', { body: { action: b.dataset.act, sosNo: b.dataset.id } }));
+          LIA.toast(res.message);
+          load();
+        } catch (err) { LIA.toast(err.message, 'error'); load(); }
+      });
+      document.getElementById('testSound').addEventListener('click', () => {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = 880;
+        const g = ctx.createGain(); g.gain.value = 0.2; o.connect(g).connect(ctx.destination);
+        o.start(); o.stop(ctx.currentTime + 0.3);
+        LIA.toast('If you heard a beep, alerts will make a sound on this device.');
+      });
+      document.addEventListener('lia:new-sos', load);
+      await load();
+      setInterval(load, 20000);
+    })();
+  </script>
+</body>
+</html>

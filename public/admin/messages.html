@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Messages · LagroInAction staff</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/lia.css">
+</head>
+<body data-area="admin" data-page="messages">
+  <main>
+    <div class="wide">
+      <div class="split" id="split">
+        <section class="card convo-list-card" style="padding:0">
+          <div style="padding:16px 16px 8px"><h2 style="margin:0">Messages</h2><p class="small muted" style="margin:0">Yellow dot: waiting for a reply.</p></div>
+          <div class="convo-list" id="convos"><div class="skeleton" style="margin:8px"></div></div>
+        </section>
+
+        <section class="card chat" id="chat">
+          <header class="chat-head">
+            <button class="icon-btn" id="back" aria-label="Back to conversations" hidden></button>
+            <span class="avatar" id="chatAvatar" hidden></span>
+            <div style="flex:1;min-width:0"><strong id="chatName">Choose a conversation</strong><span class="small muted" id="chatInfo"></span></div>
+          </header>
+          <div class="chat-log" id="log" aria-live="polite">
+            <div class="empty" style="margin:auto"><strong>No conversation open</strong><span>Pick someone on the left to read and reply.</span></div>
+          </div>
+          <form class="chat-form" id="chatForm" hidden>
+            <label class="visually-hidden" for="text">Reply</label>
+            <textarea class="input" id="text" name="text" rows="1" maxlength="2000" placeholder="Write a reply"></textarea>
+            <button class="btn" type="submit">Send</button>
+          </form>
+        </section>
+      </div>
+    </div>
+  </main>
+  <script src="/assets/js/core.js"></script>
+  <script>
+    (async () => {
+      await LIA.start();
+      const convosEl = document.getElementById('convos');
+      const log = document.getElementById('log');
+      const form = document.getElementById('chatForm');
+      const split = document.getElementById('split');
+      const back = document.getElementById('back');
+      back.innerHTML = LIA.icon('arrowLeft');
+      let current = Number(new URLSearchParams(location.search).get('userId')) || null;
+      let conversations = [];
+      let lastSig = '';
+
+      async function loadList() {
+        try {
+          ({ conversations } = await LIA.api('admin/messages.php'));
+          convosEl.innerHTML = conversations.length ? conversations.map((c) => `
+            <button class="convo" data-user="${c.userId}" ${c.userId === current ? 'aria-current="true"' : ''}>
+              <span class="avatar ${c.accountType === 'guest' ? 'guest' : ''}">${LIA.esc(LIA.initials(c.name))}</span>
+              <span class="who"><strong>${LIA.esc(c.name)}</strong><span>${LIA.esc(c.lastText)}</span></span>
+              ${c.waitingForReply ? '<span class="dot" title="Waiting for a reply"></span>' : ''}
+            </button>`).join('')
+            : '<p class="small muted" style="padding:8px">No messages yet. Students and guests can message the guidance office from their Messages page.</p>';
+        } catch (e) { convosEl.innerHTML = `<p class="small muted" style="padding:8px">${LIA.esc(e.message)}</p>`; }
+      }
+
+      async function loadChat() {
+        if (!current) return;
+        try {
+          const { person, messages } = await LIA.api('admin/messages.php?userId=' + current);
+          split.classList.add('has-chat');
+          back.hidden = false;
+          form.hidden = false;
+          const av = document.getElementById('chatAvatar');
+          av.hidden = false;
+          av.textContent = LIA.initials(person.name);
+          av.classList.toggle('guest', person.accountType === 'guest');
+          document.getElementById('chatName').textContent = person.name;
+          document.getElementById('chatInfo').textContent = person.accountType === 'guest'
+            ? 'Guest account: identity hidden' + (person.status === 'Expired' ? ' · expired, they can no longer read replies' : '')
+            : [person.gradeSection, person.adviser && 'Adviser: ' + person.adviser, person.contactNumber].filter(Boolean).join(' · ');
+          const sig = person.userId + ':' + messages.length;
+          if (sig === lastSig) return;
+          lastSig = sig;
+          log.innerHTML = messages.length ? messages.map((m) => `
+            <div class="bubble ${m.from === 'guidance' ? 'mine' : 'theirs'}">${LIA.esc(m.text)}</div>
+            <div class="bubble-meta ${m.from === 'guidance' ? 'mine' : ''}">${m.from === 'guidance' ? LIA.esc(m.staffName || 'Guidance office') : LIA.esc(person.name)} · ${LIA.esc(LIA.fmtDateTime(m.sentAt))}</div>`).join('')
+            : '<div class="empty" style="margin:auto"><strong>No messages yet</strong><span>Write the first message below.</span></div>';
+          log.scrollTop = log.scrollHeight;
+        } catch (e) { LIA.toast(e.message, 'error'); }
+      }
+
+      convosEl.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-user]');
+        if (!b) return;
+        current = Number(b.dataset.user);
+        history.replaceState(null, '', '?userId=' + current);
+        convosEl.querySelectorAll('.convo').forEach((x) => x.toggleAttribute('aria-current', x === b));
+        lastSig = '';
+        loadChat();
+      });
+      back.addEventListener('click', () => { split.classList.remove('has-chat'); });
+      form.text.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = form.text.value.trim();
+        if (!text || !current) return;
+        try {
+          await LIA.busy(form.querySelector('button'), () => LIA.api('admin/messages.php', { body: { userId: current, text } }));
+          form.text.value = '';
+          await Promise.all([loadChat(), loadList()]);
+        } catch (err) { LIA.toast(err.message, 'error'); }
+      });
+
+      await loadList();
+      await loadChat();
+      setInterval(() => { loadList(); loadChat(); }, 10000);
+    })();
+  </script>
+</body>
+</html>

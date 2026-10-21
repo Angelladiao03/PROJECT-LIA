@@ -1,67 +1,39 @@
 <?php
-// Small helpers for sending JSON back to the browser.
-// Replaces JsonUtil.java. The response shapes are exactly the same as the
-// Java version, so the existing JavaScript keeps working.
+// Helpers for sending JSON back to the browser.
+// Every response has "success": true/false and a "message" people can read.
 
-function send_json($data, int $status = 200): void
+function send_json(array $data, int $status = 200): never
 {
     http_response_code($status);
     header('Content-Type: application/json; charset=UTF-8');
+    header('Cache-Control: no-store');
     echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
 }
 
-function json_success(string $message, array $extra = []): void
+function json_success(string $message, array $extra = []): never
 {
-    send_json(array_merge(['success' => true, 'message' => $message], $extra));
+    send_json(['success' => true, 'message' => $message] + $extra);
 }
 
-function json_error(string $message, int $status = 200): void
+function json_error(string $message, int $status = 400, array $extra = []): never
 {
-    send_json(['success' => false, 'message' => $message], $status);
+    send_json(['success' => false, 'message' => $message] + $extra, $status);
 }
 
-function json_session_expired(): void
+function json_session_expired(): never
 {
     send_json([
         'success' => false,
         'sessionExpired' => true,
-        'message' => 'Your session has expired. Please log in again.',
+        'message' => 'Your session has ended. Please sign in again.',
     ], 401);
 }
 
-// The Java version sent every value as a string ("12", "true", "" for
-// null). The frontend was written for that, so we keep doing it.
-function as_text($value): string
+// Logs the real error for us, but shows a simple message to the user
+// (raw database errors are never sent to the browser).
+function json_server_error(Throwable $e): never
 {
-    if ($value === null) {
-        return '';
-    }
-    if (is_bool($value)) {
-        return $value ? 'true' : 'false';
-    }
-    return (string) $value;
-}
-
-// Turns database rows into a list of objects with the given key names,
-// all values as text. $map is [jsonKey => databaseColumn].
-function rows_as_text(array $rows, array $map): array
-{
-    $out = [];
-    foreach ($rows as $row) {
-        $item = [];
-        foreach ($map as $jsonKey => $column) {
-            $item[$jsonKey] = as_text($row[$column] ?? null);
-        }
-        $out[] = $item;
-    }
-    return $out;
-}
-
-// Logs the real error for us, but shows the user a simple message
-// (never send raw database errors to the browser).
-function json_server_error(Throwable $e): void
-{
-    error_log('[LIA] ' . get_class($e) . ': ' . $e->getMessage());
+    error_log('[LIA] ' . get_class($e) . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
     json_error('Something went wrong on the server. Please try again.', 500);
 }

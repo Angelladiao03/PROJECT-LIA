@@ -10,6 +10,9 @@ RUN apt-get update \
 # Use PHP's production settings (hides error details from visitors)
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
+# ID photo uploads (the page shrinks photos first; the server allows up to 3 MB)
+RUN printf "upload_max_filesize = 4M\npost_max_size = 6M\nexpose_php = Off\n" > "$PHP_INI_DIR/conf.d/lia.ini"
+
 # Only the public/ folder is reachable from the web.
 # includes/ (database code, settings) stays private.
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public

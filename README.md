@@ -1,142 +1,179 @@
 # LagroInAction (PROJECT LIA)
 
 LagroInAction is a web-based bullying incident reporting and case management
-system for Lagro High School. Students can report incidents (named or
-anonymous), send an SOS alert, track their reports, and message the guidance
-office. Guidance staff get a dashboard to review reports, respond to SOS
-alerts, approve new student accounts, and reply to students.
+system for Lagro High School. Students report bullying (as guests or with a
+permanent student account), follow their reports, send SOS alerts, and
+message the guidance office. Guidance staff review cases, respond to SOS
+alerts, approve student accounts, and see where bullying happens.
 
-> **Version:** PHP alpha (rewrite of the Java prototype). The original Java
-> version is saved in Git under the tag `prototype-v1.2.1`.
+> **Version:** PHP alpha. The original Java prototype is saved in Git under
+> the tag `prototype-v1.2.1`.
+
+## How accounts work
+
+| Account | How you get it | Signs in with | Lasts |
+|---|---|---|---|
+| **Guest** | Accept the Terms → verify email with a 6-digit code | Guest ID (e.g. `LIA-7K3P9Q`) + password | 30 days, longer while a report or request is open. Reports are always kept. |
+| **Student** | A guest asks for it (details + school ID photo); staff approve | Username or email + same password | Permanent |
+| **Staff** | Created in the database (see below) | Staff username + password | Permanent |
+
+- Guest reports are always anonymous. Student accounts can turn on
+  **"Hide my name from staff"** (the report stays linked to the account so the
+  student can track it; staff can't see who sent it).
+- The ID photo is only visible to staff and is **deleted as soon as they
+  approve or decline**. The student is emailed the result.
 
 ## Tech stack
 
 - **Backend:** PHP 8.5 (plain PHP, no framework) with PDO
-- **Database:** PostgreSQL, hosted on [Neon](https://neon.tech)
-- **Frontend:** HTML, CSS, vanilla JavaScript
+- **Database:** PostgreSQL on [Neon](https://neon.tech)
+- **Frontend:** HTML, CSS, vanilla JavaScript (one stylesheet, one shared script)
+- **Email:** [Brevo](https://www.brevo.com) (free plan, 300 emails a day)
 - **Hosting:** [Render](https://render.com), using the `Dockerfile`
 
 ## Project structure
 
 ```
 PROJECT-LIA/
-├── public/                 ← everything the browser can open
-│   ├── index.html          ← login / sign-up page
-│   ├── src/                ← student and admin pages (HTML, CSS, JS)
-│   └── api/                ← PHP endpoints the JavaScript calls
-│       ├── login.php            student login
-│       ├── admin_login.php      admin login
-│       ├── logout.php           log out
-│       ├── register.php         student sign-up
-│       ├── report.php           submit an incident report
-│       ├── my_reports.php       student's own reports
-│       ├── sos.php              send an SOS alert
-│       ├── messages.php         student messages
-│       ├── student_profile.php  student "My Account"
-│       ├── admin_reports.php    admin: reports + SOS (view, approve, resolve...)
-│       ├── admin_requests.php   admin: approve/reject new accounts
-│       └── admin_messages.php   admin: messages
-├── includes/               ← private PHP code (not reachable from the browser)
-│   ├── bootstrap.php       loads everything below
-│   ├── config.php          finds the database connection string
-│   ├── db.php              connects to PostgreSQL
-│   ├── session.php         login sessions (saved in the database)
-│   ├── passwords.php       password hashing
-│   ├── validation.php      form validation rules
-│   ├── json.php            sends JSON responses
-│   ├── students.php        shared student queries
-│   └── conversations.php   shared message queries
-├── schema.sql              creates the database tables
-├── docker/apache-lia.conf  browser caching rules for Apache
-└── Dockerfile              how Render builds and runs the site
+├── public/                     ← everything the browser can open
+│   ├── index.html              sign in (Student / Guest)
+│   ├── guest.html              create a guest account (Terms → email → code → done)
+│   ├── staff.html              guidance staff sign in
+│   ├── terms.html              Terms of Use & Privacy Notice (EXAMPLE DRAFT)
+│   ├── app/                    student & guest pages
+│   │   ├── home.html           feed: report box, posters, articles, videos, hotlines
+│   │   ├── report.html         report an incident
+│   │   ├── reports.html        my reports + progress
+│   │   ├── messages.html       chat with the guidance office
+│   │   ├── account.html        details, change password, request a permanent account
+│   │   └── guide.html          what counts as bullying, what to do
+│   ├── admin/                  guidance staff pages
+│   │   ├── index.html          dashboard (counts, monthly bars, hotspots)
+│   │   ├── cases.html          new / active / under investigation
+│   │   ├── records.html        resolved / rejected / archived
+│   │   ├── sos.html            SOS alerts (with sound)
+│   │   ├── messages.html       conversations
+│   │   └── accounts.html       permanent-account requests (ID photo review)
+│   ├── assets/
+│   │   ├── css/lia.css         all styles (colours and sizes are at the top)
+│   │   ├── js/core.js          shared code: top bar, side menu, SOS, API calls
+│   │   ├── js/pages/*.js       code for individual pages
+│   │   └── img/                seal, posters, favicon
+│   └── api/                    PHP endpoints the pages call
+│       ├── auth/               me, login, staff_login, logout
+│       ├── guest/              send_code, verify
+│       ├── account/            password, activation
+│       ├── reports/            create, mine
+│       ├── sos/                create
+│       ├── messages/           thread
+│       └── admin/              reports, sos, messages, activations
+├── includes/                   ← private PHP code (not reachable from the browser)
+│   ├── bootstrap.php           loads everything below
+│   ├── config.php              reads settings (DATABASE_URL, email keys)
+│   ├── db.php                  connects to PostgreSQL
+│   ├── session.php             sign-in sessions (saved in the database)
+│   ├── accounts.php            who is signed in, guest expiry, login lockout
+│   ├── mailer.php              sends email through Brevo
+│   ├── passwords.php           password hashing
+│   ├── validation.php          form checks + the category/location lists
+│   └── json.php                JSON responses
+├── docker/apache-lia.conf      caching + security headers
+├── schema.sql                  creates/updates the database tables
+└── Dockerfile                  how Render builds and runs the site
 ```
 
-## Running it on your computer (Windows)
+## Setting up the database (do this after every schema change)
 
-### 1. Install PHP
+1. Open Neon → **SQL Editor** → choose the branch (`dev` for testing,
+   your main branch for the live site).
+2. Paste the whole `schema.sql` and click **Run**.
 
-1. Download PHP 8.5 for Windows (**VS17 x64 Thread Safe**, the **Zip** link) from
-   <https://windows.php.net/download/>.
-2. Unzip it to `C:\php`.
-3. In `C:\php`, copy `php.ini-development` and rename the copy to `php.ini`.
-4. Open `php.ini` in Notepad and remove the `;` at the start of these lines:
-   ```
-   extension_dir = "ext"
-   extension=mbstring
-   extension=pdo_pgsql
-   extension=openssl
-   ```
-5. Add `C:\php` to your PATH (Start → "Edit the system environment
-   variables" → Environment Variables → Path → New → `C:\php`).
-6. Open a **new** terminal and check: `php -v`
+It's safe to run more than once. On the old (v1) database it also **converts
+the old LRN-based student accounts** into the new accounts table, keeping their
+usernames, emails and passwords, and links their old reports, SOS alerts and
+messages. Nothing is deleted.
 
-### 2. Connect to your Neon dev database
+### Staff accounts
 
-1. In Neon, open your project → **Branches** → `dev` → **Connect**, and copy
-   the connection string.
-2. In `includes/`, copy `config.local.example.php` and name the copy
-   `config.local.php`.
-3. Paste the connection string into `config.local.php`.
-
-`config.local.php` is in `.gitignore`, so your password is never uploaded to
-GitHub. **Never put the connection string anywhere else in the code.**
-
-### 3. Set up the tables (first time only)
-
-In Neon, open the **SQL Editor** (on the `dev` branch), paste the whole
-`schema.sql`, and click **Run**. It's safe to run again later; it only creates
-what's missing.
-
-To make an admin account, run this in the SQL Editor (use your own values):
+Each staff member gets their own account (so every action shows who did it).
+Run this in the SQL Editor, once per person:
 
 ```sql
 INSERT INTO admin_profile (admin_username, admin_password, admin_fullname)
-VALUES ('yourusername', 'TemporaryPass123', 'Your Full Name');
+VALUES ('reyes.guidance', 'TemporaryPass123', 'Ms. Reyes');
 ```
 
-The password is converted to a secure hash the first time you log in.
+The password becomes a secure hash the first time they sign in.
 
-### 4. Start the site
+## Running it on your computer (Windows)
 
-In VS Code, open a terminal in the project folder and run:
-
-```
-php -S localhost:8000 -t public
-```
-
-Then open <http://localhost:8000> in your browser. Press `Ctrl+C` in the
-terminal to stop it.
+1. Install PHP 8.5 (see the steps in the team chat or windows.php.net, VS17 x64
+   Thread Safe zip, unzip to `C:\php`, enable `pdo_pgsql`, `mbstring`, `openssl`
+   in `php.ini`, add `C:\php` to PATH).
+2. Copy `includes/config.local.example.php` to `includes/config.local.php` and
+   fill in your Neon **dev** branch connection string. Keep
+   `'APP_ENV' => 'development'`: without an email service, the verification
+   code is shown on screen so you can still test sign-up.
+3. Run `schema.sql` on the dev branch (see above) and create a staff account.
+4. In VS Code's terminal, in the project folder:
+   ```
+   php -S localhost:8000 -t public
+   ```
+5. Open <http://localhost:8000>. Press `Ctrl+C` in the terminal to stop.
 
 ## Deploying to Render
 
-1. In Render, open the web service → **Settings** and make sure it uses
-   **Docker** and the `Dockerfile` in the project root.
-2. Go to **Environment** and add:
-   - `DATABASE_URL` = your Neon **main/production** connection string
-     (must include `sslmode=require`).
-   - You can delete the old Java variables `DB_URL`, `DB_USER`, and
-     `DB_PASSWORD`.
-3. Run `schema.sql` once in Neon's SQL Editor on the **production** branch
-   (this adds the new `php_sessions` table).
-4. Push to GitHub. Render rebuilds automatically.
+1. In Neon, run `schema.sql` on your **main** branch.
+2. In Render → your service → **Environment**, set:
 
-## Security notes
+   | Key | Value |
+   |---|---|
+   | `DATABASE_URL` | Neon main branch connection string |
+   | `BREVO_API_KEY` | your Brevo API key (see below) |
+   | `MAIL_FROM_EMAIL` | the sender email you verified in Brevo |
+   | `MAIL_FROM_NAME` | `LagroInAction` |
+   | `PORT` | `10000` |
 
-- All database queries use prepared statements (protects against SQL injection).
-- Passwords are stored as hashes. Old plain-text passwords from the prototype
-  are upgraded automatically when that person logs in.
-- Login sessions are kept in the database, so a Render restart doesn't log
-  everyone out. Session cookies are `HttpOnly` and `SameSite=Lax`.
-- Only `public/` is reachable from the web; `includes/` stays private.
+   Do **not** set `APP_ENV` on Render (it must stay "production").
+3. Push to GitHub. Render rebuilds automatically.
+
+### Sending emails (Brevo)
+
+Guest sign-up needs email codes, and staff decisions send emails.
+
+1. Create a free account at <https://www.brevo.com>.
+2. Add and verify a **sender** email address (Brevo emails it a confirmation
+   link). A school email is best; Gmail addresses work but more often land in
+   spam.
+3. Go to **SMTP & API → API keys**, create a key, and copy it.
+4. Put the key and sender email in Render's Environment (above).
+
+Every email the system tries to send is listed in the `email_outbox` table
+(address, subject, sent time, or the error), which helps if someone says they
+didn't get a code. The email text itself is not stored.
+
+## Security and privacy (what to tell the panel)
+
+- **Passwords** are hashed (`password_hash`). Old plain-text passwords from the
+  prototype are upgraded when that person signs in.
+- **Wrong-password lockout:** 5 wrong tries in 15 minutes locks that account
+  for 15 minutes.
+- **Email codes** expire after 10 minutes, allow 5 tries, and are limited to
+  one per minute per email.
+- **Every query uses prepared statements** (no SQL injection).
+- **Role checks on every endpoint:** students only see their own data; staff
+  pages need a staff account.
+- **Requests from other websites are blocked** (`X-LIA` header + `SameSite`
+  cookies), sessions are `HttpOnly`, and the session ID changes at sign-in.
+- **Anonymous reports** never send the reporter's details to staff browsers.
+- **ID photos** are checked to be real images, only shown to staff, never
+  cached, and deleted after review.
+- **Nothing is deleted:** reports are archived, accounts expire.
 - Use **made-up test data only** while developing.
 
-## Known items still to do
+## Still to do
 
-See `CLAUDE.md` for the full list. The most important:
-
-- Separate login per staff member (no shared admin account)
-- "Reject" and "Delete" currently delete a report; change these to a
-  Rejected status plus archiving, with an audit log
-- Decide how anonymous reports work (unlinked + tracking code, or
-  "identity hidden from staff")
-- Privacy notice and consent at sign-up
+See `CLAUDE.md` for the full list. Biggest items: severity levels and
+assigned staff (revised RA 10627 IRR), an audit log of staff actions, staff
+roles (counselor / advocate / security / principal), evidence uploads, and
+final approval of the Terms by the adviser and the Guidance Office.

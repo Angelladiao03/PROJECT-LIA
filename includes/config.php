@@ -1,30 +1,52 @@
 <?php
-// Reads the database connection string.
+// Reads settings.
 //
-// On Render: set an environment variable named DATABASE_URL to your Neon
-// connection string (Render dashboard -> your service -> Environment).
+// On Render: set them as environment variables (Render -> your service ->
+// Environment). On your own computer: put them in includes/config.local.php
+// (copy config.local.example.php). config.local.php is in .gitignore, so
+// passwords and keys never get uploaded to GitHub.
 //
-// On your own computer: copy includes/config.local.example.php to
-// includes/config.local.php and paste your Neon *dev* branch connection
-// string there. config.local.php is in .gitignore, so the password never
-// gets uploaded to GitHub.
+// Settings used by LIA:
+//   DATABASE_URL     Neon connection string (required)
+//   APP_ENV          "production" (default) or "development"
+//   BREVO_API_KEY    key for sending emails through Brevo
+//   MAIL_FROM_EMAIL  the email address emails are sent from
+//   MAIL_FROM_NAME   the name shown as the sender (default: LagroInAction)
+
+function setting(string $name, ?string $default = null): ?string
+{
+    $value = getenv($name);
+    if ($value !== false && $value !== '') {
+        return trim($value);
+    }
+
+    static $local = null;
+    if ($local === null) {
+        $file = __DIR__ . '/config.local.php';
+        $local = is_file($file) ? (require $file) : [];
+        // Older config.local.php files used lowercase 'database_url'
+        if (isset($local['database_url']) && !isset($local['DATABASE_URL'])) {
+            $local['DATABASE_URL'] = $local['database_url'];
+        }
+    }
+    if (isset($local[$name]) && $local[$name] !== '') {
+        return trim((string) $local[$name]);
+    }
+    return $default;
+}
 
 function lia_database_url(): string
 {
-    $url = getenv('DATABASE_URL');
-    if ($url !== false && $url !== '') {
-        return $url;
+    $url = setting('DATABASE_URL');
+    if ($url === null) {
+        throw new RuntimeException(
+            'No database configured. Set DATABASE_URL, or create includes/config.local.php.'
+        );
     }
+    return $url;
+}
 
-    $localFile = __DIR__ . '/config.local.php';
-    if (is_file($localFile)) {
-        $local = require $localFile;
-        if (!empty($local['database_url'])) {
-            return $local['database_url'];
-        }
-    }
-
-    throw new RuntimeException(
-        'No database configured. Set DATABASE_URL, or create includes/config.local.php.'
-    );
+function is_development(): bool
+{
+    return setting('APP_ENV', 'production') === 'development';
 }

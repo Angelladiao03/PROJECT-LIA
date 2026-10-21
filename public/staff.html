@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LagroInAction · Guidance staff sign in</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/lia.css">
+</head>
+<body>
+  <div class="auth-page">
+    <section class="auth-side">
+      <a class="brand" href="/index.html">
+        <img src="/assets/img/lagro-seal.png" alt="Lagro High School seal">
+        <span class="brand-word">Lagro<b>In</b>Action</span>
+      </a>
+      <div>
+        <h1 class="auth-headline">Guidance office sign in</h1>
+        <p>Review reports, respond to SOS alerts, approve student accounts, and reply to students.</p>
+      </div>
+      <p class="auth-foot">Staff only. Every action is recorded under your own account.</p>
+    </section>
+    <main class="auth-main">
+      <div class="auth-card">
+        <div class="card">
+          <h2>Staff sign in</h2>
+          <form id="staffForm" novalidate>
+            <div class="field">
+              <label for="username">Staff username</label>
+              <input class="input" id="username" name="username" autocomplete="username" required>
+            </div>
+            <div class="field">
+              <label for="password">Password</label>
+              <div class="pw-wrap">
+                <input class="input" id="password" name="password" type="password" autocomplete="current-password" required>
+                <button class="icon-btn pw-toggle" data-pw-toggle></button>
+              </div>
+            </div>
+            <button class="btn btn-big btn-block" type="submit">Sign in</button>
+          </form>
+        </div>
+        <p class="small" style="text-align:center;margin-top:16px"><a href="/index.html">Student or guest? Sign in here</a></p>
+      </div>
+    </main>
+  </div>
+  <script src="/assets/js/core.js"></script>
+  <script>
+    const form = document.getElementById('staffForm');
+    LIA.wirePasswordToggles();
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!form.username.value.trim() || !form.password.value) return LIA.showFormError(form, 'Enter your username and password.');
+      try {
+        await LIA.busy(form.querySelector('button[type=submit]'), () => LIA.api('auth/staff_login.php', { body: new FormData(form) }));
+        location.href = '/admin/index.html';
+      } catch (err) { LIA.showFormError(form, err.message); }
+    });
+    LIA.api('auth/me.php', { allow401: true })
+      .then((me) => { if (me.role === 'admin') location.href = '/admin/index.html'; })
+      .catch(() => {});
+  </script>
+</body>
+</html>

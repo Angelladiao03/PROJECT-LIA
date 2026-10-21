@@ -1,62 +1,75 @@
 <?php
-// Server-side validation rules. Same rules and messages as Validation.java.
-// Each function returns an error message, or null when the value is OK.
+// Server-side input checks. Each *_error() function returns a message
+// people can understand, or null when the value is fine.
 
 const USERNAME_MIN_LENGTH = 8;
 const USERNAME_MAX_LENGTH = 24;
-const LRN_LENGTH = 12;
 const CONTACT_NUMBER_LENGTH = 11;
 
-function lrn_error(?string $lrn): ?string
+// Fixed lists (the report form uses the same lists).
+const REPORT_CATEGORIES = [
+    'Verbal bullying', 'Physical bullying', 'Social exclusion', 'Cyberbullying',
+    'Threats or intimidation', 'Other',
+];
+const REPORT_LOCATIONS = [
+    'Classroom', 'Hallway or stairs', 'Canteen', 'Comfort room', 'School gate',
+    'Covered court or field', 'Library', 'Online or group chat', 'Outside school', 'Other',
+];
+const REPORTER_ROLES = ['victim', 'witness', 'other'];
+
+// Reads a POST field as trimmed text. Returns '' when missing.
+function input(string $name): string
 {
-    $v = trim($lrn ?? '');
-    if ($v === '') return 'LRN is required!';
-    if (!ctype_digit($v)) return 'LRN must contain numbers only!';
-    if (strlen($v) !== LRN_LENGTH) return 'LRN must be ' . LRN_LENGTH . ' numbers!';
+    $value = $_POST[$name] ?? '';
+    return is_string($value) ? trim($value) : '';
+}
+
+function too_long(string $value, int $max): bool
+{
+    return mb_strlen($value) > $max;
+}
+
+function email_error(string $email): ?string
+{
+    if ($email === '') return 'Enter your email address.';
+    if (too_long($email, 150) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return 'Enter a valid email address, like name@gmail.com.';
+    }
     return null;
 }
 
-function is_valid_email(?string $email): bool
+function username_error(string $username): ?string
 {
-    return $email !== null && preg_match('/^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$/', $email) === 1;
-}
-
-function contact_number_error(?string $number): ?string
-{
-    $v = trim($number ?? '');
-    if ($v === '') return 'Contact number is required!';
-    if (!ctype_digit($v)) return 'Contact number must contain numbers only!';
-    if (strlen($v) !== CONTACT_NUMBER_LENGTH) return 'Contact number must be ' . CONTACT_NUMBER_LENGTH . ' numbers!';
-    if (strncmp($v, '09', 2) !== 0) return 'Contact number must start with 09!';
+    if ($username === '') return 'Choose a username.';
+    $len = mb_strlen($username);
+    if ($len < USERNAME_MIN_LENGTH) return 'Username must be at least ' . USERNAME_MIN_LENGTH . ' characters.';
+    if ($len > USERNAME_MAX_LENGTH) return 'Username must be at most ' . USERNAME_MAX_LENGTH . ' characters.';
+    if (!preg_match('/^[A-Za-z0-9._]+$/', $username)) {
+        return 'Username can only use letters, numbers, dots and underscores.';
+    }
     return null;
 }
 
-function username_error(?string $username): ?string
+function password_error(string $password): ?string
 {
-    $v = trim($username ?? '');
-    if ($v === '') return 'Username is required!';
-    $len = mb_strlen($v);
-    if ($len < USERNAME_MIN_LENGTH) return 'Username must be at least ' . USERNAME_MIN_LENGTH . ' characters long!';
-    if ($len > USERNAME_MAX_LENGTH) return 'Username must not exceed ' . USERNAME_MAX_LENGTH . ' characters!';
+    if (strlen($password) < 8) return 'Password must be at least 8 characters.';
+    if (strlen($password) > 72) return 'Password must be at most 72 characters.';
+    if (!preg_match('/[A-Za-z]/', $password)) return 'Password must include a letter.';
+    if (!preg_match('/\d/', $password)) return 'Password must include a number.';
     return null;
 }
 
-function password_error(?string $password): ?string
+function contact_number_error(string $number): ?string
 {
-    $v = $password ?? '';
-    if (strlen($v) < 8) return 'Password must be at least 8 characters!';
-    if (!preg_match('/[A-Za-z]/', $v)) return 'Password must have a letter!';
-    if (!preg_match('/\d/', $v)) return 'Password must have a number!';
+    if ($number === '') return 'Enter your contact number.';
+    if (!ctype_digit($number)) return 'Contact number can only have numbers.';
+    if (strlen($number) !== CONTACT_NUMBER_LENGTH) return 'Contact number must be 11 digits, like 09171234567.';
+    if (strncmp($number, '09', 2) !== 0) return 'Contact number must start with 09.';
     return null;
 }
 
-// Reads a POST field. Returns null when it's missing.
-function post(string $name): ?string
+// Returns the value if it's a whole positive number, otherwise null.
+function positive_int(string $value): ?int
 {
-    return isset($_POST[$name]) && is_string($_POST[$name]) ? $_POST[$name] : null;
-}
-
-function is_blank(?string $value): bool
-{
-    return $value === null || trim($value) === '';
+    return ctype_digit($value) && $value !== '' && strlen($value) < 10 ? (int) $value : null;
 }
