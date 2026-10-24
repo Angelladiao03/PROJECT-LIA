@@ -8,16 +8,16 @@
   <link rel="icon" href="/assets/img/favicon.ico">
   <link rel="stylesheet" href="/assets/css/lia.css">
 </head>
-<body>
+<body class="auth-body">
   <div class="auth-page">
     <section class="auth-side">
       <a class="brand" href="/index.html">
         <img src="/assets/img/lagro-seal.png" alt="Lagro High School seal">
-        <span class="brand-word">Lagro<b>In</b>Action</span>
+        <span class="brand-word">LagroInAction</span>
       </a>
       <div>
-        <h1 class="auth-headline">Bullying incident reporting system of Lagro High School</h1>
-        <p>Report bullying to the guidance office online, follow the status of your report, and message guidance staff.</p>
+        <h1 class="auth-headline">Anti-bullying reporting system</h1>
+        <p>Report bullying to the Lagro High School guidance office online, follow the status of your report, and message guidance staff.</p>
         <ul class="auth-points">
           <li><svg class="icon" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6z"/></svg><span>Guest reports do not show your name.</span></li>
           <li><svg class="icon" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg><span>Check the status of your reports anytime.</span></li>
@@ -30,7 +30,8 @@
     <main class="auth-main">
       <div class="auth-card">
         <div class="card">
-          <h2>Sign in</h2>
+          <img class="auth-seal" src="/assets/img/lagro-seal.png" alt="Lagro High School seal">
+          <h2 class="auth-title" id="authTitle">Student log in</h2>
           <div class="seg" role="tablist" aria-label="Account type">
             <button type="button" role="tab" id="tabStudent" aria-selected="true" aria-controls="signInForm">Student</button>
             <button type="button" role="tab" id="tabGuest" aria-selected="false" aria-controls="signInForm">Guest</button>
@@ -53,13 +54,11 @@
             <button class="btn btn-big btn-block" type="submit">Sign in</button>
           </form>
 
-          <div class="divider">New here?</div>
+          <div class="divider">Don't have an account?</div>
           <a class="btn btn-big btn-block btn-create" href="/guest.html">Create a guest account</a>
-          <p class="small muted" style="margin:12px 0 0;text-align:center">Only an email address is needed.</p>
+          <p class="small muted" style="margin:10px 0 0;text-align:center">Only an email address is needed.</p>
         </div>
-        <p class="small" style="text-align:center;margin-top:16px">
-          <a href="/staff.html">Guidance staff sign in</a> · <a href="/terms.html">Terms &amp; privacy</a>
-        </p>
+        <p class="auth-links"><a href="/staff.html">Guidance staff log in</a> · <a href="/terms.html">Terms &amp; privacy</a></p>
       </div>
     </main>
   </div>

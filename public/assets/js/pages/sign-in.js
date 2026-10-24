@@ -13,6 +13,7 @@ function choose(kind) {
   tabs.student.setAttribute('aria-selected', String(kind === 'student'));
   tabs.guest.setAttribute('aria-selected', String(kind === 'guest'));
   idLabel.textContent = kind === 'guest' ? 'Guest ID' : 'Username or email';
+  document.getElementById('authTitle').textContent = kind === 'guest' ? 'Guest log in' : 'Student log in';
   idInput.placeholder = kind === 'guest' ? 'LIA-' : '';
   idInput.autocapitalize = kind === 'guest' ? 'characters' : 'none';
   idHint.hidden = kind !== 'guest';

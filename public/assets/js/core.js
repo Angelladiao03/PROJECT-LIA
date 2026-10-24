@@ -386,15 +386,13 @@ const LIA = (() => {
     top.className = 'topbar';
     top.innerHTML = `
       <button class="icon-btn" id="navToggle" aria-label="Menu" aria-expanded="false">${icon('menu')}</button>
-      <a class="brand" href="${isAdmin ? '/admin/index.html' : '/app/home.html'}">
-        <img src="/assets/img/lagro-seal.png" alt="">
-        <span class="brand-word">Lagro<b>In</b>Action</span>
-        ${isAdmin ? '<span class="brand-tag">Guidance office</span>' : ''}
-      </a>
-      ${isAdmin ? '' : `<button class="sos-btn" id="sosTop" aria-label="Send an SOS">SOS</button>
-      <a class="icon-btn hide-sm" href="/app/messages.html" aria-label="Messages">${icon('chat')}</a>`}
+      <img class="seal" src="/assets/img/lagro-seal.png" alt="Lagro High School">
+      <a class="topbar-title" href="${isAdmin ? '/admin/index.html' : '/app/home.html'}">PROJECT LIA</a>
+      <div class="topbar-right">
+      ${isAdmin ? '<span class="brand-tag hide-sm">Guidance office</span>' : `<button class="sos-btn" id="sosTop" aria-label="Send an SOS">SOS</button>`}
       <div class="menu">
         <button class="menu-btn" id="acctBtn" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
+          <span class="menu-name">${esc(name)}</span>
           <span class="avatar ${isGuest ? 'guest' : ''}">${esc(initials(name))}</span>
         </button>
         <div class="menu-panel" id="acctMenu" hidden>
@@ -405,6 +403,7 @@ const LIA = (() => {
           ${isAdmin ? '' : `<a class="menu-item" href="/app/account.html">${icon('user')} Account</a>`}
           <button class="menu-item" id="signOut">${icon('logout')} Sign out</button>
         </div>
+      </div>
       </div>`;
 
     const side = document.createElement('nav');
@@ -413,12 +412,13 @@ const LIA = (() => {
     side.innerHTML = isAdmin
       ? `<div class="nav-group">${ADMIN_NAV.map((i) => navLink(i, current)).join('')}</div>
          <p class="sidebar-foot">LagroInAction · Lagro High School Guidance Office</p>`
-      : `<div class="nav-group">${USER_NAV.map((i) => navLink(i, current)).join('')}</div>
+      : `<button class="sidebar-sos" id="sosSide" type="button">SOS<small>Tap if you need help now</small></button>
+         <div class="nav-group">${USER_NAV.map((i) => navLink(i, current)).join('')}</div>
          <div class="nav-group extra"><p class="nav-heading">Learn</p>${USER_EXTRA.map((i) => navLink(i, current)).join('')}</div>
          <div class="nav-group extra"><p class="nav-heading">Emergency hotlines</p>
            <a class="nav-link" href="tel:911">${icon('phone')}<span>911 National</span></a>
            <a class="nav-link" href="tel:122">${icon('phone')}<span>122 Quezon City</span></a></div>
-         <p class="sidebar-foot">© ${new Date().getFullYear()} Lagro High School · LagroInAction</p>`;
+         <p class="sidebar-foot">LagroInAction · Lagro High School</p>`;
 
     const main = document.querySelector('main');
     main.classList.add('page');
@@ -432,6 +432,19 @@ const LIA = (() => {
       tabs.innerHTML = USER_NAV.map((i) => `<a href="${i.href}" ${i.id === current ? 'aria-current="page"' : ''}>${icon(i.icon)}${esc(i.label)}</a>`).join('');
       document.body.append(tabs);
       document.getElementById('sosTop').addEventListener('click', openSos);
+      document.getElementById('sosSide').addEventListener('click', openSos);
+
+      // Green footer at the bottom of every student page (like the prototype)
+      if (current !== 'messages') {
+        const foot = document.createElement('footer');
+        foot.className = 'site-footer';
+        foot.innerHTML = `
+          <div><h3>Lagro High School</h3><p><b>Address:</b> Misa de Gallo St. corner Ascension Ave., Brgy. Greater Lagro, Novaliches, Quezon City.</p></div>
+          <div><h3>Contact Us</h3><p><b>Email:</b> <a href="mailto:lagrohighschool@gmail.com">lagrohighschool@gmail.com</a><br><b>Facebook:</b> Ask Lagro High School</p></div>
+          <div><h3>Emergency Hotlines</h3><p><a href="tel:122">Quezon City Hotline - 122</a><br><a href="tel:911">National Emergency Hotline - 911</a></p></div>
+          <p class="copy">© ${new Date().getFullYear()} Lagro High School - LagroInAction. All Rights Reserved.</p>`;
+        main.append(foot);
+      }
     }
 
     // Menu button: on wide screens it shrinks the menu (like YouTube); on small screens it slides it out.
