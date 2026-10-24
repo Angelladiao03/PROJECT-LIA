@@ -170,11 +170,19 @@ didn't get a code. The email text itself is not stored.
 - **ID photos** are checked to be real images, only shown to staff, never
   cached, and deleted after review.
 - **Nothing is deleted:** reports are archived, accounts expire.
+- **Audit log:** every staff action (accept, reject, resolve, archive, SOS
+  dispatch, account approval, sign-in/out) is saved in `audit_log` with the
+  staff member's name and the time. The case window shows it as "Case History".
+- **Browser protection headers** (in `docker/apache-lia.conf`): a
+  Content-Security-Policy (only our own scripts run), HSTS (always HTTPS),
+  nosniff, no framing by other sites.
+- **Fail-safe SOS:** if an SOS can't reach the server, the student is told it
+  was NOT sent and is shown 911 / 122 and the guidance office.
 - Use **made-up test data only** while developing.
 
 ## Still to do
 
 See `CLAUDE.md` for the full list. Biggest items: severity levels and
-assigned staff (revised RA 10627 IRR), an audit log of staff actions, staff
+assigned staff (revised RA 10627 IRR), staff
 roles (counselor / advocate / security / principal), evidence uploads, and
 final approval of the Terms by the adviser and the Guidance Office.

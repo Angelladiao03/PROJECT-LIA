@@ -207,6 +207,20 @@ BEGIN
     END IF;
 END $$;
 
+-- ---------- Audit log (who changed what, and when) ----------
+-- One row per staff action. Rows are never updated or deleted.
+CREATE TABLE IF NOT EXISTS audit_log (
+    log_id      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    admin_id    INT          REFERENCES admin_profile(admin_id),
+    action      VARCHAR(40)  NOT NULL,
+    target_type VARCHAR(20)  NOT NULL,
+    target_id   INT,
+    details     TEXT,
+    ip_address  VARCHAR(64),
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS audit_log_target ON audit_log (target_type, target_id);
+
 -- =====================================================================
 -- First staff account (run separately, with your own values):
 --

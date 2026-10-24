@@ -37,11 +37,27 @@
         <a class="btn" href="/app/report.html">Submit a report</a>
       </div>
 
-      <section class="stat-grid" id="stats">
-        <button type="button" class="stat-card requested" data-filter="Pending"><span class="stat-number" id="cPending">0</span><span class="stat-label">Requested</span></button>
-        <button type="button" class="stat-card pending" data-filter="Active"><span class="stat-number" id="cActive">0</span><span class="stat-label">Pending review</span></button>
-        <button type="button" class="stat-card invest" data-filter="Under Investigation"><span class="stat-number" id="cInvest">0</span><span class="stat-label">In investigation</span></button>
-        <button type="button" class="stat-card resolved" data-filter="Resolved"><span class="stat-number" id="cResolved">0</span><span class="stat-label">Resolved</span></button>
+      <section class="stat-grid" id="stats" aria-label="Your reports by status. Choose one to filter the table.">
+        <button type="button" class="stat-card requested" data-filter="Pending" aria-pressed="false">
+          <span class="stat-top"><span class="stat-label">Requested</span><span class="stat-icon" data-icon="send" aria-hidden="true"></span></span>
+          <span class="stat-number" id="cPending">0</span>
+          <span class="stat-sub" id="sPending"><b>0%</b> of your reports</span>
+        </button>
+        <button type="button" class="stat-card pending" data-filter="Active" aria-pressed="false">
+          <span class="stat-top"><span class="stat-label">Pending Review</span><span class="stat-icon" data-icon="clock" aria-hidden="true"></span></span>
+          <span class="stat-number" id="cActive">0</span>
+          <span class="stat-sub" id="sActive"><b>0%</b> of your reports</span>
+        </button>
+        <button type="button" class="stat-card invest" data-filter="Under Investigation" aria-pressed="false">
+          <span class="stat-top"><span class="stat-label">In Investigation</span><span class="stat-icon" data-icon="shield" aria-hidden="true"></span></span>
+          <span class="stat-number" id="cInvest">0</span>
+          <span class="stat-sub" id="sInvest"><b>0%</b> of your reports</span>
+        </button>
+        <button type="button" class="stat-card resolved" data-filter="Resolved" aria-pressed="false">
+          <span class="stat-top"><span class="stat-label">Resolved</span><span class="stat-icon" data-icon="check" aria-hidden="true"></span></span>
+          <span class="stat-number" id="cResolved">0</span>
+          <span class="stat-sub" id="sResolved"><b>0%</b> of your reports</span>
+        </button>
       </section>
 
       <section class="card table-card">

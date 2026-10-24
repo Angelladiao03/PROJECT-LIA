@@ -108,6 +108,8 @@ $pdo->prepare(
 )->execute([$action === 'approve' ? 'Approved' : 'Declined', $action === 'decline' ? $reason : null,
             $admin['admin_id'], $requestId]);
 $pdo->commit();
+audit((int) $admin['admin_id'], 'account.' . $action, 'activation', $requestId,
+      ($action === 'decline' ? "Reason: $reason. " : '') . 'Student: ' . $request['full_name']);
 
 // Tell the student by email.
 $name = $request['full_name'];

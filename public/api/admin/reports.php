@@ -10,10 +10,31 @@
 // POST action=reject      reportNo, reason   -> Rejected (the student sees the reason)
 // POST action=archive     reportNo   hides a Resolved/Rejected report from Records (never deleted)
 // POST action=unarchive   reportNo
+// GET  ?history=N            who did what to report N, and when (audit log)
+//
+// Every change is written to the audit log with the staff member's name.
 
 require_once __DIR__ . '/../../../includes/bootstrap.php';
 require_method('GET', 'POST');
 $admin = require_admin();
+
+// GET ?history=N -> the case history of one report (from the audit log)
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['history'])) {
+    $reportNo = positive_int($_GET['history']);
+    if ($reportNo === null) json_error('Missing report number.');
+    $stmt = db()->prepare(
+        "SELECT l.action, l.details, l.created_at, a.admin_fullname
+         FROM audit_log l LEFT JOIN admin_profile a ON a.admin_id = l.admin_id
+         WHERE l.target_type = 'report' AND l.target_id = ? ORDER BY l.created_at, l.log_id"
+    );
+    $stmt->execute([$reportNo]);
+    send_json(['success' => true, 'history' => array_map(fn ($h) => [
+        'what' => audit_label($h['action']),
+        'details' => $h['details'],
+        'by' => $h['admin_fullname'] ?? 'Unknown staff',
+        'at' => $h['created_at'],
+    ], $stmt->fetchAll())]);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $rows = db()->query(
@@ -90,6 +111,7 @@ if (isset($moves[$action])) {
     }
     db()->prepare('UPDATE reports SET report_status = ?, reject_reason = ?, updated_at = NOW() WHERE report_no = ?')
         ->execute([$to, $reason, $reportNo]);
+    audit((int) $admin['admin_id'], 'report.' . $action, 'report', $reportNo, $reason ?? '');
     json_success($message);
 }
 
@@ -99,6 +121,7 @@ if ($action === 'archive' || $action === 'unarchive') {
     }
     db()->prepare('UPDATE reports SET archived_at = ' . ($action === 'archive' ? 'NOW()' : 'NULL') . ', updated_at = NOW() WHERE report_no = ?')
         ->execute([$reportNo]);
+    audit((int) $admin['admin_id'], 'report.' . $action, 'report', $reportNo);
     json_success($action === 'archive' ? 'Report archived. It is kept, just hidden from the main list.' : 'Report restored.');
 }
 

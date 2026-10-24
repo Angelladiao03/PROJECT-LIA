@@ -6,7 +6,7 @@
 
 require_once __DIR__ . '/../../../includes/bootstrap.php';
 require_method('GET', 'POST');
-require_admin();
+$admin = require_admin();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $rows = db()->query(
@@ -44,4 +44,6 @@ $params = $from ? [$to, $sosNo, $to, $from] : [$to, $sosNo, $to];
 $stmt = db()->prepare($sql);
 $stmt->execute($params);
 
-$stmt->rowCount() === 1 ? json_success($message) : json_error('This alert was already updated. Reload the page.', 409);
+if ($stmt->rowCount() !== 1) json_error('This alert was already updated. Reload the page.', 409);
+audit((int) $admin['admin_id'], 'sos.' . $action, 'sos', $sosNo);
+json_success($message);

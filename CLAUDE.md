@@ -74,9 +74,10 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
    with **severity** (Minor: adviser/teacher; Serious: Learner Formation Officer; Severe: school
    head, parents, PNP) or **Rejected with a reason the student can see** → resolved with the
    action taken → archived. Add severity, assigned person, and a Rejected status.
-2. DONE: victim/witness field, location dropdown + hotspot chart, Rejected with reason, archive
+2. DONE: audit log (`audit_log` table, `audit()` in includes/audit.php, called by every staff action;
+   shown as Case History), CSP/HSTS headers, victim/witness field, location dropdown + hotspot chart, Rejected with reason, archive
    instead of delete, SOS sound + red strip for staff, monthly bars, "What counts as bullying" guide.
-3. Still to do: severity + assigned staff (step 1 above), audit log of staff actions, staff roles
+3. Still to do: severity + assigned staff (step 1 above), staff roles
    (counselor / advocate by grade level / security / principal), evidence/screenshot upload,
    printable invitation letters, Terms approval by adviser + Guidance Office.
 4. Out of scope: separate mobile app, AI features

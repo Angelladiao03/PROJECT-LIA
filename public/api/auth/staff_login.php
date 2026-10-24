@@ -30,4 +30,5 @@ if (!is_hashed($admin['admin_password'])) { // upgrade an old plain-text passwor
 }
 
 sign_in_admin((int) $admin['admin_id']);
+audit((int) $admin['admin_id'], 'staff.sign_in', 'staff', (int) $admin['admin_id']);
 json_success('Signed in.', ['account' => ['displayName' => $admin['admin_fullname']]]);

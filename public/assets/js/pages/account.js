@@ -30,6 +30,8 @@
     location.href = '/index.html';
   });
 
+  document.querySelectorAll('.stat-icon[data-icon]').forEach((el) => { el.innerHTML = LIA.icon(el.dataset.icon); });
+
   // Edit Profile (permanent student accounts)
   const editBtn = document.getElementById('editProfile');
   editBtn.hidden = isGuest;
@@ -72,13 +74,18 @@
   const tabs = document.getElementById('filterTabs');
 
   function drawReports() {
+    // Counter cards: the number, plus what share of all your reports it is
     const count = (s) => reports.filter((r) => r.status === s).length;
-    document.getElementById('cPending').textContent = count('Pending');
-    document.getElementById('cActive').textContent = count('Active');
-    document.getElementById('cInvest').textContent = count('Under Investigation');
-    document.getElementById('cResolved').textContent = count('Resolved');
-    tabs.querySelectorAll('[data-filter]').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.filter === filter)));
-    document.querySelectorAll('.stat-card').forEach((c) => c.classList.toggle('selected', c.dataset.filter === filter));
+    [['Pending', 'Pending'], ['Active', 'Active'], ['Under Investigation', 'Invest'], ['Resolved', 'Resolved']].forEach(([status, id]) => {
+      const n = count(status);
+      const pct = reports.length ? Math.round((n / reports.length) * 100) : 0;
+      document.getElementById('c' + id).textContent = n;
+      document.getElementById('s' + id).innerHTML = `<b>${pct}%</b> of your ${reports.length} report${reports.length === 1 ? '' : 's'}`;
+    });
+    document.querySelectorAll('.stat-card').forEach((c) => {
+      c.classList.toggle('selected', c.dataset.filter === filter);
+      c.setAttribute('aria-pressed', String(c.dataset.filter === filter));
+    });
 
     const list = filter === 'all' ? reports : reports.filter((r) => r.status === filter);
     if (!list.length) {

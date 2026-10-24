@@ -13,6 +13,7 @@ require_once __DIR__ . '/session.php';
 require_once __DIR__ . '/passwords.php';
 require_once __DIR__ . '/accounts.php';
 require_once __DIR__ . '/mailer.php';
+require_once __DIR__ . '/audit.php';
 
 // Any error we didn't catch becomes a clean JSON message instead of a PHP error page.
 set_exception_handler('json_server_error');

@@ -65,11 +65,21 @@ const LIA = (() => {
         init.body = new URLSearchParams(options.body);
       }
     }
+    // Give up after 60 seconds so buttons don't stay "loading" forever.
+    // (60 s because Render's free plan can take about 50 s to wake up.)
+    const timer = new AbortController();
+    const stop = setTimeout(() => timer.abort(), 60000);
+    init.signal = timer.signal;
     let res;
     try {
       res = await fetch('/api/' + path, init);
     } catch (e) {
-      throw Object.assign(new Error("Can't reach LagroInAction. Check your internet connection and try again."), { network: true });
+      const msg = e.name === 'AbortError'
+        ? 'LagroInAction is taking too long to answer. Please try again.'
+        : "Can't reach LagroInAction. Check your internet connection and try again.";
+      throw Object.assign(new Error(msg), { network: true });
+    } finally {
+      clearTimeout(stop);
     }
     let data = null;
     try { data = await res.json(); } catch (e) { /* not JSON */ }
@@ -335,7 +345,11 @@ const LIA = (() => {
                      <p class="muted">Emergency hotlines: <a href="tel:911">911</a> · Quezon City <a href="tel:122">122</a></p>`,
               foot: `<button class="btn" data-close>OK</button>`,
             });
-          } catch (err) { showFormError(form, err.message); }
+          } catch (err) {
+            // Fail safe: if the SOS could not reach the server, say so clearly and point to other help.
+            const failed = err.network || !err.status || err.status >= 500;
+            showFormError(form, failed ? `Your SOS was NOT sent. ${err.message} Call 911 or 122, or go to the guidance office now.` : err.message);
+          }
         });
       },
     });
@@ -442,9 +456,9 @@ const LIA = (() => {
       const foot = document.createElement('footer');
       foot.className = 'site-footer';
       foot.innerHTML = `
-        <div><h3>Lagro High School</h3><p><b>Address:</b> Misa de Gallo St. corner Ascension Ave., Brgy. Greater Lagro, Novaliches, Quezon City.</p></div>
-        <div><h3>Contact Us</h3><p><b>Email:</b> <a href="mailto:lagrohighschool@gmail.com">lagrohighschool@gmail.com</a><br><b>Facebook:</b> Ask Lagro High School</p></div>
-        <div><h3>Emergency Hotlines</h3><p><a href="tel:122">Quezon City Hotline - 122</a><br><a href="tel:911">National Emergency Hotline - 911</a></p></div>
+        <div><h2>Lagro High School</h2><p><b>Address:</b> Misa de Gallo St. corner Ascension Ave., Brgy. Greater Lagro, Novaliches, Quezon City.</p></div>
+        <div><h2>Contact Us</h2><p><b>Email:</b> <a href="mailto:lagrohighschool@gmail.com">lagrohighschool@gmail.com</a><br><b>Facebook:</b> Ask Lagro High School</p></div>
+        <div><h2>Emergency Hotlines</h2><p><a href="tel:122">Quezon City Hotline - 122</a><br><a href="tel:911">National Emergency Hotline - 911</a></p></div>
         <p class="copy">© ${new Date().getFullYear()} Lagro High School - LagroInAction. All Rights Reserved.</p>`;
       main.append(foot);
     }
@@ -556,6 +570,9 @@ const LIA = (() => {
   // Call LIA.start() at the top of each page script. It returns who is signed in.
   async function start() {
     const area = document.body.dataset.area; // "user" or "admin"
+    // Tell the user when their internet drops and comes back (nothing is lost: report drafts are saved on this device)
+    window.addEventListener('offline', () => toast("You're offline. Your report draft is kept on this device.", 'error'));
+    window.addEventListener('online', () => toast("You're back online."));
     let me;
     try {
       me = await api('auth/me.php', { allow401: true });

@@ -101,12 +101,20 @@ const CASE = (() => {
         ${r.involvedKnown ? `<h3 style="margin-top:16px">Description of Person(s) Involved</h3><div class="quote-box">${LIA.esc(r.involvedDescription)}</div>` : ''}
         <h3 style="margin-top:16px">Description</h3>
         <div class="quote-box">${LIA.esc(r.description)}</div>
-        ${r.status === 'Rejected' ? `<h3 style="margin-top:16px">Reason given to the student</h3><div class="reason">${LIA.esc(r.rejectReason)}</div>` : ''}`,
+        ${r.status === 'Rejected' ? `<h3 style="margin-top:16px">Reason given to the student</h3><div class="reason">${LIA.esc(r.rejectReason)}</div>` : ''}
+        <h3 style="margin-top:16px">Case History</h3>
+        <ol class="case-history" data-history><li class="muted">Loading...</li></ol>`,
       foot: `${buttons}
         ${r.canMessage ? `<a class="btn btn-quiet" href="/admin/messages.html?userId=${p.userId}">Message</a>` : ''}
         <button class="btn btn-ghost" data-print>Print</button>
         <button class="btn btn-gray" data-close>Close</button>`,
       onOpen: (el, close) => {
+        // Who did what to this report, and when (from the audit log)
+        const hist = el.querySelector('[data-history]');
+        LIA.api('admin/reports.php?history=' + r.reportNo).then(({ history }) => {
+          hist.innerHTML = `<li><b>Report submitted</b> <span class="muted">· ${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</span></li>` +
+            history.map((h) => `<li><b>${LIA.esc(h.what)}</b> by ${LIA.esc(h.by)} <span class="muted">· ${LIA.esc(LIA.fmtDateTime(h.at))}</span></li>`).join('');
+        }).catch((e) => { hist.innerHTML = `<li class="muted">${LIA.esc(e.message)}</li>`; });
         el.querySelector('[data-print]').addEventListener('click', () => {
           document.body.classList.add('printing-case');
           window.print();
