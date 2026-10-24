@@ -541,13 +541,113 @@ body.ready main > *:nth-child(2) { animation-delay: 0.04s; }
 body[data-area]:not(.ready) main { visibility: hidden; }
 
 /* ---------- Printing a case ---------- */
+/* =====================================================================
+   Restored prototype pages: tables, My Account, Submit Report, staff pages
+   ===================================================================== */
+
+/* ---------- Small buttons and inputs ---------- */
+.btn-sm { padding: 6px 12px; font-size: 0.84rem; border-radius: var(--radius-sm); min-height: 0; }
+.btn-gray { background: #eef1ef; color: var(--ink); border-color: #dfe5e1; box-shadow: none; }
+.btn-gray:hover { background: #e2e7e4; color: var(--ink); box-shadow: none; }
+.input-sm { padding: 6px 10px; font-size: 0.86rem; width: auto; min-width: 150px; }
+.input.search { width: min(340px, 100%); border-radius: 999px; padding-left: 16px; background: var(--surface); }
+
+/* ---------- Tables (like the prototype's white table cards) ---------- */
+.table-card { padding: 20px 22px; }
+.table-card + .table-card { margin-top: 22px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.data-table th { text-align: left; padding: 11px 12px; background: var(--green); color: #fff; font-weight: 700; white-space: nowrap; }
+.data-table th:first-child { border-top-left-radius: var(--radius-sm); }
+.data-table th:last-child { border-top-right-radius: var(--radius-sm); }
+.data-table td { padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.data-table tbody tr:nth-child(even) td { background: #fbfdfc; }
+.data-table tbody tr:hover td { background: var(--green-tint); }
+.data-table tr.clickable { cursor: pointer; }
+.data-table td.summary { max-width: 320px; color: var(--muted); }
+.data-table td.actions { white-space: nowrap; }
+.data-table td.actions > * { margin: 2px 4px 2px 0; vertical-align: middle; }
+.data-table .empty-cell { text-align: center; color: var(--muted); padding: 26px 12px; font-style: italic; background: none !important; }
+.count-pill { display: inline-grid; place-items: center; min-width: 26px; height: 24px; padding: 0 8px; margin-left: 6px; border-radius: 999px; background: var(--orange); color: #3d2700; font-size: 0.8rem; font-weight: 800; vertical-align: middle; font-family: var(--font-body); }
+.count-pill.sos { background: var(--sos); color: #fff; }
+
+/* SOS table */
+.sos-card { border-top: 4px solid var(--sos); }
+.sos-title { color: var(--sos-dark); }
+.sos-card .data-table th { background: var(--sos-dark); }
+.data-table tr.sos-active td { background: var(--sos-tint) !important; }
+.data-table tr.sos-active td:first-child { box-shadow: inset 4px 0 0 var(--sos); font-weight: 700; }
+
+/* Records filters */
+.filters { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+
+/* ---------- Case details window ---------- */
+.modal.case-modal { width: min(900px, 100%); }
+.case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.case-section { padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: #fbfdfc; }
+.case-section h3 { margin: 0 0 10px; font-size: 1rem; color: var(--green); padding-bottom: 8px; border-bottom: 2px solid var(--orange); }
+.case-facts { display: grid; grid-template-columns: max-content 1fr; gap: 7px 14px; margin: 0; font-size: 0.92rem; }
+.case-facts dt { font-weight: 700; color: var(--green); }
+.case-facts dd { margin: 0; word-break: break-word; }
+
+/* Messages: buttons above the chat */
+.chat-tools { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+
+/* ---------- My Account ---------- */
+.profile-card { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; background: linear-gradient(135deg, var(--surface) 60%, var(--orange-tint)); border-left: 6px solid var(--green); }
+.avatar.xl { width: 96px; height: 96px; font-size: 2.1rem; box-shadow: 0 0 0 5px var(--green-tint); }
+.avatar.xl.guest { box-shadow: 0 0 0 5px var(--orange-tint); }
+.profile-details { flex: 1; min-width: 220px; }
+.profile-details h1, .profile-details h2 { margin: 0 0 2px; }
+.profile-type { display: inline-block; margin-bottom: 10px; padding: 2px 10px; border-radius: 999px; background: var(--green-tint); color: var(--green); font-size: 0.8rem; font-weight: 700; }
+.profile-facts { display: grid; grid-template-columns: max-content 1fr; gap: 5px 14px; margin: 0; font-size: 0.92rem; }
+.profile-facts dt { color: var(--muted); }
+.profile-facts dd { margin: 0; font-weight: 600; word-break: break-word; }
+.profile-actions { display: flex; flex-direction: column; gap: 8px; min-width: 170px; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+.stat-card { display: grid; gap: 2px; padding: 16px 18px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); border-top: 5px solid var(--c, var(--green)); box-shadow: var(--shadow-sm); text-align: left; cursor: pointer; font: inherit; color: inherit; transition: transform 0.15s, box-shadow 0.15s; }
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.stat-card.selected { background: var(--bg-c, var(--green-tint)); outline: 2px solid var(--c); outline-offset: -2px; }
+.stat-card.requested { --c: var(--st-pending); --bg-c: var(--st-pending-bg); }
+.stat-card.pending { --c: var(--st-active); --bg-c: var(--st-active-bg); }
+.stat-card.invest { --c: var(--st-invest); --bg-c: var(--st-invest-bg); }
+.stat-card.resolved { --c: var(--st-resolved); --bg-c: var(--st-resolved-bg); }
+.stat-number { font-family: var(--font-head); font-size: 2rem; font-weight: 700; color: var(--c); line-height: 1.1; }
+.stat-label { font-size: 0.86rem; color: var(--muted); font-weight: 600; }
+
+/* ---------- Submit Report form (prototype layout) ---------- */
+.report-card { padding: 28px 30px; border-top: 6px solid var(--green); }
+.report-card h1 { margin-top: 0; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.pref-box { margin: 0 0 18px; padding: 14px 16px; border: 1px dashed var(--green-bright); border-radius: var(--radius); background: var(--green-tint); }
+.pref-box legend { padding: 0 6px; font-weight: 700; color: var(--green); }
+.pref-options { display: flex; gap: 18px; flex-wrap: wrap; margin: 4px 0 8px; }
+.pref-options label { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
+.req { color: var(--sos); font-weight: 700; margin-left: 2px; }
+
+@media (max-width: 900px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .filters { grid-template-columns: 1fr 1fr; }
+  .filters .input[type=search] { grid-column: 1 / -1; }
+  .case-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .form-row { grid-template-columns: 1fr; }
+  .profile-actions { flex-direction: row; flex-wrap: wrap; width: 100%; }
+  .report-card, .table-card { padding: 18px 16px; }
+  .input.search { width: 100%; }
+  .filters { grid-template-columns: 1fr; }
+}
+
 @media print {
-  body.printing-case > *:not(.drawer) { display: none !important; }
-  body.printing-case .drawer { position: static; width: 100%; box-shadow: none; animation: none; }
-  body.printing-case .drawer-foot, body.printing-case [data-x] { display: none !important; }
-  body.printing-case .drawer-body { overflow: visible; }
-  body.printing-case .drawer-head::before { content: "Lagro High School Guidance Office · LagroInAction case record"; display: block; width: 100%; font-size: 12px; color: #555; }
-  body.printing-case .drawer-head { flex-wrap: wrap; }
+  body.printing-case > *:not(.modal-wrap) { display: none !important; }
+  body.printing-case .modal-wrap { position: static; display: block; padding: 0; background: none; backdrop-filter: none; }
+  body.printing-case .modal { width: 100%; max-height: none; box-shadow: none; animation: none; overflow: visible; }
+  body.printing-case .modal-foot, body.printing-case .modal-head .icon-btn, body.printing-case [data-x] { display: none !important; }
+  body.printing-case .modal-body { overflow: visible; }
+  body.printing-case .modal-head { flex-wrap: wrap; }
+  body.printing-case .modal-head::before { content: "Lagro High School Guidance Office · LagroInAction case record"; display: block; width: 100%; font-size: 12px; color: #555; }
 }
 
 /* ---------- Smaller screens ---------- */

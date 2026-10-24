@@ -3,26 +3,63 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Account · LagroInAction</title>
+  <title>My Account · LagroInAction</title>
   <link rel="icon" href="/assets/img/favicon.ico">
   <link rel="stylesheet" href="/assets/css/lia.css">
 </head>
 <body data-area="user" data-page="account">
   <main>
-    <div class="narrow">
-      <section class="card">
-        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
-          <span class="avatar lg" id="bigAvatar"></span>
-          <div style="flex:1;min-width:200px">
-            <h1 style="margin:0" id="who"></h1>
-            <p class="muted" style="margin:0" id="whoSub"></p>
-          </div>
-          <button class="btn btn-quiet" id="changePw" type="button"></button>
+    <div class="wide">
+      <!-- Profile card (like the prototype) -->
+      <section class="card profile-card">
+        <span class="avatar xl" id="bigAvatar"></span>
+        <div class="profile-details">
+          <h2 id="who"></h2>
+          <p class="profile-type" id="whoType"></p>
+          <dl class="profile-facts" id="facts"></dl>
         </div>
-        <dl class="facts" id="facts" style="margin:20px 0 0"></dl>
+        <div class="profile-actions">
+          <button class="btn" id="editProfile" type="button" hidden>Edit Profile</button>
+          <button class="btn btn-quiet" id="changePw" type="button">Change Password</button>
+          <button class="btn btn-danger" id="logOut" type="button">Log Out</button>
+        </div>
       </section>
 
-      <section class="card" id="activate"></section>
+      <!-- Guests: request a permanent student account -->
+      <section class="card" id="activate" hidden></section>
+
+      <!-- My Report History (like the prototype) -->
+      <div class="page-head" id="history" style="margin-top:30px">
+        <div>
+          <h1>My Report History</h1>
+          <p>Track the status and investigation progress of your filed incident reports.</p>
+        </div>
+        <a class="btn" href="/app/report.html">Submit a report</a>
+      </div>
+
+      <section class="stat-grid" id="stats">
+        <button type="button" class="stat-card requested" data-filter="Pending"><span class="stat-number" id="cPending">0</span><span class="stat-label">Requested</span></button>
+        <button type="button" class="stat-card pending" data-filter="Active"><span class="stat-number" id="cActive">0</span><span class="stat-label">Pending review</span></button>
+        <button type="button" class="stat-card invest" data-filter="Under Investigation"><span class="stat-number" id="cInvest">0</span><span class="stat-label">In investigation</span></button>
+        <button type="button" class="stat-card resolved" data-filter="Resolved"><span class="stat-number" id="cResolved">0</span><span class="stat-label">Resolved</span></button>
+      </section>
+
+      <section class="card table-card">
+        <div class="tabs" id="filterTabs" role="tablist">
+          <button class="tab" role="tab" data-filter="all" aria-selected="true">All Reports</button>
+          <button class="tab" role="tab" data-filter="Pending" aria-selected="false">Requested</button>
+          <button class="tab" role="tab" data-filter="Active" aria-selected="false">Pending</button>
+          <button class="tab" role="tab" data-filter="Under Investigation" aria-selected="false">In Investigation</button>
+          <button class="tab" role="tab" data-filter="Resolved" aria-selected="false">Resolved</button>
+          <button class="tab" role="tab" data-filter="Rejected" aria-selected="false">Not accepted</button>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Report No.</th><th>Category</th><th>Location</th><th>Reporter Name</th><th>Date &amp; Time Filed</th><th>Status</th><th></th></tr></thead>
+            <tbody id="rows"><tr><td colspan="7"><div class="skeleton" style="height:40px"></div></td></tr></tbody>
+          </table>
+        </div>
+      </section>
     </div>
   </main>
   <script src="/assets/js/core.js"></script>

@@ -3,25 +3,62 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cases · LagroInAction staff</title>
+  <title>Manage Reports · LagroInAction staff</title>
   <link rel="icon" href="/assets/img/favicon.ico">
   <link rel="stylesheet" href="/assets/css/lia.css">
 </head>
-<body data-area="admin" data-page="cases" data-mode="cases">
+<body data-area="admin" data-page="cases">
   <main>
     <div class="wide">
       <div class="page-head">
-        <div><h1>Cases</h1><p>Review new reports and follow active cases. Click a report to see details and take action.</p></div>
+        <div>
+          <h1>Manage Incident Reports &amp; Verification</h1>
+          <p>Review submitted incident requests, manage active investigations, and dispatch emergency SOS alerts.</p>
+        </div>
+        <label class="visually-hidden" for="search">Search reports</label>
+        <input class="input search" id="search" type="search" placeholder="Search by report #, category, place, name">
       </div>
-      <div class="toolbar">
-        <div class="tabs" id="tabs" role="tablist" style="margin:0;flex:1"></div>
-        <label class="visually-hidden" for="search">Search</label>
-        <input class="input" id="search" type="search" placeholder="Search by #, kind, place, words">
-      </div>
-      <div class="list" id="list"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+
+      <!-- 1. New reports -->
+      <section class="card table-card">
+        <div class="card-title"><h2>New Report Approval Requests <span class="count-pill" id="nNew">0</span></h2></div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Report ID</th><th>Date Submitted</th><th>Reporter Type</th><th>Category</th><th>Details / Summary</th><th>Actions</th></tr></thead>
+            <tbody id="newRows"><tr><td colspan="6"><div class="skeleton" style="height:40px"></div></td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 2. Active cases -->
+      <section class="card table-card">
+        <div class="card-title"><h2>Active Incident Tracking &amp; Status Updates <span class="count-pill" id="nActive">0</span></h2></div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Report ID</th><th>Reporter Info</th><th>Category</th><th>Current Status</th><th>Update Action</th></tr></thead>
+            <tbody id="activeRows"><tr><td colspan="5"><div class="skeleton" style="height:40px"></div></td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 3. SOS -->
+      <section class="card table-card sos-card" id="sos">
+        <div class="card-title">
+          <h2 class="sos-title">Emergency SOS Verification &amp; Dispatch <span class="count-pill sos" id="nSos">0</span></h2>
+          <button class="btn btn-ghost btn-sm" id="testSound" type="button">Test alert sound</button>
+        </div>
+        <p class="small muted" style="margin-top:-6px"><b>Dispatched</b> = someone (a guard or staff member) is on the way. <b>Responded</b> = the student was reached and the situation was handled. New alerts make a sound on every staff page.</p>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Time Alert</th><th>Student Info</th><th>Location</th><th>Description / Note</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="sosRows"><tr><td colspan="6"><div class="skeleton" style="height:40px"></div></td></tr></tbody>
+          </table>
+        </div>
+      </section>
     </div>
   </main>
   <script src="/assets/js/core.js"></script>
-  <script src="/assets/js/pages/admin-cases.js"></script>
+  <script src="/assets/js/pages/admin-case.js"></script>
+  <script src="/assets/js/pages/admin-manage.js"></script>
 </body>
 </html>

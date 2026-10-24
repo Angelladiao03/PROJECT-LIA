@@ -21,6 +21,10 @@
             <button class="icon-btn" id="back" aria-label="Back to conversations" hidden></button>
             <span class="avatar" id="chatAvatar" hidden></span>
             <div style="flex:1;min-width:0"><strong id="chatName">Choose a conversation</strong><span class="small muted" id="chatInfo"></span></div>
+            <div class="chat-tools" id="chatTools" hidden>
+              <button class="btn btn-quiet btn-sm" id="viewInfo" type="button">View Info</button>
+              <button class="btn btn-quiet btn-sm" id="viewCase" type="button">View Linked Case</button>
+            </div>
           </header>
           <div class="chat-log" id="log" aria-live="polite">
             <div class="empty" style="margin:auto"><strong>No conversation open</strong><span>Pick someone on the left to read and reply.</span></div>
@@ -35,6 +39,7 @@
     </div>
   </main>
   <script src="/assets/js/core.js"></script>
+  <script src="/assets/js/pages/admin-case.js"></script>
   <script>
     (async () => {
       await LIA.start();
@@ -46,6 +51,47 @@
       back.innerHTML = LIA.icon('arrowLeft');
       let current = Number(new URLSearchParams(location.search).get('userId')) || null;
       let conversations = [];
+      let currentPerson = null;
+
+      // "View Info": the student's details (guests stay anonymous)
+      document.getElementById('viewInfo').addEventListener('click', () => {
+        const p = currentPerson;
+        if (!p) return;
+        const row = (k, v) => `<dt>${k}:</dt><dd>${v ? LIA.esc(v) : '<span class="muted">-</span>'}</dd>`;
+        LIA.openModal({
+          title: 'Student Information',
+          body: p.accountType === 'guest'
+            ? `<p><b>${LIA.esc(p.name)}</b></p><p class="form-note">This is a guest account. Guests are anonymous, so staff only see their guest ID.${p.status === 'Expired' ? ' This guest account has expired.' : ''}</p>`
+            : `<dl class="case-facts">${row('Full Name', p.name)}${row('Grade & Section', p.gradeSection)}${row('Adviser', p.adviser)}${row('Email', p.email)}${row('Contact Number', p.contactNumber)}</dl>`,
+          foot: '<button class="btn btn-gray" data-close>Close</button>',
+        });
+      });
+
+      // "View Linked Case": reports this person sent with their name shown
+      document.getElementById('viewCase').addEventListener('click', async () => {
+        const p = currentPerson;
+        if (!p) return;
+        let reports = [];
+        try { ({ reports } = await LIA.api('admin/reports.php')); } catch (e) { return LIA.toast(e.message, 'error'); }
+        const linked = reports.filter((r) => !r.anonymous && r.reporter && r.reporter.userId === p.userId);
+        LIA.openModal({
+          title: 'Linked Cases',
+          wide: true,
+          body: linked.length
+            ? `<p class="small muted">Reports sent by ${LIA.esc(p.name)} with their name shown. Anonymous reports are never linked to a person.</p>
+               <div class="table-scroll"><table class="data-table"><thead><tr><th>Report</th><th>Category</th><th>Filed</th><th>Status</th><th></th></tr></thead><tbody>
+               ${linked.map((r) => `<tr><td><b>#${r.reportNo}</b></td><td>${LIA.esc(r.category)}</td><td>${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</td><td>${LIA.chip(r.status, 'staff')}</td><td><button class="btn btn-quiet btn-sm" data-case="${r.reportNo}">View Details</button></td></tr>`).join('')}
+               </tbody></table></div>`
+            : `<p class="form-note" style="margin:0">No linked cases. ${p.accountType === 'guest' ? 'Guest reports are always anonymous, so they are never linked to a person.' : 'This student has no reports with their name shown.'}</p>`,
+          foot: '<button class="btn btn-gray" data-close>Close</button>',
+          onOpen: (el, close) => {
+            el.addEventListener('click', (e) => {
+              const b = e.target.closest('[data-case]');
+              if (b) { close(); CASE.open(linked.find((r) => r.reportNo === Number(b.dataset.case))); }
+            });
+          },
+        });
+      });
       let lastSig = '';
 
       async function loadList() {
@@ -68,6 +114,8 @@
           split.classList.add('has-chat');
           back.hidden = false;
           form.hidden = false;
+          currentPerson = person;
+          document.getElementById('chatTools').hidden = false;
           const av = document.getElementById('chatAvatar');
           av.hidden = false;
           av.textContent = LIA.initials(person.name);

@@ -3,23 +3,37 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Report · LagroInAction</title>
+  <title>Submit Report · LagroInAction</title>
   <link rel="icon" href="/assets/img/favicon.ico">
   <link rel="stylesheet" href="/assets/css/lia.css">
 </head>
 <body data-area="user" data-page="report">
   <main>
     <div class="narrow">
-      <div class="page-head">
-        <div>
-          <h1>Report an incident</h1>
-          <p>Tell the guidance office what happened. Only guidance staff can read your report.</p>
-        </div>
-      </div>
+      <form id="reportForm" class="card report-card" novalidate>
+        <h1>Submit an Incident Report</h1>
+        <p class="muted">Your safety is our top priority. Fill out the form below to report any bullying or misconduct.</p>
 
-      <form id="reportForm" class="card" novalidate>
+        <!-- Submission preference (permanent student accounts) -->
+        <fieldset class="pref-box" id="anonStudent" hidden>
+          <legend>Submission Preference:</legend>
+          <div class="pref-options">
+            <label><input type="radio" name="submitAs" value="anonymous" checked> Submit Anonymously</label>
+            <label><input type="radio" name="submitAs" value="identity"> Include My Identity</label>
+          </div>
+          <p class="small muted" id="prefNote">Reminder: guidance staff will not see your name. The report still appears in your My Report History so you can follow it. Staff can't message you about it, so message them yourself if you want to talk.</p>
+          <div class="form-row" id="identityFields" hidden>
+            <div class="field"><label for="idName">Full Name</label><input class="input" id="idName" readonly></div>
+            <div class="field"><label for="idGrade">Grade &amp; Section</label><input class="input" id="idGrade" readonly></div>
+          </div>
+        </fieldset>
+        <div class="pref-box" id="anonGuest" hidden>
+          <strong>Submission Preference:</strong> Anonymous
+          <p class="small muted" style="margin:6px 0 0">You're using a guest account, so your report never shows who you are. Staff only see the report itself.</p>
+        </div>
+
         <div class="field">
-          <span class="label" id="roleLabel">Who are you in this?</span>
+          <span class="label" id="roleLabel">Who are you in this incident? <span class="req">*</span></span>
           <div class="choice-grid" role="radiogroup" aria-labelledby="roleLabel">
             <label class="choice"><input type="radio" name="reporterRole" value="victim"><span><strong>I was bullied</strong><span>It happened to me</span></span></label>
             <label class="choice"><input type="radio" name="reporterRole" value="witness"><span><strong>I saw it happen</strong><span>It happened to someone else</span></span></label>
@@ -28,93 +42,84 @@
         </div>
 
         <div class="field">
-          <label for="category">What kind of bullying?</label>
-          <select class="input" id="category" name="category" required>
-            <option value="">Choose one</option>
+          <label for="category">Category of Bullying <span class="req">*</span></label>
+          <select class="input" id="category" name="category">
+            <option value="">Select category...</option>
             <option>Verbal bullying</option>
             <option>Physical bullying</option>
             <option>Social exclusion</option>
             <option>Cyberbullying</option>
             <option>Threats or intimidation</option>
-            <option>Other</option>
+            <option value="Other">Others</option>
           </select>
           <p class="hint">Not sure? <a href="/app/guide.html" target="_blank">See what each one means</a>.</p>
         </div>
         <div class="field" id="categoryOtherField" hidden>
-          <label for="categoryOther">Describe the kind of bullying</label>
+          <label for="categoryOther">Please Specify Category <span class="req">*</span></label>
           <input class="input" id="categoryOther" name="categoryOther" maxlength="80">
         </div>
 
-        <div class="field">
-          <label for="location">Where did it happen?</label>
-          <select class="input" id="location" name="location" required>
-            <option value="">Choose a place</option>
-            <option>Classroom</option>
-            <option>Hallway or stairs</option>
-            <option>Canteen</option>
-            <option>Comfort room</option>
-            <option>School gate</option>
-            <option>Covered court or field</option>
-            <option>Library</option>
-            <option>Online or group chat</option>
-            <option>Outside school</option>
-            <option>Other</option>
-          </select>
-        </div>
-        <div class="field" id="locationOtherField" hidden>
-          <label for="locationOther">Type the place</label>
-          <input class="input" id="locationOther" name="locationOther" maxlength="120" placeholder="e.g. Room 204, Building B">
-        </div>
-
-        <div class="field">
-          <label for="incidentDate">When did it happen?</label>
-          <input class="input" id="incidentDate" name="incidentDate" type="date" required style="max-width:240px">
-        </div>
-
-        <div class="field">
-          <label for="description">What happened?</label>
-          <textarea class="input" id="description" name="description" maxlength="5000" required
-            placeholder="Write what happened, in your own words. Include what was said or done, and if it has happened before."></textarea>
-          <div class="counter" id="descCount">0 / 5000</div>
-        </div>
-
-        <div class="field">
-          <span class="label" id="knownLabel">Do you know who was involved?</span>
-          <div class="choice-grid" role="radiogroup" aria-labelledby="knownLabel" style="grid-template-columns:repeat(2,minmax(0,160px))">
-            <label class="choice"><input type="radio" name="involvedKnown" value="yes"><strong>Yes</strong></label>
-            <label class="choice"><input type="radio" name="involvedKnown" value="no" checked><strong>No</strong></label>
+        <div class="form-row">
+          <div class="field">
+            <label for="location">Location of Incident <span class="req">*</span></label>
+            <select class="input" id="location" name="location">
+              <option value="">Select location...</option>
+              <option>Classroom</option>
+              <option>Hallway or stairs</option>
+              <option>Canteen</option>
+              <option>Comfort room</option>
+              <option>School gate</option>
+              <option>Covered court or field</option>
+              <option>Library</option>
+              <option>Online or group chat</option>
+              <option>Outside school</option>
+              <option value="Other">Others</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="incidentDate">Date <span class="req">*</span></label>
+            <input class="input" id="incidentDate" name="incidentDate" type="date">
           </div>
         </div>
+        <div class="field" id="locationOtherField" hidden>
+          <label for="locationOther">Please Specify Location <span class="req">*</span></label>
+          <input class="input" id="locationOther" name="locationOther" maxlength="120" placeholder="e.g. 2nd Floor Gymnasium / Room 204">
+        </div>
+
+        <div class="field">
+          <label for="involvedKnown">Do you know the person(s) involved? <span class="req">*</span></label>
+          <select class="input" id="involvedKnown" name="involvedKnown">
+            <option value="">Select an answer...</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
         <div class="field" id="involvedField" hidden>
-          <label for="involvedDescription">Who was involved?</label>
+          <label for="involvedDescription">Describe the Person(s) Involved <span class="req">*</span></label>
           <textarea class="input" id="involvedDescription" name="involvedDescription" maxlength="1000" style="min-height:90px"
             placeholder="Names, grade and section, or what they look like, if you know."></textarea>
         </div>
 
-        <!-- Students: choose. Guests: always hidden. -->
-        <div class="field" id="anonStudent" hidden>
-          <div class="switch-row">
-            <span><strong style="color:var(--forest)">Hide my name from staff</strong><br><span class="small muted">Staff will see the report but not who sent it. You can still follow it in My reports. Staff can't message you about a hidden-name report, so message them yourself if you want to talk.</span></span>
-            <label class="switch"><input type="checkbox" id="anonymous" aria-label="Hide my name from staff"><span></span></label>
-          </div>
-        </div>
-        <div class="form-note" id="anonGuest" hidden>
-          <b>Your name is never shown.</b> You're using a guest account, so staff only see the report itself.
+        <div class="field">
+          <label for="description">Description of What Happened <span class="req">*</span></label>
+          <textarea class="input" id="description" name="description" maxlength="5000"
+            placeholder="Preferred format: (1) What happened, (2) When and where it happened, (3) Who was involved, (4) Any witnesses..."></textarea>
+          <div class="counter" id="descCount">0 / 5000</div>
         </div>
 
-        <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:22px">
-          <a class="btn btn-quiet" href="/app/home.html">Cancel</a>
-          <button class="btn btn-big" type="submit">Send report</button>
+        <div class="form-actions">
+          <button class="btn btn-gray" type="reset" id="resetBtn">Reset</button>
+          <button class="btn" type="submit">Submit Report</button>
         </div>
       </form>
 
       <section class="card" id="sentCard" hidden style="text-align:center">
-        <img src="/assets/img/lagro-seal.png" alt="" style="width:72px;margin:0 auto 10px">
-        <h2 id="sentTitle">Report sent</h2>
-        <p>The guidance office will review it. You'll see updates in My reports.</p>
-        <p class="small muted">If you're in danger right now, use the red SOS button.</p>
+        <img src="/assets/img/lagro-seal.png" alt="" style="width:80px;margin:0 auto 10px">
+        <h2 id="sentTitle">Report submitted</h2>
+        <p>The guidance office will review it. You can follow its status in My Report History.</p>
+        <p class="small muted">If you're in danger right now, press the red SOS button.</p>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-          <a class="btn" href="/app/reports.html">See my reports</a>
+          <a class="btn" href="/app/account.html#history">See my report history</a>
           <a class="btn btn-quiet" href="/app/messages.html">Message the guidance office</a>
         </div>
       </section>

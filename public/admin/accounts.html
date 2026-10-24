@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Account requests · LagroInAction staff</title>
+  <title>Registration Requests · LagroInAction staff</title>
   <link rel="icon" href="/assets/img/favicon.ico">
   <link rel="stylesheet" href="/assets/css/lia.css">
 </head>
@@ -11,92 +11,135 @@
   <main>
     <div class="wide">
       <div class="page-head">
-        <div><h1>Account requests</h1><p>Guests asking for a permanent student account. Check the ID photo matches the details, then approve or decline.</p></div>
+        <div>
+          <h1>Student Registration Requests</h1>
+          <p>Guests asking for a permanent student account. Check that the school ID photo matches the details before approving. The photo is deleted as soon as you approve or decline, and the student is emailed the result.</p>
+        </div>
       </div>
-      <div class="form-note small" style="margin-bottom:16px">The ID photo is deleted as soon as you approve or decline. The student is emailed the result, and the reason if declined.</div>
-      <div class="list" id="pending"><div class="skeleton"></div></div>
-      <h2 style="margin-top:28px">Recently reviewed</h2>
-      <div class="card table-scroll" id="recent" style="padding:8px 12px"></div>
+
+      <section class="card table-card">
+        <div class="card-title"><h2>Pending Account Approvals (<span id="nPending">0</span>)</h2></div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Date Requested</th><th>Full Name</th><th>Grade &amp; Section</th><th>Guest ID</th><th>Actions</th></tr></thead>
+            <tbody id="pending"><tr><td colspan="5"><div class="skeleton" style="height:40px"></div></td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card table-card">
+        <div class="card-title"><h2>Recently Reviewed</h2></div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Full Name</th><th>Result</th><th>Reviewed</th><th>By</th></tr></thead>
+            <tbody id="recent"></tbody>
+          </table>
+        </div>
+      </section>
     </div>
   </main>
   <script src="/assets/js/core.js"></script>
   <script>
     (async () => {
       await LIA.start();
+      let pending = [];
       const pendingEl = document.getElementById('pending');
-      const recentEl = document.getElementById('recent');
+
+      async function decide(req, action, button, closeInfo) {
+        let reason = '';
+        if (action === 'approve') {
+          const ok = await LIA.confirmBox({ title: 'Approve this account?', text: `${req.fullName}'s account becomes a permanent student account. The ID photo is deleted and the student is emailed.`, confirmLabel: 'Approve' });
+          if (!ok) return;
+        } else {
+          reason = await new Promise((resolve) => {
+            let done = false;
+            LIA.openModal({
+              title: 'Decline this request',
+              body: `<form id="decForm" novalidate><div class="field"><label for="decReason">Reason (emailed to the student)</label>
+                <textarea class="input" id="decReason" maxlength="1000" placeholder="e.g. The ID photo is blurry. Please send a clearer photo."></textarea></div></form>`,
+              foot: `<button class="btn btn-quiet" data-close>Cancel</button><button class="btn btn-sos" form="decForm" type="submit">Decline and email</button>`,
+              onOpen: (el, close) => {
+                el.querySelector('#decForm').addEventListener('submit', (ev) => {
+                  ev.preventDefault();
+                  const v = el.querySelector('#decReason').value.trim();
+                  if (v.length < 5) return LIA.showFormError(ev.target, 'Write the reason. The student will receive it by email.');
+                  done = true; close(); resolve(v);
+                });
+                new MutationObserver((_, obs) => { if (!el.isConnected) { obs.disconnect(); if (!done) resolve(null); } }).observe(document.body, { childList: true });
+              },
+            });
+          });
+          if (!reason) return;
+        }
+        try {
+          const run = () => LIA.api('admin/activations.php', { body: { action, requestId: req.requestId, reason } });
+          const res = button ? await LIA.busy(button, run) : await run();
+          closeInfo?.();
+          LIA.toast(res.message);
+        } catch (err) { LIA.toast(err.message, 'error'); }
+        load();
+      }
+
+      // "Student Info" window with the ID photo (like the prototype's View button)
+      function info(req) {
+        LIA.openModal({
+          title: 'Student Info',
+          wide: true,
+          body: `
+            <div class="request-card">
+              <a class="id-photo" href="/api/admin/activations.php?photo=${req.requestId}" target="_blank" rel="noopener" title="Open the photo bigger">
+                <img src="/api/admin/activations.php?photo=${req.requestId}" alt="School ID photo sent by ${LIA.esc(req.fullName)}">
+              </a>
+              <dl class="case-facts">
+                <dt>Full Name:</dt><dd>${LIA.esc(req.fullName)}</dd>
+                <dt>Username:</dt><dd>${LIA.esc(req.username)}</dd>
+                <dt>Grade &amp; Section:</dt><dd>${LIA.esc(req.gradeSection)}</dd>
+                <dt>Adviser:</dt><dd>${LIA.esc(req.adviser)}</dd>
+                <dt>Email:</dt><dd>${LIA.esc(req.email)}</dd>
+                <dt>Contact Number:</dt><dd>${LIA.esc(req.contactNumber)}</dd>
+                <dt>Guest ID:</dt><dd>${LIA.esc(req.guestId)}</dd>
+                <dt>Requested:</dt><dd>${LIA.esc(LIA.fmtDateTime(req.submittedAt))}</dd>
+              </dl>
+            </div>`,
+          foot: `<button class="btn" data-approve>Approve</button><button class="btn btn-danger" data-decline>Decline</button><button class="btn btn-gray" data-close>Close</button>`,
+          onOpen: (el, close) => {
+            el.querySelector('[data-approve]').addEventListener('click', (e) => decide(req, 'approve', e.currentTarget, close));
+            el.querySelector('[data-decline]').addEventListener('click', (e) => decide(req, 'decline', null, close));
+          },
+        });
+      }
 
       async function load() {
         try {
-          const { pending, recent } = await LIA.api('admin/activations.php');
+          const data = await LIA.api('admin/activations.php');
+          pending = data.pending;
+          document.getElementById('nPending').textContent = pending.length;
           pendingEl.innerHTML = pending.length ? pending.map((r) => `
-            <article class="card request-card">
-              <button class="id-photo" data-photo="${r.requestId}" aria-label="View ID photo larger">
-                <img src="/api/admin/activations.php?photo=${r.requestId}" alt="School ID photo sent by ${LIA.esc(r.fullName)}">
-              </button>
-              <div>
-                <div class="row-top"><strong style="font-size:1.2rem">${LIA.esc(r.fullName)}</strong><span class="chip pending">Waiting</span></div>
-                <dl class="facts" style="margin:10px 0 14px">
-                  <dt>Grade and section</dt><dd>${LIA.esc(r.gradeSection)}</dd>
-                  <dt>Adviser</dt><dd>${LIA.esc(r.adviser)}</dd>
-                  <dt>Contact number</dt><dd>${LIA.esc(r.contactNumber)}</dd>
-                  <dt>Email</dt><dd>${LIA.esc(r.email)}</dd>
-                  <dt>Username wanted</dt><dd>${LIA.esc(r.username)}</dd>
-                  <dt>Guest ID</dt><dd>${LIA.esc(r.guestId)}</dd>
-                  <dt>Sent</dt><dd>${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</dd>
-                </dl>
-                <div style="display:flex;gap:10px;flex-wrap:wrap">
-                  <button class="btn" data-approve="${r.requestId}">Approve</button>
-                  <button class="btn btn-danger" data-decline="${r.requestId}">Decline</button>
-                </div>
-              </div>
-            </article>`).join('')
-            : '<div class="empty"><strong>No requests waiting</strong><span>When a guest asks for a permanent account, it shows up here.</span></div>';
-
-          recentEl.innerHTML = recent.length ? `<table class="plain"><thead><tr><th>Student</th><th>Result</th><th>Reviewed</th><th>By</th></tr></thead><tbody>
-            ${recent.map((r) => `<tr><td>${LIA.esc(r.fullName)}<br><span class="small muted">${LIA.esc(r.gradeSection)}</span></td>
-              <td><span class="chip ${r.status === 'Approved' ? 'resolved' : 'rejected'}">${LIA.esc(r.status)}</span>${r.declineReason ? `<br><span class="small muted">${LIA.esc(r.declineReason)}</span>` : ''}</td>
-              <td>${LIA.esc(LIA.fmtDateTime(r.reviewedAt))}</td><td>${LIA.esc(r.reviewedBy || '')}</td></tr>`).join('')}
-            </tbody></table>` : '<p class="small muted" style="margin:8px">Nothing reviewed yet.</p>';
-        } catch (e) { pendingEl.innerHTML = `<div class="empty"><strong>Couldn't load requests</strong><span>${LIA.esc(e.message)}</span></div>`; }
+            <tr>
+              <td>${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</td>
+              <td><b>${LIA.esc(r.fullName)}</b></td>
+              <td>${LIA.esc(r.gradeSection)}</td>
+              <td>${LIA.esc(r.guestId)}</td>
+              <td class="actions">
+                <button class="btn btn-quiet btn-sm" data-info="${r.requestId}">View</button>
+                <button class="btn btn-sm" data-approve="${r.requestId}">Approve</button>
+                <button class="btn btn-danger btn-sm" data-decline="${r.requestId}">Decline</button>
+              </td>
+            </tr>`).join('') : `<tr><td colspan="5" class="empty-cell">No requests waiting.</td></tr>`;
+          document.getElementById('recent').innerHTML = data.recent.length ? data.recent.map((r) => `
+            <tr><td><b>${LIA.esc(r.fullName)}</b><br><span class="small muted">${LIA.esc(r.gradeSection)}</span></td>
+            <td><span class="chip ${r.status === 'Approved' ? 'resolved' : 'rejected'}">${LIA.esc(r.status)}</span>${r.declineReason ? `<br><span class="small muted">${LIA.esc(r.declineReason)}</span>` : ''}</td>
+            <td>${LIA.esc(LIA.fmtDateTime(r.reviewedAt))}</td><td>${LIA.esc(r.reviewedBy || '')}</td></tr>`).join('')
+            : `<tr><td colspan="4" class="empty-cell">Nothing reviewed yet.</td></tr>`;
+        } catch (e) { pendingEl.innerHTML = `<tr><td colspan="5" class="empty-cell">${LIA.esc(e.message)}</td></tr>`; }
       }
 
-      pendingEl.addEventListener('click', async (e) => {
-        const photo = e.target.closest('[data-photo]');
-        if (photo) {
-          LIA.openModal({ title: 'School ID photo', wide: true, body: `<img src="/api/admin/activations.php?photo=${photo.dataset.photo}" alt="School ID photo" style="width:100%;border-radius:10px">` });
-          return;
-        }
-        const ap = e.target.closest('[data-approve]');
-        if (ap) {
-          const ok = await LIA.confirmBox({ title: 'Approve this account?', text: 'The account becomes a permanent student account, the ID photo is deleted, and the student is emailed.', confirmLabel: 'Approve' });
-          if (!ok) return;
-          try { const r = await LIA.busy(ap, () => LIA.api('admin/activations.php', { body: { action: 'approve', requestId: ap.dataset.approve } })); LIA.toast(r.message); load(); }
-          catch (err) { LIA.toast(err.message, 'error'); load(); }
-          return;
-        }
-        const de = e.target.closest('[data-decline]');
-        if (de) {
-          LIA.openModal({
-            title: 'Decline this request',
-            body: `<form id="decForm" novalidate><div class="field"><label for="decReason">Reason (emailed to the student)</label>
-              <textarea class="input" id="decReason" maxlength="1000" placeholder="e.g. The ID photo is blurry. Please send a clearer photo."></textarea></div></form>`,
-            foot: `<button class="btn btn-quiet" data-close>Cancel</button><button class="btn btn-sos" form="decForm" type="submit">Decline and email</button>`,
-            onOpen: (el, close) => {
-              el.querySelector('#decForm').addEventListener('submit', async (ev) => {
-                ev.preventDefault();
-                const reason = el.querySelector('#decReason').value.trim();
-                if (reason.length < 5) return LIA.showFormError(ev.target, 'Write the reason. The student will receive it by email.');
-                try {
-                  const r = await LIA.busy(el.querySelector('button[type=submit]'), () => LIA.api('admin/activations.php', { body: { action: 'decline', requestId: de.dataset.decline, reason } }));
-                  close(); LIA.toast(r.message); load();
-                } catch (err) { LIA.showFormError(ev.target, err.message); }
-              });
-            },
-          });
-        }
+      pendingEl.addEventListener('click', (e) => {
+        const find = (id) => pending.find((r) => r.requestId === Number(id));
+        const i = e.target.closest('[data-info]'); if (i) return info(find(i.dataset.info));
+        const a = e.target.closest('[data-approve]'); if (a) return decide(find(a.dataset.approve), 'approve', a);
+        const d = e.target.closest('[data-decline]'); if (d) return decide(find(d.dataset.decline), 'decline', d);
       });
-
       await load();
       setInterval(load, 60000);
     })();

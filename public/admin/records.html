@@ -3,25 +3,117 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Records · LagroInAction staff</title>
+  <title>Report Records · LagroInAction staff</title>
   <link rel="icon" href="/assets/img/favicon.ico">
   <link rel="stylesheet" href="/assets/css/lia.css">
 </head>
-<body data-area="admin" data-page="records" data-mode="records">
+<body data-area="admin" data-page="records">
   <main>
     <div class="wide">
       <div class="page-head">
-        <div><h1>Records</h1><p>Finished reports. Archived reports are kept, just hidden from the main list. Nothing is deleted.</p></div>
+        <div>
+          <h1>Resolved Report Records</h1>
+          <p>Archive of officially closed and resolved incident reports for Guidance reference. Nothing is deleted: archived reports are only hidden from the main list.</p>
+        </div>
       </div>
-      <div class="toolbar">
-        <div class="tabs" id="tabs" role="tablist" style="margin:0;flex:1"></div>
-        <label class="visually-hidden" for="search">Search</label>
-        <input class="input" id="search" type="search" placeholder="Search by #, kind, place, words">
-      </div>
-      <div class="list" id="list"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+
+      <section class="card table-card">
+        <div class="filters">
+          <label class="visually-hidden" for="search">Search</label>
+          <input class="input" id="search" type="search" placeholder="Search by Case ID, Student Name, or place...">
+          <label class="visually-hidden" for="fCategory">Category</label>
+          <select class="input" id="fCategory"><option value="">All Categories</option></select>
+          <label class="visually-hidden" for="fYear">School year</label>
+          <select class="input" id="fYear"><option value="">All School Years</option></select>
+          <label class="visually-hidden" for="fStatus">Status</label>
+          <select class="input" id="fStatus">
+            <option value="Resolved">Resolved</option>
+            <option value="Rejected">Rejected</option>
+            <option value="archived">Archived</option>
+            <option value="all">All finished reports</option>
+          </select>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Case ID</th><th>Student Involved</th><th>Incident Category</th><th>Date Closed</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="rows"><tr><td colspan="6"><div class="skeleton" style="height:40px"></div></td></tr></tbody>
+          </table>
+        </div>
+      </section>
     </div>
   </main>
   <script src="/assets/js/core.js"></script>
-  <script src="/assets/js/pages/admin-cases.js"></script>
+  <script src="/assets/js/pages/admin-case.js"></script>
+  <script>
+    (async () => {
+      await LIA.start();
+      let reports = [];
+      const $ = (id) => document.getElementById(id);
+      const rows = $('rows');
+
+      // School year runs June to May (e.g. S.Y. 2026 - 2027)
+      const schoolYear = (value) => {
+        const d = LIA.toDate(value);
+        if (!d) return '';
+        const y = Number(d.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }).slice(0, 4));
+        const m = Number(d.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }).slice(5, 7));
+        const start = m >= 6 ? y : y - 1;
+        return `S.Y. ${start} - ${start + 1}`;
+      };
+      const baseCategory = (c) => c.startsWith('Other: ') ? 'Others' : c;
+      const finished = (r) => r.status === 'Resolved' || r.status === 'Rejected';
+
+      function fillFilters() {
+        const done = reports.filter(finished);
+        const cats = [...new Set(done.map((r) => baseCategory(r.category)))].sort();
+        const years = [...new Set(done.map((r) => schoolYear(r.updatedAt || r.submittedAt)))].sort().reverse();
+        $('fCategory').innerHTML = '<option value="">All Categories</option>' + cats.map((c) => `<option>${LIA.esc(c)}</option>`).join('');
+        $('fYear').innerHTML = '<option value="">All School Years</option>' + years.map((y) => `<option>${LIA.esc(y)}</option>`).join('');
+      }
+
+      function draw() {
+        const q = $('search').value.trim().toLowerCase();
+        const cat = $('fCategory').value, year = $('fYear').value, status = $('fStatus').value;
+        const list = reports.filter(finished).filter((r) => {
+          if (status === 'archived' && !r.archived) return false;
+          if ((status === 'Resolved' || status === 'Rejected') && (r.status !== status || r.archived)) return false;
+          if (cat && baseCategory(r.category) !== cat) return false;
+          if (year && schoolYear(r.updatedAt || r.submittedAt) !== year) return false;
+          if (q && !['#' + r.reportNo, String(r.reportNo), r.category, r.location, r.reporter?.name].some((v) => String(v || '').toLowerCase().includes(q))) return false;
+          return true;
+        });
+        rows.innerHTML = list.length ? list.map((r) => `
+          <tr>
+            <td><b>#${r.reportNo}</b></td>
+            <td>${CASE.reporterLabel(r)}</td>
+            <td>${LIA.esc(r.category)}</td>
+            <td>${LIA.esc(LIA.fmtDateTime(r.updatedAt || r.submittedAt))}</td>
+            <td>${LIA.chip(r.status, 'staff')} ${r.archived ? '<span class="chip rejected">Archived</span>' : ''}</td>
+            <td class="actions">
+              <button class="btn btn-quiet btn-sm" data-view="${r.reportNo}">View Details</button>
+              ${r.canMessage ? `<a class="btn btn-ghost btn-sm" href="/admin/messages.html?userId=${r.reporter.userId}">Message</a>` : ''}
+              <button class="btn btn-ghost btn-sm" data-act="${r.archived ? 'unarchive' : 'archive'}" data-no="${r.reportNo}">${r.archived ? 'Restore' : 'Archive'}</button>
+            </td>
+          </tr>`).join('') : `<tr><td colspan="6" class="empty-cell">No records match these filters.</td></tr>`;
+      }
+
+      async function load() {
+        try { ({ reports } = await LIA.api('admin/reports.php')); fillFilters(); draw(); }
+        catch (e) { rows.innerHTML = `<tr><td colspan="6" class="empty-cell">${LIA.esc(e.message)}</td></tr>`; }
+      }
+
+      ['search', 'fCategory', 'fYear', 'fStatus'].forEach((id) => $(id).addEventListener(id === 'search' ? 'input' : 'change', draw));
+      rows.addEventListener('click', async (e) => {
+        const view = e.target.closest('[data-view]');
+        if (view) return CASE.open(reports.find((r) => r.reportNo === Number(view.dataset.view)), load);
+        const act = e.target.closest('[data-act]');
+        if (act) {
+          const r = reports.find((x) => x.reportNo === Number(act.dataset.no));
+          if (r && await CASE.act(r, act.dataset.act, act)) load();
+        }
+      });
+      await load();
+    })();
+  </script>
 </body>
 </html>

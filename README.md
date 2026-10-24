@@ -43,26 +43,27 @@ PROJECT-LIA/
 │   ├── app/                    student & guest pages
 │   │   ├── home.html           feed: report box, posters, articles, videos, hotlines
 │   │   ├── report.html         report an incident
-│   │   ├── reports.html        my reports + progress
+│   │   ├── reports.html        old link, now opens My Account → My Report History
 │   │   ├── messages.html       chat with the guidance office
-│   │   ├── account.html        details, change password, request a permanent account
+│   │   ├── account.html        profile (Edit Profile, password, log out), report history,
+│   │   │                       request a permanent account
 │   │   └── guide.html          what counts as bullying, what to do
 │   ├── admin/                  guidance staff pages
+│   │   ├── home.html           staff home page (same layout as the student home)
 │   │   ├── index.html          dashboard (counts, monthly bars, hotspots)
-│   │   ├── cases.html          new / active / under investigation
+│   │   ├── cases.html          Manage Reports: new reports, active cases, SOS alerts (with sound)
 │   │   ├── records.html        resolved / rejected / archived
-│   │   ├── sos.html            SOS alerts (with sound)
-│   │   ├── messages.html       conversations
+│   │   ├── messages.html       conversations (+ student info and linked cases)
 │   │   └── accounts.html       permanent-account requests (ID photo review)
 │   ├── assets/
 │   │   ├── css/lia.css         all styles (colours and sizes are at the top)
 │   │   ├── js/core.js          shared code: top bar, side menu, SOS, API calls
-│   │   ├── js/pages/*.js       code for individual pages
+│   │   ├── js/pages/*.js       code for individual pages (admin-case.js = the case details window)
 │   │   └── img/                seal, posters, favicon
 │   └── api/                    PHP endpoints the pages call
 │       ├── auth/               me, login, staff_login, logout
 │       ├── guest/              send_code, verify
-│       ├── account/            password, activation
+│       ├── account/            password, activation, profile
 │       ├── reports/            create, mine
 │       ├── sos/                create
 │       ├── messages/           thread

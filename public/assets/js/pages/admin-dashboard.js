@@ -20,12 +20,12 @@
     const tile = (n, label, sub, href, color, alert = false) =>
       `<a class="tile ${color} ${alert && n ? 'alert' : ''}" href="${href}"><span class="t">${label}</span><span class="n">${n}</span><span>${sub}</span></a>`;
     document.getElementById('tiles').innerHTML =
-      tile(activeSos, 'Active SOS', 'Needs response now', '/admin/sos.html', 'c-sos', true) +
-      tile(count('Pending'), 'Pending review', 'New reports to check', '/admin/cases.html#new', 'c-yellow') +
-      tile(count('Active'), 'Active cases', 'Accepted, being handled', '/admin/cases.html#active', 'c-blue') +
-      tile(count('Under Investigation'), 'In investigation', 'Ongoing guidance sessions', '/admin/cases.html#investigating', 'c-orange') +
-      tile(count('Resolved'), 'Resolved cases', 'Successfully addressed', '/admin/records.html', 'c-green') +
-      tile(pending.length, 'Account requests', 'Waiting for approval', '/admin/accounts.html', '');
+      tile(activeSos, 'Active SOS', 'Needs response now', '/admin/cases.html#sos', 'c-sos', true) +
+      tile(pending.length, 'Registration Requests', 'Pending account approvals', '/admin/accounts.html', '') +
+      tile(reports.length, 'Total Reports', 'All reports received', '/admin/records.html', 'c-blue') +
+      tile(count('Pending'), 'Pending Review', 'Requires admin action', '/admin/cases.html', 'c-yellow') +
+      tile(count('Under Investigation'), 'In Investigation', 'Ongoing guidance sessions', '/admin/cases.html', 'c-orange') +
+      tile(count('Resolved'), 'Resolved Cases', 'Successfully addressed', '/admin/records.html', 'c-green');
 
     // Reports per month (bars, not a curved line: each bar is a real count)
     const months = [];

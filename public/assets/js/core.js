@@ -344,22 +344,21 @@ const LIA = (() => {
   // ---------- Page shell ----------
   const USER_NAV = [
     { id: 'home', href: '/app/home.html', icon: 'home', label: 'Home' },
-    { id: 'report', href: '/app/report.html', icon: 'flag', label: 'Report' },
-    { id: 'reports', href: '/app/reports.html', icon: 'list', label: 'My reports' },
-    { id: 'messages', href: '/app/messages.html', icon: 'chat', label: 'Messages' },
-    { id: 'account', href: '/app/account.html', icon: 'user', label: 'Account' },
+    { id: 'report', href: '/app/report.html', icon: 'flag', label: 'Submit Report' },
+    { id: 'messages', href: '/app/messages.html', icon: 'chat', label: 'Message' },
+    { id: 'account', href: '/app/account.html', icon: 'user', label: 'My Account' },
   ];
   const USER_EXTRA = [
     { id: 'guide', href: '/app/guide.html', icon: 'book', label: 'What counts as bullying' },
     { id: 'terms', href: '/terms.html', icon: 'shield', label: 'Terms & privacy' },
   ];
   const ADMIN_NAV = [
+    { id: 'home', href: '/admin/home.html', icon: 'home', label: 'Home' },
     { id: 'dashboard', href: '/admin/index.html', icon: 'chart', label: 'Dashboard' },
-    { id: 'cases', href: '/admin/cases.html', icon: 'folder', label: 'Cases', count: 'cases' },
-    { id: 'sos', href: '/admin/sos.html', icon: 'alert', label: 'SOS alerts', count: 'sos' },
+    { id: 'cases', href: '/admin/cases.html', icon: 'folder', label: 'Manage Reports', count: 'cases' },
+    { id: 'records', href: '/admin/records.html', icon: 'archive', label: 'Report Records' },
+    { id: 'accounts', href: '/admin/accounts.html', icon: 'users', label: 'Registration Requests', count: 'accounts' },
     { id: 'messages', href: '/admin/messages.html', icon: 'chat', label: 'Messages', count: 'messages' },
-    { id: 'accounts', href: '/admin/accounts.html', icon: 'users', label: 'Account requests', count: 'accounts' },
-    { id: 'records', href: '/admin/records.html', icon: 'archive', label: 'Records' },
   ];
 
   function initials(name) {
@@ -434,17 +433,20 @@ const LIA = (() => {
       document.getElementById('sosTop').addEventListener('click', openSos);
       document.getElementById('sosSide').addEventListener('click', openSos);
 
-      // Green footer at the bottom of every student page (like the prototype)
-      if (current !== 'messages') {
-        const foot = document.createElement('footer');
-        foot.className = 'site-footer';
-        foot.innerHTML = `
-          <div><h3>Lagro High School</h3><p><b>Address:</b> Misa de Gallo St. corner Ascension Ave., Brgy. Greater Lagro, Novaliches, Quezon City.</p></div>
-          <div><h3>Contact Us</h3><p><b>Email:</b> <a href="mailto:lagrohighschool@gmail.com">lagrohighschool@gmail.com</a><br><b>Facebook:</b> Ask Lagro High School</p></div>
-          <div><h3>Emergency Hotlines</h3><p><a href="tel:122">Quezon City Hotline - 122</a><br><a href="tel:911">National Emergency Hotline - 911</a></p></div>
-          <p class="copy">© ${new Date().getFullYear()} Lagro High School - LagroInAction. All Rights Reserved.</p>`;
-        main.append(foot);
-      }
+
+    }
+
+
+    // Green footer at the bottom of student pages and the staff Home page (like the prototype)
+    if ((!isAdmin && current !== 'messages') || (isAdmin && current === 'home')) {
+      const foot = document.createElement('footer');
+      foot.className = 'site-footer';
+      foot.innerHTML = `
+        <div><h3>Lagro High School</h3><p><b>Address:</b> Misa de Gallo St. corner Ascension Ave., Brgy. Greater Lagro, Novaliches, Quezon City.</p></div>
+        <div><h3>Contact Us</h3><p><b>Email:</b> <a href="mailto:lagrohighschool@gmail.com">lagrohighschool@gmail.com</a><br><b>Facebook:</b> Ask Lagro High School</p></div>
+        <div><h3>Emergency Hotlines</h3><p><a href="tel:122">Quezon City Hotline - 122</a><br><a href="tel:911">National Emergency Hotline - 911</a></p></div>
+        <p class="copy">© ${new Date().getFullYear()} Lagro High School - LagroInAction. All Rights Reserved.</p>`;
+      main.append(foot);
     }
 
     // Menu button: on wide screens it shrinks the menu (like YouTube); on small screens it slides it out.
@@ -514,8 +516,8 @@ const LIA = (() => {
         api('admin/sos.php'), api('admin/reports.php'), api('admin/activations.php'), api('admin/messages.php'),
       ]);
       const active = sos.alerts.filter((a) => a.status === 'Active');
-      setCount('sos', active.length);
-      setCount('cases', reports.reports.filter((r) => r.status === 'Pending').length, true);
+      const newReports = reports.reports.filter((r) => r.status === 'Pending').length;
+      if (active.length) setCount('cases', active.length); else setCount('cases', newReports, true);
       setCount('accounts', accounts.pending.length, true);
       setCount('messages', messages.conversations.filter((c) => c.waitingForReply).length, true);
 
@@ -528,7 +530,7 @@ const LIA = (() => {
           strip.setAttribute('role', 'alert');
           document.body.append(strip);
         }
-        strip.innerHTML = `${icon('alert')} <span>${active.length} active SOS ${active.length === 1 ? 'alert' : 'alerts'}. Latest: ${esc(active[0].location)} · ${esc(timeAgo(active[0].sentAt))}</span> <a href="/admin/sos.html">Open SOS alerts</a>`;
+        strip.innerHTML = `${icon('alert')} <span>${active.length} active SOS ${active.length === 1 ? 'alert' : 'alerts'}. Latest: ${esc(active[0].location)} · ${esc(timeAgo(active[0].sentAt))}</span> <a href="/admin/cases.html#sos">Open SOS alerts</a>`;
         document.body.classList.add('has-sos-strip');
         document.body.style.setProperty('--strip-h', strip.offsetHeight + 'px');
       } else {
