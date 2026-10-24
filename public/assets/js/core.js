@@ -89,6 +89,9 @@ const LIA = (() => {
     }
     if (!data) throw new Error('The server sent an unexpected reply. Reload the page and try again.');
     if (!data.success) throw Object.assign(new Error(data.message || 'Something went wrong.'), { data, status: res.status });
+    // A button changed something (dispatch, accept, approve, reply...): tell the page so the
+    // sidebar counters and the red SOS strip update right away instead of waiting.
+    if (init.method === 'POST') document.dispatchEvent(new CustomEvent('lia:changed', { detail: { path } }));
     return data;
   }
 
@@ -400,7 +403,7 @@ const LIA = (() => {
     top.innerHTML = `
       <button class="icon-btn" id="navToggle" aria-label="Menu" aria-expanded="false">${icon('menu')}</button>
       <img class="seal" src="/assets/img/lagro-seal.png" alt="Lagro High School">
-      <a class="topbar-title" href="${isAdmin ? '/admin/index.html' : '/app/home.html'}">PROJECT LIA</a>
+      <a class="topbar-title" href="${isAdmin ? '/admin/index.html' : '/app/home.html'}">Lagro<b>In</b>Action</a>
       <div class="topbar-right">
       ${isAdmin ? '<span class="brand-tag hide-sm">Guidance office</span>' : `<button class="sos-btn" id="sosTop" aria-label="Send an SOS">SOS</button>`}
       <div class="menu">
@@ -502,9 +505,14 @@ const LIA = (() => {
 
   function setCount(name, n, calm = false) {
     document.querySelectorAll(`[data-count="${name}"]`).forEach((el) => {
+      const text = n > 99 ? '99+' : String(n);
+      const changed = el.textContent !== '' && el.textContent !== text;
       el.hidden = !n;
-      el.textContent = n > 99 ? '99+' : String(n);
+      el.textContent = text;
       el.classList.toggle('calm', calm);
+      if (changed) { // small "bump" animation when the number changes
+        el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+      }
     });
   }
 
@@ -588,7 +596,28 @@ const LIA = (() => {
     if (area === 'admin') {
       watchStaffCounts();
       setInterval(watchStaffCounts, 20000);
+      // Update counters right after any action (small delay groups several quick clicks into one check)
+      let soon;
+      document.addEventListener('lia:changed', () => { clearTimeout(soon); soon = setTimeout(watchStaffCounts, 250); });
+      // ...and when staff come back to this tab
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) watchStaffCounts(); });
     }
+    // Phones: each table row is shown as a small card, so every cell needs its column name
+    // (CSS shows it from data-label). Tables are redrawn often, so watch for new rows.
+    const labelTables = () => document.querySelectorAll('table.data-table').forEach((t) => {
+      const heads = [...t.querySelectorAll('thead th')].map((th) => th.textContent.trim());
+      t.querySelectorAll('tbody tr').forEach((tr) => [...tr.children].forEach((td, i) => {
+        if (!td.hasAttribute('data-label') && heads[i] && !td.hasAttribute('colspan')) td.setAttribute('data-label', heads[i]);
+      }));
+    });
+    labelTables();
+    new MutationObserver(labelTables).observe(document.querySelector('main'), { childList: true, subtree: true });
+
+    // Cards fade in one after another (40 ms apart, at most 0.3 s)
+    document.querySelectorAll('main :is(.card, .tile, .stat-card)').forEach((el, i) => {
+      el.style.setProperty('--enter-delay', Math.min(i * 0.04, 0.3) + 's');
+      el.classList.add('enter');
+    });
     document.body.classList.add('ready');
     return me;
   }

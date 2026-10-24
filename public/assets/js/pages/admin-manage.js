@@ -45,7 +45,7 @@
         <td>${CASE.reporterLabel(r)}</td>
         <td>${LIA.esc(r.category)}</td>
         <td>${LIA.chip(r.status, 'staff')}</td>
-        <td class="actions">
+        <td class="actions"><div class="row-actions">
           <select class="input input-sm" data-update="${r.reportNo}" aria-label="New status for report ${r.reportNo}">
             <option value="">Update status...</option>
             ${r.status === 'Active' ? '<option value="investigate">Under investigation</option>' : ''}
@@ -54,7 +54,7 @@
           </select>
           <button class="btn btn-sm" data-apply="${r.reportNo}">Update</button>
           <button class="btn btn-quiet btn-sm" data-view="${r.reportNo}">View Details</button>
-        </td>
+        </div></td>
       </tr>`).join('') : emptyRow(5, 'No active cases.');
 
     // 3. SOS: waiting alerts first, then the 15 most recent handled ones

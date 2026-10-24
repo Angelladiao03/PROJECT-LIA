@@ -31,6 +31,10 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
   `assets/js/core.js`, and calls `LIA.start()` (checks sign-in, builds top bar/sidebar/tab bar/SOS).
   Use `LIA.api()` for requests (adds the required `X-LIA: 1` header) and `LIA.esc()` for any
   database text put into HTML. All styles in `assets/css/lia.css` (tokens at the top).
+  Every successful `LIA.api()` POST fires a `lia:changed` event; staff pages then refresh the sidebar
+  counters and SOS strip at once. The loading screen is pure CSS (`body[data-area]::before/::after`)
+  and disappears when `LIA.start()` adds `body.ready`. On phones `.data-table` rows become stacked
+  cards (core.js fills `data-label` from the table headers).
 - Settings via `setting()` in `includes/config.php`: env vars on Render (`DATABASE_URL`,
   `BREVO_API_KEY`, `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME`), `includes/config.local.php` locally
   (gitignored; `APP_ENV=development` shows email codes on screen when no mail service).
