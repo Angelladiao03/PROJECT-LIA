@@ -193,17 +193,6 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
 .brand-word b { color: var(--orange); font-weight: 900; }
 .brand-tag { font-size: 0.72rem; font-weight: 700; color: var(--green); background: var(--green-tint); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
 
-.sos-btn {
-  display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 16px; border: 0; border-radius: 999px;
-  background: linear-gradient(135deg, #e53935, #b71c1c); color: #fff; font-family: var(--font-brand); font-weight: 900;
-  letter-spacing: 0.08em; cursor: pointer; box-shadow: 0 3px 10px rgba(211, 47, 47, 0.35); transition: transform 0.1s, box-shadow 0.15s;
-}
-.sos-btn:hover { box-shadow: 0 5px 16px rgba(211, 47, 47, 0.45); }
-.sos-btn:active { transform: scale(0.97); }
-/* The top-bar SOS only shows when the side menu (with its big SOS button) is hidden:
-   on tablets/phones, or when the menu is collapsed. So there is always exactly one SOS button. */
-@media (min-width: 1101px) { body:not(.nav-mini) .sos-btn { display: none; } }
-
 .avatar {
   display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; flex: none;
   background: var(--green); color: #fff; font-weight: 700; font-size: 0.9rem; font-family: var(--font-head);
@@ -255,6 +244,7 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
 
 .page { padding: calc(var(--topbar-h) + 26px) 26px 40px calc(var(--sidebar-w) + 26px); min-height: 100vh; transition: padding-left 0.22s ease; }
 body.nav-mini .sidebar { transform: translateX(-100%); }
+@media (min-width: 761px) { body[data-area="user"] #navToggle { visibility: hidden; } }
 body.nav-mini .page { padding-left: 26px; }
 .scrim { position: fixed; inset: 0; z-index: 35; background: rgba(9, 32, 23, 0.45); animation: fade 0.15s ease-out; }
 
@@ -720,8 +710,8 @@ body.ready main > * { animation: fade 0.25s ease-out both; }
   .home-side { position: static; }
   .videos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@media (max-width: 1100px) {
-  /* Tablet: the menu slides out when the menu button is pressed */
+@media (max-width: 760px) {
+  /* Phones: the menu slides out when the menu button is pressed */
   .sidebar { transform: translateX(-100%); z-index: 50; }
   body.nav-open .sidebar { transform: none; box-shadow: var(--shadow-pop); }
   .page, body.nav-mini .page { padding-left: 22px; }
@@ -752,6 +742,9 @@ body.ready main > * { animation: fade 0.25s ease-out both; }
   }
   .tabbar a { display: grid; justify-items: center; gap: 2px; padding: 8px 2px 6px; font-size: 0.68rem; font-weight: 700; color: var(--muted); text-decoration: none; position: relative; }
   .tabbar a[aria-current="page"] { color: var(--green); }
+  /* SOS tab: red, always first */
+  .tabbar .tab-sos { display: grid; justify-items: center; gap: 2px; padding: 8px 2px 6px; border: 0; background: var(--sos); color: #fff; font: inherit; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; cursor: pointer; }
+  .tabbar .tab-sos:active { background: var(--sos-dark); }
   .tabbar a[aria-current="page"]::before { content: ""; position: absolute; top: 0; left: 25%; right: 25%; height: 3px; border-radius: 0 0 3px 3px; background: var(--green-bright); }
   .card { padding: 18px; }
   h1 { font-size: 1.55rem; }

@@ -405,7 +405,7 @@ const LIA = (() => {
       <img class="seal" src="/assets/img/lagro-seal.png" alt="Lagro High School">
       <a class="topbar-title" href="${isAdmin ? '/admin/index.html' : '/app/home.html'}">Lagro<b>In</b>Action</a>
       <div class="topbar-right">
-      ${isAdmin ? '<span class="brand-tag hide-sm">Guidance office</span>' : `<button class="sos-btn" id="sosTop" aria-label="Send an SOS">SOS</button>`}
+      ${isAdmin ? '<span class="brand-tag hide-sm">Guidance office</span>' : ''}
       <div class="menu">
         <button class="menu-btn" id="acctBtn" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
           <span class="menu-name">${esc(name)}</span>
@@ -445,9 +445,11 @@ const LIA = (() => {
       const tabs = document.createElement('nav');
       tabs.className = 'tabbar';
       tabs.setAttribute('aria-label', 'Quick menu');
-      tabs.innerHTML = USER_NAV.map((i) => `<a href="${i.href}" ${i.id === current ? 'aria-current="page"' : ''}>${icon(i.icon)}${esc(i.label)}</a>`).join('');
+      // Phones: the side menu is hidden, so SOS is the first item of the bottom tab bar
+      tabs.innerHTML = `<button type="button" class="tab-sos" id="sosTab">${icon('alert')}SOS</button>` +
+        USER_NAV.map((i) => `<a href="${i.href}" ${i.id === current ? 'aria-current="page"' : ''}>${icon(i.icon)}${esc(i.label)}</a>`).join('');
       document.body.append(tabs);
-      document.getElementById('sosTop').addEventListener('click', openSos);
+      document.getElementById('sosTab').addEventListener('click', openSos);
       document.getElementById('sosSide').addEventListener('click', openSos);
 
 
@@ -469,8 +471,9 @@ const LIA = (() => {
     // Menu button: on wide screens it shrinks the menu (like YouTube); on small screens it slides it out.
     const toggle = document.getElementById('navToggle');
     let scrim = null;
-    const smallScreen = () => window.matchMedia('(max-width: 1100px)').matches;
-    try { if (localStorage.getItem('lia-nav-mini') === '1') document.body.classList.add('nav-mini'); } catch (e) {}
+    const smallScreen = () => window.matchMedia('(max-width: 760px)').matches;
+    // Only staff can shrink the menu on wide screens. Students keep it, because it has the SOS button.
+    try { if (isAdmin && localStorage.getItem('lia-nav-mini') === '1') document.body.classList.add('nav-mini'); } catch (e) {}
     toggle.addEventListener('click', () => {
       if (smallScreen()) {
         const open = document.body.classList.toggle('nav-open');
@@ -481,7 +484,7 @@ const LIA = (() => {
           scrim.addEventListener('click', () => toggle.click());
           document.body.append(scrim);
         } else { scrim?.remove(); }
-      } else {
+      } else if (isAdmin) {
         const mini = document.body.classList.toggle('nav-mini');
         try { localStorage.setItem('lia-nav-mini', mini ? '1' : '0'); } catch (e) {}
       }
