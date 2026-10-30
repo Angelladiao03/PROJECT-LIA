@@ -3,6 +3,7 @@
 const panels = [...document.querySelectorAll('[data-panel]')];
 const dots = [...document.querySelectorAll('.wizard-steps li')];
 let email = '';
+let contactNumber = '';
 let generatedPassword = null;
 
 function goTo(step) {
@@ -66,7 +67,7 @@ const emailForm = document.getElementById('emailForm');
 let resendTimer = null;
 
 async function sendCode(button, form) {
-  const data = await LIA.busy(button, () => LIA.api('guest/send_code.php', { body: { email, agree: 'yes' } }));
+  const data = await LIA.busy(button, () => LIA.api('guest/send_code.php', { body: { email, contactNumber, agree: 'yes' } }));
   document.getElementById('codeSentTo').innerHTML = `We sent a code to <b>${LIA.esc(email)}</b>. Check your inbox and spam folder. It works for 10 minutes.`;
   const dev = document.getElementById('devCode');
   dev.hidden = !data.devCode;
@@ -89,15 +90,28 @@ function startResendCountdown() {
   resendTimer = setInterval(tick, 1000);
 }
 
+emailForm.contactNumber.addEventListener('input', () => {
+  emailForm.contactNumber.value = emailForm.contactNumber.value.replace(/\D/g, '').slice(0, 11);
+});
+
 emailForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   email = emailForm.email.value.trim().toLowerCase();
+  contactNumber = emailForm.contactNumber.value.trim();
   if (!/^\S+@\S+\.\S+$/.test(email)) return LIA.showFormError(emailForm, 'Enter a valid email address, like name@gmail.com.');
+  if (!/^09\d{9}$/.test(contactNumber)) return LIA.showFormError(emailForm, 'Enter your 11-digit phone number, starting with 09.');
   try {
     await sendCode(emailForm.querySelector('button[type=submit]'), emailForm);
     LIA.showFormError(emailForm, '');
     goTo(3);
-  } catch (err) { LIA.showFormError(emailForm, err.message); }
+  } catch (err) {
+    LIA.showFormError(emailForm, err.message);
+    // Email or phone already used: offer the way back in
+    if (err.data?.hasAccount) {
+      emailForm.querySelector('.form-error span').insertAdjacentHTML('beforeend',
+        ` <a href="/index.html">Sign in</a> · <a href="/reset.html?email=${encodeURIComponent(email)}">Reset password</a>`);
+    }
+  }
 });
 
 // ---------- Step 3: Code ----------

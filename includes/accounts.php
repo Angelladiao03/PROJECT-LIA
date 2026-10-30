@@ -4,7 +4,7 @@
 
 const GUEST_LIFETIME_DAYS = 30;
 const OPEN_CASE_STATUSES = ['Pending', 'Active', 'Under Investigation'];
-const TERMS_VERSION = 'draft-2026-10';
+const TERMS_VERSION = 'draft-2026-11';
 
 // Letters and numbers that are easy to read (no 0/O, 1/I/L).
 const READABLE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -189,4 +189,81 @@ function record_failed_login(string $key): void
 function clear_failed_logins(string $key): void
 {
     db()->prepare('DELETE FROM login_attempts WHERE login_key = ?')->execute([$key]);
+}
+
+// ---------- Duplicate checks ----------
+
+// The active account that uses this email, or null. (An expired guest frees up its email.)
+function active_account_by_email(string $email): ?array
+{
+    $stmt = db()->prepare("SELECT * FROM users WHERE LOWER(email) = LOWER(?) AND status = 'Active'");
+    $stmt->execute([$email]);
+    $user = $stmt->fetch();
+    if (!$user) return null;
+    $user = apply_guest_expiry($user);
+    return $user['status'] === 'Active' ? $user : null;
+}
+
+// True if another active account already uses this phone number.
+function contact_in_use(string $number, ?int $exceptUserId = null): bool
+{
+    $stmt = db()->prepare("SELECT * FROM users WHERE contact_number = ? AND status = 'Active' AND user_id <> ?");
+    $stmt->execute([$number, $exceptUserId ?? 0]);
+    foreach ($stmt->fetchAll() as $user) {
+        if (apply_guest_expiry($user)['status'] === 'Active') return true;
+    }
+    return false;
+}
+
+// ---------- 6-digit email codes (sign-up and password reset) ----------
+
+const CODE_VALID_MINUTES = 10;
+const MAX_CODE_ATTEMPTS = 5;
+
+// Makes a new code for this email and saves its hash. Stops the request if codes
+// are asked for too often (1 per minute per email, 10 per hour per device).
+function issue_email_code(string $email, string $purpose): string
+{
+    $stmt = db()->prepare(
+        "SELECT
+            COUNT(*) FILTER (WHERE LOWER(email) = ? AND created_at > NOW() - INTERVAL '60 seconds') AS recent_for_email,
+            COUNT(*) FILTER (WHERE ip_address = ? AND created_at > NOW() - INTERVAL '1 hour') AS recent_for_ip
+         FROM email_codes"
+    );
+    $stmt->execute([$email, client_ip()]);
+    $limits = $stmt->fetch();
+    if ($limits['recent_for_email'] > 0) json_error('A code was just sent. Wait a minute before asking for a new one.', 429);
+    if ($limits['recent_for_ip'] >= 10) json_error('Too many codes requested. Try again in an hour.', 429);
+
+    $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    db()->prepare(
+        'INSERT INTO email_codes (email, code_hash, ip_address, expires_at, purpose)
+         VALUES (?, ?, ?, NOW() + make_interval(mins => ?), ?)'
+    )->execute([$email, password_hash($code, PASSWORD_DEFAULT), client_ip(), CODE_VALID_MINUTES, $purpose]);
+    return $code;
+}
+
+// Checks a code. Returns the code's row if it's right; otherwise stops with a clear message.
+// The caller marks it used (UPDATE email_codes SET used_at = NOW()) when the action succeeds.
+function check_email_code(string $email, string $code, string $purpose): array
+{
+    if (strlen($code) !== 6) json_error('Enter the 6-digit code from the email.');
+    $stmt = db()->prepare(
+        'SELECT * FROM email_codes WHERE LOWER(email) = ? AND purpose = ? AND used_at IS NULL
+         ORDER BY created_at DESC LIMIT 1'
+    );
+    $stmt->execute([$email, $purpose]);
+    $row = $stmt->fetch();
+    if (!$row || strtotime($row['expires_at']) < time()) {
+        json_error('This code has expired. Send a new code.', 400, ['codeExpired' => true]);
+    }
+    if ($row['attempts'] >= MAX_CODE_ATTEMPTS) {
+        json_error('Too many wrong tries. Send a new code.', 429, ['codeExpired' => true]);
+    }
+    if (!password_verify($code, $row['code_hash'])) {
+        db()->prepare('UPDATE email_codes SET attempts = attempts + 1 WHERE code_id = ?')->execute([$row['code_id']]);
+        $left = MAX_CODE_ATTEMPTS - $row['attempts'] - 1;
+        json_error("That code isn't right. $left " . ($left === 1 ? 'try' : 'tries') . ' left.');
+    }
+    return $row;
 }

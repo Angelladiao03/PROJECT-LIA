@@ -123,7 +123,7 @@
           <dt>Date of incident</dt><dd>${LIA.esc(LIA.fmtDate(r.incidentDate))}</dd>
           <dt>Filed</dt><dd>${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</dd>
           <dt>You are</dt><dd>${LIA.esc(LIA.ROLE[r.reporterRole] || '')}</dd>
-          <dt>Name shown to staff</dt><dd>${r.anonymous ? 'No (anonymous)' : 'Yes'}</dd>
+          <dt>Name shown to staff</dt><dd>${r.anonymous ? 'No (anonymous: staff see your phone number only)' : 'Yes'}</dd>
         </dl>
         <div class="quote-box">${LIA.esc(r.description)}</div>`,
       foot: `<a class="btn btn-quiet" href="/app/messages.html">Message the guidance office</a><button class="btn" data-close>Close</button>`,
@@ -154,6 +154,9 @@
     rows.innerHTML = `<tr><td colspan="7" class="muted">${LIA.esc(e.message)}</td></tr>`;
   }
   if (location.hash === '#history') document.getElementById('history').scrollIntoView();
+  // From a case card in Messages: open that report straight away
+  const fromChat = location.hash.match(/^#report-(\d+)$/);
+  if (fromChat) { document.getElementById('history').scrollIntoView(); openReport(Number(fromChat[1])); }
   if (location.hash === '#activate') document.getElementById('activate').scrollIntoView();
 })();
 

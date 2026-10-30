@@ -164,6 +164,32 @@ ALTER TABLE reports    ADD COLUMN IF NOT EXISTS updated_at    TIMESTAMPTZ;
 ALTER TABLE sos_alerts ADD COLUMN IF NOT EXISTS user_id       INT REFERENCES users(user_id);
 ALTER TABLE messages   ADD COLUMN IF NOT EXISTS user_id       INT REFERENCES users(user_id);
 
+-- alpha.3 additions
+ALTER TABLE email_codes ADD COLUMN IF NOT EXISTS purpose     VARCHAR(10) NOT NULL DEFAULT 'signup'; -- 'signup' or 'reset'
+ALTER TABLE messages    ADD COLUMN IF NOT EXISTS read_at     TIMESTAMPTZ; -- when the student read a staff message
+ALTER TABLE messages    ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ; -- when we emailed "you have unread messages"
+ALTER TABLE messages    ADD COLUMN IF NOT EXISTS report_no   INT REFERENCES reports(report_no); -- a report case attached by staff
+-- A file attached to a message (e.g. a form from the guidance office, or the filled-up form sent back).
+-- Kept in the database because Render's disk is wiped on every deploy. Max 5 MB (checked in PHP).
+ALTER TABLE messages    ADD COLUMN IF NOT EXISTS file_name   VARCHAR(160);
+ALTER TABLE messages    ADD COLUMN IF NOT EXISTS file_type   VARCHAR(100);
+ALTER TABLE messages    ADD COLUMN IF NOT EXISTS file_size   INT;
+ALTER TABLE messages    ADD COLUMN IF NOT EXISTS file_data   BYTEA;
+-- Phone numbers: one active account per number is checked in PHP (contact_in_use()),
+-- not with a UNIQUE index, so older test data with repeated numbers doesn't block this upgrade.
+CREATE INDEX IF NOT EXISTS users_contact ON users (contact_number);
+
+-- Messages older than a day never get an "unread" reminder (so upgrading doesn't email about old messages)
+UPDATE messages SET notified_at = NOW()
+ WHERE notified_at IS NULL AND sender_type = 'Admin' AND sent_datetime < (NOW() AT TIME ZONE 'UTC') - INTERVAL '1 day';
+
+-- Small key/value store for background jobs (e.g. when the unread-message reminder last ran)
+CREATE TABLE IF NOT EXISTS app_state (
+    state_key   VARCHAR(50) PRIMARY KEY,
+    state_value TEXT,
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 DO $$
 BEGIN
     -- v1 stored students by LRN in a "students" table. Copy APPROVED ones

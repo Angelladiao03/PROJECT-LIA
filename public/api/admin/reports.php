@@ -2,7 +2,7 @@
 // Staff: incident reports.
 //
 // GET -> every report (newest first). The page filters by status.
-//        Anonymous reports never include who sent them.
+//        Anonymous reports never include who sent them, only their phone number (anonymousContact).
 //
 // POST action=approve     reportNo   Pending -> Active
 // POST action=investigate reportNo   Active -> Under Investigation
@@ -60,6 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'contactNumber' => $r['contact_number'],
                 'email' => $r['account_type'] === 'student' ? $r['email'] : null,
             ],
+            // Anonymous reports: staff get the phone number ONLY (no name), so they can still reach the student.
+            'anonymousContact' => $anonymous ? $r['contact_number'] : null,
             'canMessage' => $canMessage,
             'reporterRole' => $r['reporter_role'],
             'category' => $r['category'],
@@ -112,6 +114,7 @@ if (isset($moves[$action])) {
     db()->prepare('UPDATE reports SET report_status = ?, reject_reason = ?, updated_at = NOW() WHERE report_no = ?')
         ->execute([$to, $reason, $reportNo]);
     audit((int) $admin['admin_id'], 'report.' . $action, 'report', $reportNo, $reason ?? '');
+    notify_report_update($reportNo, $action, $reason); // email the student that their report changed
     json_success($message);
 }
 

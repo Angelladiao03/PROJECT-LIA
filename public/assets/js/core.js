@@ -8,6 +8,10 @@
    ===================================================================== */
 
 const LIA = (() => {
+  // The version shown on the sign-in pages. Change it here when you tag a new version.
+  const VERSION = 'v1.0.0-alpha.3';
+  document.querySelectorAll('[data-version]').forEach((el) => { el.textContent = VERSION; });
+
   // ---------- Icons (simple line drawings, 24x24) ----------
   const ICONS = {
     menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
@@ -20,6 +24,8 @@ const LIA = (() => {
     shield: '<path d="M12 3l8 3v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6z"/><path d="m9 12 2 2 4-4"/>',
     alert: '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',
     chart: '<path d="M3 21h18M6 17V10M11 17V5M16 17v-5M21 17V8"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    clip: '<path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/>',
     folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
     archive: '<path d="M3 4h18v5H3zM5 9v11h14V9M10 13h4"/>',
     users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
@@ -55,7 +61,39 @@ const LIA = (() => {
   // ---------- Talking to the backend ----------
   // api('reports/mine.php')                     -> GET
   // api('reports/create.php', { body: form })   -> POST (form = FormData or object)
+  // ---------- Loading line at the top of the page ----------
+  // Shows while the page starts and while any request is waiting for the server.
+  const loading = (() => {
+    let bar = null, busyCount = 0, creep = null;
+    const el = () => {
+      if (!bar) { bar = document.createElement('div'); bar.className = 'loadbar'; bar.setAttribute('aria-hidden', 'true'); document.body.append(bar); }
+      return bar;
+    };
+    function start() {
+      busyCount++;
+      if (busyCount > 1) return;
+      const b = el(); let p = 0.15;
+      b.classList.add('on'); b.style.transform = `scaleX(${p})`;
+      clearInterval(creep);
+      creep = setInterval(() => { p += (0.9 - p) * 0.15; b.style.transform = `scaleX(${p})`; }, 250); // slows down near 90%
+    }
+    function done() {
+      busyCount = Math.max(0, busyCount - 1);
+      if (busyCount) return;
+      clearInterval(creep);
+      const b = el(); b.style.transform = 'scaleX(1)';
+      setTimeout(() => { if (!busyCount) { b.classList.remove('on'); setTimeout(() => { if (!busyCount) b.style.transform = 'scaleX(0)'; }, 250); } }, 200);
+    }
+    return { start, done };
+  })();
+  if (document.body.dataset.area) loading.start(); // signed-in pages: line runs until LIA.start() is done
+
   async function api(path, options = {}) {
+    loading.start();
+    try { return await apiRequest(path, options); } finally { loading.done(); }
+  }
+
+  async function apiRequest(path, options = {}) {
     const init = { method: options.body ? 'POST' : 'GET', headers: {}, credentials: 'same-origin' };
     if (options.body) {
       init.headers['X-LIA'] = '1'; // our own pages always send this (see includes/bootstrap.php)
@@ -317,6 +355,10 @@ const LIA = (() => {
   }
 
   // ---------- SOS ----------
+  // Places for SOS alerts. Must match REPORT_LOCATIONS in includes/validation.php.
+  const SOS_LOCATIONS = ['Classroom', 'Hallway or stairs', 'Canteen', 'Comfort room', 'School gate',
+    'Covered court or field', 'Library', 'Online or group chat', 'Outside school', 'Other'];
+
   function openSos() {
     openModal({
       title: 'Send an SOS',
@@ -326,7 +368,14 @@ const LIA = (() => {
         <form id="sosForm" novalidate>
           <div class="field">
             <label for="sosWhere">Where are you right now?</label>
-            <input class="input" id="sosWhere" name="location" maxlength="255" placeholder="e.g. 2nd floor comfort room, Building B" required>
+            <select class="input" id="sosWhere" name="location" required>
+              <option value="">Select location...</option>
+              ${SOS_LOCATIONS.map((p) => `<option${p === 'Other' ? ' value="Other">Others' : `>${p}`}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field" id="sosOtherField" hidden>
+            <label for="sosOther">Type the place</label>
+            <input class="input" id="sosOther" name="locationOther" maxlength="200" placeholder="e.g. Room 204, Building B">
           </div>
           <div class="field">
             <label for="sosWhat">What is happening?</label>
@@ -337,8 +386,13 @@ const LIA = (() => {
       foot: `<button class="btn btn-quiet" data-close>Cancel</button><button class="btn btn-sos btn-big" form="sosForm" type="submit">${icon('alert')} Send SOS now</button>`,
       onOpen: (el, close) => {
         const form = el.querySelector('#sosForm');
+        const otherField = el.querySelector('#sosOtherField');
+        form.location.addEventListener('change', () => { otherField.hidden = form.location.value !== 'Other'; });
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
+          if (!form.location.value) return showFormError(form, 'Choose where you are right now.');
+          if (form.location.value === 'Other' && !form.locationOther.value.trim()) return showFormError(form, 'Type where you are right now.');
+          if (!form.description.value.trim()) return showFormError(form, 'Say briefly what is happening.');
           try {
             await busy(el.querySelector('button[type=submit]'), () => api('sos/create.php', { body: new FormData(form) }));
             close();
@@ -405,7 +459,7 @@ const LIA = (() => {
       <img class="seal" src="/assets/img/lagro-seal.png" alt="Lagro High School">
       <a class="topbar-title" href="${isAdmin ? '/admin/index.html' : '/app/home.html'}">Lagro<b>In</b>Action</a>
       <div class="topbar-right">
-      ${isAdmin ? '<span class="brand-tag hide-sm">Guidance office</span>' : ''}
+      ${isAdmin ? `<span class="admin-tag" title="You are signed in to the staff side of LagroInAction">${icon('shield')}<span class="hide-sm">LagroInAction Administrator Access</span><span class="show-sm">Admin</span></span>` : ''}
       <div class="menu">
         <button class="menu-btn" id="acctBtn" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
           <span class="menu-name">${esc(name)}</span>
@@ -445,11 +499,8 @@ const LIA = (() => {
       const tabs = document.createElement('nav');
       tabs.className = 'tabbar';
       tabs.setAttribute('aria-label', 'Quick menu');
-      // Phones: the side menu is hidden, so SOS is the first item of the bottom tab bar
-      tabs.innerHTML = `<button type="button" class="tab-sos" id="sosTab">${icon('alert')}SOS</button>` +
-        USER_NAV.map((i) => `<a href="${i.href}" ${i.id === current ? 'aria-current="page"' : ''}>${icon(i.icon)}${esc(i.label)}</a>`).join('');
+      tabs.innerHTML = USER_NAV.map((i) => `<a href="${i.href}" ${i.id === current ? 'aria-current="page"' : ''}>${icon(i.icon)}${esc(i.label)}</a>`).join('');
       document.body.append(tabs);
-      document.getElementById('sosTab').addEventListener('click', openSos);
       document.getElementById('sosSide').addEventListener('click', openSos);
 
 
@@ -471,9 +522,8 @@ const LIA = (() => {
     // Menu button: on wide screens it shrinks the menu (like YouTube); on small screens it slides it out.
     const toggle = document.getElementById('navToggle');
     let scrim = null;
-    const smallScreen = () => window.matchMedia('(max-width: 760px)').matches;
-    // Only staff can shrink the menu on wide screens. Students keep it, because it has the SOS button.
-    try { if (isAdmin && localStorage.getItem('lia-nav-mini') === '1') document.body.classList.add('nav-mini'); } catch (e) {}
+    const smallScreen = () => window.matchMedia('(max-width: 1100px)').matches;
+    try { if (localStorage.getItem('lia-nav-mini') === '1') document.body.classList.add('nav-mini'); } catch (e) {}
     toggle.addEventListener('click', () => {
       if (smallScreen()) {
         const open = document.body.classList.toggle('nav-open');
@@ -484,7 +534,7 @@ const LIA = (() => {
           scrim.addEventListener('click', () => toggle.click());
           document.body.append(scrim);
         } else { scrim?.remove(); }
-      } else if (isAdmin) {
+      } else {
         const mini = document.body.classList.toggle('nav-mini');
         try { localStorage.setItem('lia-nav-mini', mini ? '1' : '0'); } catch (e) {}
       }
@@ -614,19 +664,17 @@ const LIA = (() => {
       }));
     });
     labelTables();
-    new MutationObserver(labelTables).observe(document.querySelector('main'), { childList: true, subtree: true });
+    let labelSoon = 0;
+    new MutationObserver(() => { if (!labelSoon) labelSoon = requestAnimationFrame(() => { labelSoon = 0; labelTables(); }); })
+      .observe(document.querySelector('main'), { childList: true, subtree: true });
 
-    // Cards fade in one after another (40 ms apart, at most 0.3 s)
-    document.querySelectorAll('main :is(.card, .tile, .stat-card)').forEach((el, i) => {
-      el.style.setProperty('--enter-delay', Math.min(i * 0.04, 0.3) + 's');
-      el.classList.add('enter');
-    });
     document.body.classList.add('ready');
+    loading.done();
     return me;
   }
 
   return {
-    api, esc, icon, toast, openModal, confirmBox, showFormError, busy, wirePasswordToggles, copyText,
+    VERSION, api, esc, icon, toast, openModal, confirmBox, showFormError, busy, wirePasswordToggles, copyText,
     changePasswordModal, openSos, start, setCount, initials, chip, STATUS, ROLE,
     toDate, fmtDate, fmtDateTime, fmtTime, timeAgo, daysLeft, todayInManila,
   };

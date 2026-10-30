@@ -19,6 +19,7 @@ if ($error = username_error($username)) json_error($error);
 if ($gradeSection === '' || too_long($gradeSection, 50)) json_error('Enter your grade and section, like 10 - Sampaguita.');
 if ($adviser === '' || too_long($adviser, 150)) json_error("Enter your adviser's name.");
 if ($error = contact_number_error($contact)) json_error($error);
+if (contact_in_use($contact, (int) $user['user_id'])) json_error('This phone number already belongs to another account.', 409);
 
 // The username must not belong to someone else (or be waiting in someone's request).
 $stmt = db()->prepare(

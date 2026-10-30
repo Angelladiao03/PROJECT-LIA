@@ -8,7 +8,7 @@ const CASE = (() => {
     : (r.reporter?.accountType === 'student' ? 'Identified student' : 'Guest');
 
   function reporterLabel(r) {
-    if (r.anonymous) return '<span class="muted">Anonymous</span>';
+    if (r.anonymous) return '<span class="muted">Anonymous</span>' + (r.anonymousContact ? `<br><a class="small" href="tel:${LIA.esc(r.anonymousContact)}">${LIA.esc(r.anonymousContact)}</a>` : '');
     const p = r.reporter || {};
     return `<b>${LIA.esc(p.name)}</b>${p.gradeSection ? `<br><span class="small muted">${LIA.esc(p.gradeSection)}</span>` : ''}`;
   }
@@ -83,7 +83,8 @@ const CASE = (() => {
           <section class="case-section">
             <h3>Student Account Details</h3>
             ${r.anonymous
-              ? `<p class="form-note" style="margin:0">The reporter chose to stay anonymous (or used a guest account). Their identity is hidden from staff.</p>`
+              ? `<p class="form-note" style="margin:0 0 10px">The reporter chose to stay anonymous (or used a guest account). Their identity is hidden from staff. Only their contact number is shown.</p>
+                 <dl class="case-facts">${row('Contact Number', r.anonymousContact)}</dl>`
               : `<dl class="case-facts">${row('Full Name', p.name)}${row('Account', p.accountType === 'student' ? 'Student' : 'Guest')}${row('Grade & Section', p.gradeSection)}${row('Username', p.username)}${row('Adviser', p.adviser)}${row('Email', p.email)}${row('Contact Number', p.contactNumber)}</dl>`}
           </section>
           <section class="case-section">
@@ -107,14 +108,38 @@ const CASE = (() => {
       foot: `${buttons}
         ${r.canMessage ? `<a class="btn btn-quiet" href="/admin/messages.html?userId=${p.userId}">Message</a>` : ''}
         <button class="btn btn-ghost" data-print>Print</button>
+        <button class="btn btn-ghost" data-pdf>Save as PDF</button>
         <button class="btn btn-gray" data-close>Close</button>`,
       onOpen: (el, close) => {
         // Who did what to this report, and when (from the audit log)
         const hist = el.querySelector('[data-history]');
+        let historyRows = [];
         LIA.api('admin/reports.php?history=' + r.reportNo).then(({ history }) => {
+          historyRows = history.map((h) => [`Case history · ${LIA.fmtDateTime(h.at)}`, `${h.what} by ${h.by}`]);
           hist.innerHTML = `<li><b>Report submitted</b> <span class="muted">· ${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</span></li>` +
             history.map((h) => `<li><b>${LIA.esc(h.what)}</b> by ${LIA.esc(h.by)} <span class="muted">· ${LIA.esc(LIA.fmtDateTime(h.at))}</span></li>`).join('');
         }).catch((e) => { hist.innerHTML = `<li class="muted">${LIA.esc(e.message)}</li>`; });
+        // Save this case record as a PDF (two columns: field and details)
+        el.querySelector('[data-pdf]').addEventListener('click', () => {
+          const rows = [
+            ['Case No.', `#${r.reportNo}`],
+            ['Status', r.status + (r.archived ? ' (archived)' : '')],
+            ['Reporter', r.anonymous ? `Anonymous${r.anonymousContact ? ' · Contact number: ' + r.anonymousContact : ''}`
+              : [p.name, p.accountType === 'student' ? 'Student' : 'Guest', p.gradeSection, p.adviser && 'Adviser: ' + p.adviser, p.contactNumber && 'Contact: ' + p.contactNumber].filter(Boolean).join(' · ')],
+            ['Category of Bullying', r.category],
+            ['Date of Incident', LIA.fmtDate(r.incidentDate)],
+            ['Date & Time Filed', LIA.fmtDateTime(r.submittedAt)],
+            ['Location', r.location],
+            ['Reporter is', LIA.ROLE[r.reporterRole] || ''],
+            ['Knows Person(s) Involved?', r.involvedKnown ? 'Yes' : 'No'],
+            ...(r.involvedKnown ? [['Person(s) Involved', r.involvedDescription]] : []),
+            ['Description', r.description],
+            ...(r.status === 'Rejected' ? [['Reason given to the student', r.rejectReason || '']] : []),
+            ['Case history · ' + LIA.fmtDateTime(r.submittedAt), 'Report submitted'],
+            ...historyRows,
+          ];
+          PRINT.savePdf({ title: `Report Case No. #${r.reportNo}`, columns: [{ label: 'Field', width: 150 }, { label: 'Details' }], rows, filename: `case-${r.reportNo}`, landscape: false, note: 'Case record' });
+        });
         el.querySelector('[data-print]').addEventListener('click', () => {
           document.body.classList.add('printing-case');
           window.print();

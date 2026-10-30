@@ -32,9 +32,24 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
   Use `LIA.api()` for requests (adds the required `X-LIA: 1` header) and `LIA.esc()` for any
   database text put into HTML. All styles in `assets/css/lia.css` (tokens at the top).
   Every successful `LIA.api()` POST fires a `lia:changed` event; staff pages then refresh the sidebar
-  counters and SOS strip at once. The loading screen is pure CSS (`body[data-area]::before/::after`)
-  and disappears when `LIA.start()` adds `body.ready`. On phones `.data-table` rows become stacked
-  cards (core.js fills `data-label` from the table headers).
+  counters and SOS strip at once. `main` stays hidden until `LIA.start()` adds `body.ready`. On phones
+  `.data-table` rows become stacked cards (core.js fills `data-label` from the table headers). A thin
+  `.loadbar` line at the top shows while a page or request loads (no full loading screen; keep
+  animations short and opacity-only). `LIA.VERSION` in core.js is the version shown on the
+  sign-in pages (clicking it on index.html opens staff.html; there is no staff link otherwise).
+- alpha.3 (Oct 31 2026): guest sign-up needs email + phone (one account per email/phone, checked in PHP);
+  forgot password (`reset.html`, `email_codes.purpose='reset'`); SOS location is a dropdown (REPORT_LOCATIONS);
+  anonymous reports show staff the phone number only; Records has 10 per page, sortable headings and
+  Print / Save as PDF (`pdf.js` + `print.js`, also in the case window and per student in Messages);
+  staff can attach a report case to a message (`messages.report_no`); emails for registration, approval,
+  report status changes and 1-hour unread reminders (`includes/notify.php`, piggybacks on requests;
+  optional `/api/system/reminders.php?key=CRON_KEY`). Staff top bar shows "LagroInAction Administrator Access".
+- Files in messages: "+" at the left of the message box (`assets/js/chat-attach.js`) opens Attach File
+  (staff + students) and Attach Case (staff). Files live in `messages.file_*` (bytea, 5 MB, PDF/Word/JPG/PNG,
+  signature-checked in `includes/attachments.php`) and download via `api/messages/file.php?id=`.
+  Purpose: the guidance office sends forms for reporters to fill up; students send them back.
+- Purpose note from the team: LIA is for tracking reports, updates and case management. It does not
+  solve cases or replace the guidance sessions themselves.
 - Settings via `setting()` in `includes/config.php`: env vars on Render (`DATABASE_URL`,
   `BREVO_API_KEY`, `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME`), `includes/config.local.php` locally
   (gitignored; `APP_ENV=development` shows email codes on screen when no mail service).

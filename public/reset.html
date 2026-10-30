@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LagroInAction · Forgot password</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/lia.css">
+</head>
+<body class="auth-body">
+  <div class="auth-page">
+    <section class="auth-side">
+      <a class="brand" href="/index.html">
+        <img src="/assets/img/lagro-seal.png" alt="Lagro High School seal">
+        <span class="brand-word">LagroInAction</span>
+      </a>
+      <div>
+        <h1 class="auth-headline">Forgot your password?</h1>
+        <p>We'll send a 6-digit code to the email address of your account. Enter the code here and choose a new password.</p>
+      </div>
+      <p class="auth-foot">Works for guest and student accounts.</p>
+    </section>
+
+    <main class="auth-main">
+      <div class="auth-card">
+        <!-- Step 1: email -->
+        <section class="card" data-step="1">
+          <img class="auth-seal" src="/assets/img/lagro-seal.png" alt="Lagro High School seal">
+          <h2 class="auth-title">Reset password</h2>
+          <form id="emailForm" novalidate>
+            <div class="field">
+              <label for="email">Email of your account</label>
+              <input class="input" id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="name@gmail.com" required>
+            </div>
+            <button class="btn btn-big btn-block" type="submit">Send code</button>
+          </form>
+        </section>
+
+        <!-- Step 2: code + new password -->
+        <section class="card" data-step="2" hidden>
+          <h2 class="auth-title">Choose a new password</h2>
+          <p class="small" id="sentTo"></p>
+          <div class="form-note warn small" id="devCode" hidden></div>
+          <form id="resetForm" novalidate style="margin-top:14px">
+            <div class="field">
+              <label for="code">6-digit code</label>
+              <input class="input code-input" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
+            </div>
+            <div class="field">
+              <label for="newPassword">New password</label>
+              <div class="pw-wrap">
+                <input class="input" id="newPassword" name="newPassword" type="password" autocomplete="new-password" required>
+                <button class="icon-btn pw-toggle" data-pw-toggle></button>
+              </div>
+              <p class="hint">At least 8 characters, with a letter and a number.</p>
+            </div>
+            <div class="field">
+              <label for="confirmPassword">Re-type new password</label>
+              <input class="input" id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required>
+            </div>
+            <button class="btn btn-big btn-block" type="submit">Save new password</button>
+          </form>
+          <p style="text-align:center;margin:12px 0 0"><button class="btn btn-ghost" id="again" type="button">Use a different email</button></p>
+        </section>
+
+        <!-- Step 3: done -->
+        <section class="card" data-step="3" hidden>
+          <div class="congrats">
+            <img class="seal-big" src="/assets/img/lagro-seal.png" alt="">
+            <h2>Password changed</h2>
+            <p class="muted">You can now sign in with your new password.</p>
+          </div>
+          <a class="btn btn-big btn-block" id="toSignIn" href="/index.html">Go to sign in</a>
+        </section>
+        <p class="auth-links"><a href="/index.html">Back to sign in</a></p>
+      </div>
+      <span class="version-link" data-version>v</span>
+    </main>
+  </div>
+  <script src="/assets/js/core.js"></script>
+  <script src="/assets/js/pages/reset.js"></script>
+</body>
+</html>

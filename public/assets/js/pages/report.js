@@ -17,7 +17,7 @@
       document.getElementById('identityFields').hidden = !identity;
       document.getElementById('prefNote').textContent = identity
         ? 'Guidance staff will see your name and details, so they can message you about this report.'
-        : "Reminder: guidance staff will not see your name. The report still appears in your My Report History so you can follow it. Staff can't message you about it, so message them yourself if you want to talk.";
+        : "Reminder: guidance staff will not see your name. They will only see your phone number, so they can contact you if needed. The report still appears in your My Report History so you can follow it.";
     };
     form.querySelectorAll('[name=submitAs]').forEach((r) => r.addEventListener('change', updatePref));
     updatePref();

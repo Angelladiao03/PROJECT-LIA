@@ -36,8 +36,9 @@ alerts, approve student accounts, and see where bullying happens.
 ```
 PROJECT-LIA/
 ├── public/                     ← everything the browser can open
-│   ├── index.html              sign in (Student / Guest)
-│   ├── guest.html              create a guest account (Terms → email → code → done)
+│   ├── index.html              sign in (Student / Guest). The version number in the corner opens staff log in
+│   ├── guest.html              create a guest account (Terms → email + phone → code → done)
+│   ├── reset.html              forgot password (code by email → new password)
 │   ├── staff.html              guidance staff sign in
 │   ├── terms.html              Terms of Use & Privacy Notice (EXAMPLE DRAFT)
 │   ├── app/                    student & guest pages
@@ -57,17 +58,21 @@ PROJECT-LIA/
 │   │   └── accounts.html       permanent-account requests (ID photo review)
 │   ├── assets/
 │   │   ├── css/lia.css         all styles (colours and sizes are at the top)
-│   │   ├── js/core.js          shared code: top bar, side menu, SOS, API calls
+│   │   ├── js/core.js          shared code: top bar, side menu, SOS, API calls, loading line, VERSION
+│   │   ├── js/pdf.js           makes PDF files in the browser (tables, page numbers), no library needed
+│   │   ├── js/print.js         "Print or save as PDF" window used by Records, Messages and the case window
+│   │   ├── js/chat-attach.js   the "+" next to the message box: Attach File (and Attach Case for staff)
 │   │   ├── js/pages/*.js       code for individual pages (admin-case.js = the case details window)
 │   │   └── img/                seal, posters, favicon
 │   └── api/                    PHP endpoints the pages call
-│       ├── auth/               me, login, staff_login, logout
+│       ├── auth/               me, login, staff_login, logout, reset_send, reset_confirm
 │       ├── guest/              send_code, verify
 │       ├── account/            password, activation, profile
 │       ├── reports/            create, mine
 │       ├── sos/                create
-│       ├── messages/           thread
-│       └── admin/              reports, sos, messages, activations
+│       ├── messages/           thread, file (download a file sent in a message)
+│       ├── admin/              reports, sos, messages, activations
+│       └── system/             reminders (optional: for a free scheduler like cron-job.org)
 ├── includes/                   ← private PHP code (not reachable from the browser)
 │   ├── bootstrap.php           loads everything below
 │   ├── config.php              reads settings (DATABASE_URL, email keys)
@@ -75,6 +80,9 @@ PROJECT-LIA/
 │   ├── session.php             sign-in sessions (saved in the database)
 │   ├── accounts.php            who is signed in, guest expiry, login lockout
 │   ├── mailer.php              sends email through Brevo
+│   ├── notify.php              report-update emails + "you have unread messages" reminders
+│   ├── attachments.php         files in messages: allowed types, 5 MB limit, checks the real file type
+│   ├── audit.php               audit log of staff actions
 │   ├── passwords.php           password hashing
 │   ├── validation.php          form checks + the category/location lists
 │   └── json.php                JSON responses
@@ -134,6 +142,7 @@ The password becomes a secure hash the first time they sign in.
    | `MAIL_FROM_EMAIL` | the sender email you verified in Brevo |
    | `MAIL_FROM_NAME` | `LagroInAction` |
    | `PORT` | `10000` |
+   | `CRON_KEY` | *(optional)* a long random word, only if you use cron-job.org for reminders (see below) |
 
    Do **not** set `APP_ENV` on Render (it must stay "production").
 3. Push to GitHub. Render rebuilds automatically.
@@ -148,6 +157,22 @@ Guest sign-up needs email codes, and staff decisions send emails.
    spam.
 3. Go to **SMTP & API → API keys**, create a key, and copy it.
 4. Put the key and sender email in Render's Environment (above).
+
+Emails the system sends:
+
+| When | Email |
+|---|---|
+| Guest sign-up | 6-digit code, then "You are now Registered!" with the guest ID (never the password) |
+| Forgot password | 6-digit reset code, then "your password was changed" |
+| Student account approved / declined | "Congratulations! You are now registered as a student…" / the reason |
+| Staff change a report's status | "Update on your report #N" (no report details in the email) |
+| Guidance messages unread for 1 hour | "You have N unread messages…" (once per message) |
+
+**Unread-message reminders.** Render's free plan has no scheduled jobs, so the reminder check runs
+after normal website requests (at most every 10 minutes). If nobody uses the site for a while, a
+reminder can be late. For exact timing, set `CRON_KEY` in Render and create a free job at
+<https://cron-job.org> that opens `https://YOUR-SITE.onrender.com/api/system/reminders.php?key=YOUR_CRON_KEY`
+every 10 minutes.
 
 Every email the system tries to send is listed in the `email_outbox` table
 (address, subject, sent time, or the error), which helps if someone says they
@@ -166,7 +191,13 @@ didn't get a code. The email text itself is not stored.
   pages need a staff account.
 - **Requests from other websites are blocked** (`X-LIA` header + `SameSite`
   cookies), sessions are `HttpOnly`, and the session ID changes at sign-in.
-- **Anonymous reports** never send the reporter's details to staff browsers.
+- **Anonymous reports** never send the reporter's name to staff browsers, only their phone number
+  (`anonymousContact`) so the guidance office can still reach them. The report form and the Terms say so.
+- **Files in messages** (PDF, Word, JPG, PNG, up to 5 MB) are checked by their real contents, stored in
+  the database, always downloaded (never opened inside the site), and only the student's own conversation
+  or staff can download them.
+- **One account per email and per phone number.** A used email or phone gets "already has an account"
+  with links to sign in or reset the password.
 - **ID photos** are checked to be real images, only shown to staff, never
   cached, and deleted after review.
 - **Nothing is deleted:** reports are archived, accounts expire.

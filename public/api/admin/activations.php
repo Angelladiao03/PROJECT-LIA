@@ -116,8 +116,9 @@ $name = $request['full_name'];
 if ($action === 'approve') {
     $sent = send_email(
         $request['email'],
-        'Your LagroInAction student account is approved',
-        "Hi $name,\n\nThe guidance office approved your request. Your account is now a permanent student account.\n\n"
+        'Congratulations! You are now a registered student in LagroInAction',
+        "Hi $name,\n\nCongratulations! You are now registered as a student in Lagro High School's LagroInAction. "
+        . "The guidance office approved your request, and your account is now a permanent student account.\n\n"
         . "Sign in on the Student tab with your username ({$request['username']}) or this email, "
         . "using the same password you use now.\n\nYour ID photo has been deleted from our system."
     );

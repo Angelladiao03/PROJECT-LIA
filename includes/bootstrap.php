@@ -14,6 +14,11 @@ require_once __DIR__ . '/passwords.php';
 require_once __DIR__ . '/accounts.php';
 require_once __DIR__ . '/mailer.php';
 require_once __DIR__ . '/audit.php';
+require_once __DIR__ . '/notify.php';
+require_once __DIR__ . '/attachments.php';
+
+// After each API request, maybe send the "unread messages" reminder emails (at most every 10 minutes).
+register_shutdown_function('maybe_run_background_jobs');
 
 // Any error we didn't catch becomes a clean JSON message instead of a PHP error page.
 set_exception_handler('json_server_error');

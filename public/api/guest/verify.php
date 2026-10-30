@@ -1,12 +1,10 @@
 <?php
 // Step 3 of creating a guest account: check the code, then create the account.
-// POST: email, code
+// POST: email, code   (the phone number comes from step 2, saved in the session)
 // Success -> { guestId, password, expiresAt }  (the password is shown ONCE)
 
 require_once __DIR__ . '/../../../includes/bootstrap.php';
 require_method('POST');
-
-const MAX_CODE_ATTEMPTS = 5;
 
 $email = strtolower(input('email'));
 $code = preg_replace('/\D/', '', input('code'));
@@ -16,25 +14,11 @@ $signup = $_SESSION['guestSignup'] ?? null;
 if (!$signup || $signup['email'] !== $email) {
     json_error('Start again: accept the Terms and enter your email.', 400, ['restart' => true]);
 }
-if (strlen($code) !== 6) json_error('Enter the 6-digit code from the email.');
+$row = check_email_code($email, $code, 'signup');
 
-$stmt = db()->prepare(
-    'SELECT * FROM email_codes WHERE LOWER(email) = ? AND used_at IS NULL
-     ORDER BY created_at DESC LIMIT 1'
-);
-$stmt->execute([$email]);
-$row = $stmt->fetch();
-
-if (!$row || strtotime($row['expires_at']) < time()) {
-    json_error('This code has expired. Send a new code.', 400, ['codeExpired' => true]);
-}
-if ($row['attempts'] >= MAX_CODE_ATTEMPTS) {
-    json_error('Too many wrong tries. Send a new code.', 429, ['codeExpired' => true]);
-}
-if (!password_verify($code, $row['code_hash'])) {
-    db()->prepare('UPDATE email_codes SET attempts = attempts + 1 WHERE code_id = ?')->execute([$row['code_id']]);
-    $left = MAX_CODE_ATTEMPTS - $row['attempts'] - 1;
-    json_error("That code isn't right. $left " . ($left === 1 ? 'try' : 'tries') . ' left.');
+// Check again: someone may have used this email or phone number in the last few minutes.
+if (active_account_by_email($email) || contact_in_use($signup['contactNumber'] ?? '')) {
+    json_error('This email or phone number already has an account. Sign in, or reset your password.', 409, ['hasAccount' => true]);
 }
 
 $guestId = new_guest_id();
@@ -49,23 +33,28 @@ $pdo->prepare("UPDATE users SET status = 'Expired' WHERE LOWER(email) = ? AND st
                AND account_type = 'guest' AND expires_at < NOW()")->execute([$email]);
 
 $stmt = $pdo->prepare(
-    "INSERT INTO users (account_type, guest_id, email, password_hash, terms_version, terms_accepted_at, expires_at)
-     VALUES ('guest', ?, ?, ?, ?, ?, NOW() + make_interval(days => ?))
+    "INSERT INTO users (account_type, guest_id, email, contact_number, password_hash, terms_version, terms_accepted_at, expires_at)
+     VALUES ('guest', ?, ?, ?, ?, ?, ?, NOW() + make_interval(days => ?))
      RETURNING *"
 );
-$stmt->execute([$guestId, $email, hash_password($password), $signup['termsVersion'], $signup['agreedAt'], GUEST_LIFETIME_DAYS]);
+$stmt->execute([$guestId, $email, $signup['contactNumber'], hash_password($password), $signup['termsVersion'], $signup['agreedAt'], GUEST_LIFETIME_DAYS]);
 $user = $stmt->fetch();
 $pdo->commit();
 
 sign_in_user((int) $user['user_id']); // also clears guestSignup
 
+// Welcome email with the guest ID (never the password)
 send_email(
     $email,
-    'Your LagroInAction guest account',
-    "Your guest account is ready.\n\nGuest ID: $guestId\n\n"
-    . "Your password is NOT included in this email for your safety. "
-    . "If you forget it, ask the guidance office for help.\n\n"
-    . "Your guest account lasts " . GUEST_LIFETIME_DAYS . " days. Reports you send are kept even after it expires."
+    'You are now registered in LagroInAction!',
+    "You are now Registered!\n\n"
+    . "Your LagroInAction guest account is ready.\n\nGuest ID: $guestId\n\n"
+    . "Sign in on the Guest tab with this guest ID and your password. "
+    . "For your safety, your password is NOT included in this email. "
+    . "If you forget it, use \"Forgot password?\" on the sign-in page.\n\n"
+    . "Your guest account lasts " . GUEST_LIFETIME_DAYS . " days. Reports you send are kept even after it expires. "
+    . "You can ask for a permanent student account on the My Account page.\n\n"
+    . "- Lagro High School Guidance Office"
 );
 
 json_success('Your guest account is ready.', [

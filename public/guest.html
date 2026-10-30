@@ -16,7 +16,7 @@
       </a>
       <div>
         <h1 class="auth-headline">Create a guest account</h1>
-        <p>A guest account only needs your email address. Guidance staff will not see your name on your reports. You can still check your reports and message the guidance office.</p>
+        <p>A guest account only needs your email address and phone number. Guidance staff will not see your name on your reports, only your phone number. You can still check your reports and message the guidance office.</p>
       </div>
       <p class="auth-foot">Guest accounts last 30 days. Your reports are kept even after that.</p>
     </section>
@@ -39,12 +39,17 @@
         <!-- Step 2: Email -->
         <section class="card" data-panel="2" hidden>
           <p class="step-label">Step 2 of 4</p>
-          <h2>Verify your email</h2>
-          <p>We'll send a 6-digit code to your email. We use your email only to verify your account and send important notices.</p>
+          <h2>Your email and phone number</h2>
+          <p>We'll send a 6-digit code to your email. We use your email to verify your account and send important notices. Your phone number lets the guidance office reach you if you need help.</p>
           <form id="emailForm" novalidate>
             <div class="field">
               <label for="email">Email address</label>
               <input class="input" id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="name@gmail.com" required>
+            </div>
+            <div class="field">
+              <label for="contactNumber">Phone number</label>
+              <input class="input" id="contactNumber" name="contactNumber" type="tel" autocomplete="tel" inputmode="numeric" maxlength="11" placeholder="09171234567" required>
+              <p class="hint">11 digits, starting with 09.</p>
             </div>
             <button class="btn btn-big btn-block" type="submit">Send code</button>
           </form>
@@ -101,6 +106,7 @@
           </div>
         </section>
       </div>
+      <span class="version-link" data-version>v</span>
     </main>
   </div>
 

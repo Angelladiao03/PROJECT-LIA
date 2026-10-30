@@ -23,6 +23,9 @@ function choose(kind) {
 tabs.student.addEventListener('click', () => choose('student'));
 tabs.guest.addEventListener('click', () => choose('guest'));
 try { if (localStorage.getItem('lia-signin-kind') === 'guest') choose('guest'); } catch (e) {}
+// After resetting a password, the reset page sends people here with their account filled in
+const params = new URLSearchParams(location.search);
+if (params.get('as')) { choose(params.get('as') === 'guest' ? 'guest' : 'student'); idInput.value = params.get('id') || ''; form.password.focus(); }
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();

@@ -15,6 +15,7 @@
           <h1>Resolved Report Records</h1>
           <p>Archive of officially closed and resolved incident reports for Guidance reference. Nothing is deleted: archived reports are only hidden from the main list.</p>
         </div>
+        <button class="btn btn-quiet" id="printBtn" type="button">Print / Save as PDF</button>
       </div>
 
       <section class="card table-card">
@@ -34,16 +35,30 @@
           </select>
         </div>
         <div class="table-scroll">
-          <table class="data-table">
-            <thead><tr><th>Case ID</th><th>Student Involved</th><th>Incident Category</th><th>Date Closed</th><th>Status</th><th>Actions</th></tr></thead>
+          <table class="data-table sortable">
+            <!-- Click a heading to sort. Click again to reverse. -->
+            <thead><tr>
+              <th aria-sort="none"><button type="button" class="sort-btn" data-sort="no">Case ID</button></th>
+              <th aria-sort="none"><button type="button" class="sort-btn" data-sort="student">Student Involved</button></th>
+              <th aria-sort="none"><button type="button" class="sort-btn" data-sort="category">Incident Category</button></th>
+              <th aria-sort="descending"><button type="button" class="sort-btn" data-sort="date">Date Closed</button></th>
+              <th aria-sort="none"><button type="button" class="sort-btn" data-sort="status">Status</button></th>
+              <th>Actions</th>
+            </tr></thead>
             <tbody id="rows"><tr><td colspan="6"><div class="skeleton" style="height:40px"></div></td></tr></tbody>
           </table>
+        </div>
+        <div class="table-foot">
+          <p class="small muted" id="showing" aria-live="polite"></p>
+          <nav class="pager" id="pager" aria-label="Pages"></nav>
         </div>
       </section>
     </div>
   </main>
   <script src="/assets/js/core.js"></script>
   <script src="/assets/js/pages/admin-case.js"></script>
+  <script src="/assets/js/pdf.js"></script>
+  <script src="/assets/js/print.js"></script>
   <script>
     (async () => {
       await LIA.start();
@@ -71,7 +86,23 @@
         $('fYear').innerHTML = '<option value="">All School Years</option>' + years.map((y) => `<option>${LIA.esc(y)}</option>`).join('');
       }
 
-      function draw() {
+      // ---------- Sorting (click a heading) and pages (10 records per page) ----------
+      const PER_PAGE = 10;
+      let page = 1;
+      let sortKey = 'date', sortDir = 'desc'; // newest closed first
+      const closedAt = (r) => LIA.toDate(r.updatedAt || r.submittedAt)?.getTime() || 0;
+      const studentName = (r) => (r.anonymous ? 'Anonymous' : r.reporter?.name || '');
+      const SORTERS = {
+        no: (r) => r.reportNo,
+        student: (r) => studentName(r).toLowerCase(),
+        category: (r) => r.category.toLowerCase(),
+        date: closedAt,
+        status: (r) => r.status + (r.archived ? ' archived' : ''),
+      };
+      // What each direction is called, for screen readers and the tooltip
+      const DIR_WORDS = { no: ['lowest first', 'highest first'], date: ['oldest first', 'newest first'] };
+
+      function filtered() {
         const q = $('search').value.trim().toLowerCase();
         const cat = $('fCategory').value, year = $('fYear').value, status = $('fStatus').value;
         const list = reports.filter(finished).filter((r) => {
@@ -79,10 +110,25 @@
           if ((status === 'Resolved' || status === 'Rejected') && (r.status !== status || r.archived)) return false;
           if (cat && baseCategory(r.category) !== cat) return false;
           if (year && schoolYear(r.updatedAt || r.submittedAt) !== year) return false;
-          if (q && !['#' + r.reportNo, String(r.reportNo), r.category, r.location, r.reporter?.name].some((v) => String(v || '').toLowerCase().includes(q))) return false;
+          if (q && !['#' + r.reportNo, String(r.reportNo), r.category, r.location, studentName(r)].some((v) => String(v || '').toLowerCase().includes(q))) return false;
           return true;
         });
-        rows.innerHTML = list.length ? list.map((r) => `
+        const get = SORTERS[sortKey];
+        list.sort((a, b) => {
+          const x = get(a), y = get(b);
+          const c = typeof x === 'number' ? x - y : String(x).localeCompare(String(y));
+          return sortDir === 'asc' ? c : -c;
+        });
+        return list;
+      }
+
+      function draw() {
+        const list = filtered();
+        const pages = Math.max(1, Math.ceil(list.length / PER_PAGE));
+        page = Math.min(page, pages);
+        const shown = list.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+        rows.innerHTML = shown.length ? shown.map((r) => `
           <tr>
             <td><b>#${r.reportNo}</b></td>
             <td>${CASE.reporterLabel(r)}</td>
@@ -95,14 +141,67 @@
               <button class="btn btn-ghost btn-sm" data-act="${r.archived ? 'unarchive' : 'archive'}" data-no="${r.reportNo}">${r.archived ? 'Restore' : 'Archive'}</button>
             </td>
           </tr>`).join('') : `<tr><td colspan="6" class="empty-cell">No records match these filters.</td></tr>`;
+
+        $('showing').textContent = list.length
+          ? `Showing ${(page - 1) * PER_PAGE + 1}–${(page - 1) * PER_PAGE + shown.length} of ${list.length} records`
+          : '';
+        // Page buttons: Previous, 1 2 3 ..., Next
+        let nums = '';
+        for (let i = 1; i <= pages; i++) {
+          if (pages > 7 && i !== 1 && i !== pages && Math.abs(i - page) > 1) { if (!nums.endsWith('…</span>')) nums += '<span class="pager-gap">…</span>'; continue; }
+          nums += `<button type="button" class="pager-btn" data-page="${i}" ${i === page ? 'aria-current="page"' : ''}>${i}</button>`;
+        }
+        $('pager').innerHTML = pages > 1
+          ? `<button type="button" class="pager-btn" data-page="${page - 1}" ${page === 1 ? 'disabled' : ''}>Previous</button>${nums}<button type="button" class="pager-btn" data-page="${page + 1}" ${page === pages ? 'disabled' : ''}>Next</button>`
+          : '';
+
+        // Show which column is sorted, and which way
+        document.querySelectorAll('.sort-btn').forEach((b) => {
+          const on = b.dataset.sort === sortKey;
+          b.closest('th').setAttribute('aria-sort', on ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none');
+          const words = DIR_WORDS[b.dataset.sort] || ['A to Z', 'Z to A'];
+          b.title = on ? `Sorted ${sortDir === 'asc' ? words[0] : words[1]}. Click to reverse.` : `Sort by ${b.textContent}`;
+        });
       }
+
+      document.querySelector('thead').addEventListener('click', (e) => {
+        const b = e.target.closest('.sort-btn');
+        if (!b) return;
+        if (sortKey === b.dataset.sort) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        else { sortKey = b.dataset.sort; sortDir = sortKey === 'date' ? 'desc' : 'asc'; }
+        page = 1; draw();
+      });
+      $('pager').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-page]');
+        if (!b || b.disabled) return;
+        page = Number(b.dataset.page); draw();
+        document.querySelector('.table-card').scrollIntoView({ block: 'start', behavior: 'auto' });
+      });
+
+      // ---------- Print / Save as PDF (this page, or every matching record) ----------
+      $('printBtn').addEventListener('click', () => {
+        const list = filtered();
+        const toRow = (r) => [`#${r.reportNo}`, r.anonymous ? `Anonymous${r.anonymousContact ? ' (' + r.anonymousContact + ')' : ''}` : `${r.reporter?.name || ''}${r.reporter?.gradeSection ? ' · ' + r.reporter.gradeSection : ''}`,
+          r.category, r.location, LIA.fmtDateTime(r.updatedAt || r.submittedAt), r.status + (r.archived ? ' (archived)' : ''), r.status === 'Rejected' ? (r.rejectReason || '') : ''];
+        const thisPage = list.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+        PRINT.choose({
+          title: 'Resolved Report Records',
+          columns: [{ label: 'Case ID', width: 50 }, { label: 'Student Involved', width: 140 }, { label: 'Incident Category', width: 105 },
+            { label: 'Location', width: 100 }, { label: 'Date Closed', width: 120 }, { label: 'Status', width: 80 }, { label: 'Reason (if not accepted)' }],
+          sets: [
+            { label: `This page only (${thisPage.length} ${thisPage.length === 1 ? 'record' : 'records'})`, rows: thisPage.map(toRow) },
+            { label: `All records matching the filters (${list.length})`, rows: list.map(toRow) },
+          ],
+          filename: 'resolved-report-records',
+        });
+      });
 
       async function load() {
         try { ({ reports } = await LIA.api('admin/reports.php')); fillFilters(); draw(); }
         catch (e) { rows.innerHTML = `<tr><td colspan="6" class="empty-cell">${LIA.esc(e.message)}</td></tr>`; }
       }
 
-      ['search', 'fCategory', 'fYear', 'fStatus'].forEach((id) => $(id).addEventListener(id === 'search' ? 'input' : 'change', draw));
+      ['search', 'fCategory', 'fYear', 'fStatus'].forEach((id) => $(id).addEventListener(id === 'search' ? 'input' : 'change', () => { page = 1; draw(); }));
       rows.addEventListener('click', async (e) => {
         const view = e.target.closest('[data-view]');
         if (view) return CASE.open(reports.find((r) => r.reportNo === Number(view.dataset.view)), load);

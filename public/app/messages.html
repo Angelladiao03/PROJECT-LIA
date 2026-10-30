@@ -26,6 +26,7 @@
     </div>
   </main>
   <script src="/assets/js/core.js"></script>
+  <script src="/assets/js/chat-attach.js"></script>
   <script>
     (async () => {
       const me = await LIA.start();
@@ -34,7 +35,9 @@
       if (me.account.accountType === 'guest') {
         document.getElementById('chatSub').textContent = 'Staff see you only as Guest ' + me.account.guestId + '.';
       }
-      form.querySelector('button').insertAdjacentHTML('afterbegin', LIA.icon('send'));
+      form.querySelector('button[type=submit]').insertAdjacentHTML('afterbegin', LIA.icon('send'));
+      // "+" next to the message box: Attach File (e.g. send back a filled-up form)
+      const attach = ATTACH.setup({ form });
       let lastCount = -1;
 
       async function load() {
@@ -43,7 +46,7 @@
           if (messages.length === lastCount) return;
           lastCount = messages.length;
           log.innerHTML = messages.length ? messages.map((m) => `
-            <div class="bubble ${m.from === 'me' ? 'mine' : 'theirs'}">${LIA.esc(m.text)}</div>
+            <div class="bubble ${m.from === 'me' ? 'mine' : 'theirs'}">${m.case ? `<a class="case-card" href="/app/account.html#report-${m.case.reportNo}">${LIA.icon('folder')}<span><b>Your report #${m.case.reportNo}</b>${LIA.esc(m.case.category)} · ${LIA.esc(LIA.STATUS[m.case.status]?.student || m.case.status)}</span></a>` : ''}${ATTACH.fileCard(m.file)}${LIA.esc(m.text)}</div>
             <div class="bubble-meta ${m.from === 'me' ? 'mine' : ''}">${m.from === 'me' ? 'You' : LIA.esc(m.staffName || 'Guidance office')} · ${LIA.esc(LIA.fmtDateTime(m.sentAt))}</div>
           `).join('') : `<div class="empty" style="margin:auto"><strong>Start a conversation</strong><span>Ask a question or tell the guidance office what's going on. A staff member will reply here.</span></div>`;
           log.scrollTop = log.scrollHeight;
@@ -56,10 +59,14 @@
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const text = form.text.value.trim();
-        if (!text) return;
+        if (!text && !attach.file) return;
+        let body = { text };
+        if (attach.file) { body = new FormData(); body.append('text', text); body.append('file', attach.file); }
         try {
-          await LIA.busy(form.querySelector('button'), () => LIA.api('messages/thread.php', { body: { text } }));
+          const res = await LIA.busy(form.querySelector('button[type=submit]'), () => LIA.api('messages/thread.php', { body }));
+          if (attach.file) LIA.toast(res.message);
           form.text.value = '';
+          attach.clear();
           await load();
         } catch (err) { LIA.toast(err.message, 'error'); }
       });

@@ -1,49 +1,31 @@
 <?php
 // Step 2 of creating a guest account: email a 6-digit code.
-// POST: email, agree ("yes" - the person read and accepted the Terms)
+// POST: email, contactNumber, agree ("yes" - the person read and accepted the Terms)
 
 require_once __DIR__ . '/../../../includes/bootstrap.php';
 require_method('POST');
 
-const CODE_VALID_MINUTES = 10;
-
 $email = strtolower(input('email'));
+$contact = input('contactNumber');
 if (input('agree') !== 'yes') json_error('Read and accept the Terms first.');
 if ($error = email_error($email)) json_error($error);
+if ($error = contact_number_error($contact)) json_error($error);
 
-// Is this email already used by an active account?
-$stmt = db()->prepare("SELECT * FROM users WHERE LOWER(email) = ? AND status = 'Active'");
-$stmt->execute([$email]);
-if ($existing = $stmt->fetch()) {
-    $existing = apply_guest_expiry($existing); // an expired guest frees up the email
-    if ($existing['status'] === 'Active') {
-        json_error('This email already has an account. Sign in instead, or use a different email.', 409);
-    }
+// One account per email and per phone number. Point them to sign in or reset their password.
+if (active_account_by_email($email)) {
+    json_error('This email already has an account. Sign in, or reset your password if you forgot it.', 409, ['hasAccount' => true]);
+}
+if (contact_in_use($contact)) {
+    json_error('This phone number already has an account. Sign in, or reset your password if you forgot it.', 409, ['hasAccount' => true]);
 }
 
-// Limits: one code per minute per email, 10 codes per hour from one device.
-$stmt = db()->prepare(
-    "SELECT
-        COUNT(*) FILTER (WHERE LOWER(email) = ? AND created_at > NOW() - INTERVAL '60 seconds') AS recent_for_email,
-        COUNT(*) FILTER (WHERE ip_address = ? AND created_at > NOW() - INTERVAL '1 hour') AS recent_for_ip
-     FROM email_codes"
-);
-$stmt->execute([$email, client_ip()]);
-$limits = $stmt->fetch();
-if ($limits['recent_for_email'] > 0) json_error('A code was just sent. Wait a minute before asking for a new one.', 429);
-if ($limits['recent_for_ip'] >= 10) json_error('Too many codes requested. Try again in an hour.', 429);
+$code = issue_email_code($email, 'signup');
 
-$code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-db()->prepare(
-    'INSERT INTO email_codes (email, code_hash, ip_address, expires_at)
-     VALUES (?, ?, ?, NOW() + make_interval(mins => ?))'
-)->execute([$email, password_hash($code, PASSWORD_DEFAULT), client_ip(), CODE_VALID_MINUTES]);
-
-// Remember (on the server) that this person accepted the Terms for this email.
+// Remember (on the server) the details and that this person accepted the Terms.
 start_session();
 $_SESSION['guestSignup'] = [
     'email' => $email,
+    'contactNumber' => $contact,
     'termsVersion' => TERMS_VERSION,
     'agreedAt' => date('c'),
 ];
