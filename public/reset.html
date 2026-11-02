@@ -16,36 +16,44 @@
       </a>
       <div>
         <h1 class="auth-headline">Forgot your password?</h1>
-        <p>We'll send a 6-digit code to the email address of your account. Enter the code here and choose a new password.</p>
+        <p>Enter your username (or guest ID). We'll email a link to the address of your account. Open it to choose a new password.</p>
       </div>
       <p class="auth-foot">Works for guest and student accounts.</p>
     </section>
 
     <main class="auth-main">
       <div class="auth-card">
-        <!-- Step 1: email -->
+        <!-- Step 1: username or guest ID -->
         <section class="card" data-step="1">
           <img class="auth-seal" src="/assets/img/lagro-seal.png" alt="Lagro High School seal">
           <h2 class="auth-title">Reset password</h2>
-          <form id="emailForm" novalidate>
+          <form id="askForm" novalidate>
             <div class="field">
-              <label for="email">Email of your account</label>
-              <input class="input" id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="name@gmail.com" required>
+              <label for="identifier">Username or guest ID</label>
+              <input class="input" id="identifier" name="identifier" autocomplete="username" autocapitalize="none" required>
+              <p class="hint">Students: your username. Guests: your guest ID, like <span style="white-space:nowrap">LIA-7K3P9Q</span>.</p>
             </div>
-            <button class="btn btn-big btn-block" type="submit">Send code</button>
+            <button class="btn btn-big btn-block" type="submit">Send reset link</button>
           </form>
         </section>
 
-        <!-- Step 2: code + new password -->
+        <!-- Step 2: link sent -->
         <section class="card" data-step="2" hidden>
+          <div class="congrats">
+            <img class="seal-big" src="/assets/img/lagro-seal.png" alt="">
+            <h2>Check your email</h2>
+            <p>We sent a password reset link to<br><b id="sentTo"></b></p>
+            <p class="small muted">Open the link within 30 minutes. Check your spam folder too. Not your email? Ask the guidance office for help.</p>
+          </div>
+          <div class="form-note warn small" id="devLink" hidden></div>
+          <p style="text-align:center;margin:12px 0 0"><button class="btn btn-ghost" id="again" type="button">Send another link</button></p>
+        </section>
+
+        <!-- Step 3: new password (opened from the link in the email) -->
+        <section class="card" data-step="3" hidden>
           <h2 class="auth-title">Choose a new password</h2>
-          <p class="small" id="sentTo"></p>
-          <div class="form-note warn small" id="devCode" hidden></div>
-          <form id="resetForm" novalidate style="margin-top:14px">
-            <div class="field">
-              <label for="code">6-digit code</label>
-              <input class="input code-input" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
-            </div>
+          <p class="small" id="forWho"></p>
+          <form id="resetForm" novalidate>
             <div class="field">
               <label for="newPassword">New password</label>
               <div class="pw-wrap">
@@ -60,11 +68,10 @@
             </div>
             <button class="btn btn-big btn-block" type="submit">Save new password</button>
           </form>
-          <p style="text-align:center;margin:12px 0 0"><button class="btn btn-ghost" id="again" type="button">Use a different email</button></p>
         </section>
 
-        <!-- Step 3: done -->
-        <section class="card" data-step="3" hidden>
+        <!-- Step 4: done -->
+        <section class="card" data-step="4" hidden>
           <div class="congrats">
             <img class="seal-big" src="/assets/img/lagro-seal.png" alt="">
             <h2>Password changed</h2>

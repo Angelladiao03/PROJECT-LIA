@@ -137,7 +137,7 @@
             <td>${LIA.chip(r.status, 'staff')} ${r.archived ? '<span class="chip rejected">Archived</span>' : ''}</td>
             <td class="actions">
               <button class="btn btn-quiet btn-sm" data-view="${r.reportNo}">View Details</button>
-              ${r.canMessage ? `<a class="btn btn-ghost btn-sm" href="/admin/messages.html?userId=${r.reporter.userId}">Message</a>` : ''}
+              ${r.canMessage ? `<a class="btn btn-ghost btn-sm" href="/admin/messages.html?case=${r.reportNo}">Message</a>` : ''}
               <button class="btn btn-ghost btn-sm" data-act="${r.archived ? 'unarchive' : 'archive'}" data-no="${r.reportNo}">${r.archived ? 'Restore' : 'Archive'}</button>
             </td>
           </tr>`).join('') : `<tr><td colspan="6" class="empty-cell">No records match these filters.</td></tr>`;
@@ -181,7 +181,7 @@
       // ---------- Print / Save as PDF (this page, or every matching record) ----------
       $('printBtn').addEventListener('click', () => {
         const list = filtered();
-        const toRow = (r) => [`#${r.reportNo}`, r.anonymous ? `Anonymous${r.anonymousContact ? ' (' + r.anonymousContact + ')' : ''}` : `${r.reporter?.name || ''}${r.reporter?.gradeSection ? ' · ' + r.reporter.gradeSection : ''}`,
+        const toRow = (r) => [`#${r.reportNo}`, (r.anonymous ? 'Anonymous' : r.reporter?.name || '') + (r.gradeLevel ? ' · Grade ' + r.gradeLevel : ''),
           r.category, r.location, LIA.fmtDateTime(r.updatedAt || r.submittedAt), r.status + (r.archived ? ' (archived)' : ''), r.status === 'Rejected' ? (r.rejectReason || '') : ''];
         const thisPage = list.slice((page - 1) * PER_PAGE, page * PER_PAGE);
         PRINT.choose({

@@ -1,98 +1,144 @@
 <?php
-// Staff: conversations with students and guests.
+// Staff: chats with students and guests, grouped by case.
 //
-// GET                -> list of conversations (newest message first)
-// GET ?userId=12     -> one conversation + who it's with
-// POST userId, text  -> send a message to that person
-// POST userId, reportNo, text(optional) -> send a report case card for follow-up.
-// POST userId, file, text(optional)     -> send a file (PDF, Word, JPG, PNG; up to 5 MB), e.g. a form to fill up
-//      Only reports with the student's name shown can be attached (never anonymous ones).
+// GET                 -> list of chats (newest message first)
+// GET ?case=12        -> the chat about report #12 (works for anonymous reports too: the reporter
+//                        gets the messages, staff never learn who they are)
+// GET ?user=5         -> the general chat with account 5 (questions not about one report)
+// POST case=12 | user=5, text, file (optional), reportNo (optional, general chat only)
+//                     -> send a message. A file can be a form for the student to fill up (PDF, Word, JPG, PNG; 5 MB).
+//                        reportNo attaches a case card (only reports with the student's name shown).
+// POST action=edit   id, text   -> edit one of your own messages
+// POST action=delete id         -> delete one of your own messages (hidden, never erased)
+//
+// Counselor: every chat. Advocate: chats about reports of their grade level, and general chats
+// with students of their grade level. (Guests have no grade level: their general chats go to the counselor.)
 
 require_once __DIR__ . '/../../../includes/bootstrap.php';
 require_method('GET', 'POST');
-$admin = require_admin();
+$admin = require_admin('counselor', 'advocate');
+$myId = (int) $admin['admin_id'];
 
-function person(int $userId): array
+// Works out which chat a request is about, checks this staff member may open it, and
+// returns ['userId', 'caseNo', 'info' => what the page shows at the top of the chat].
+function open_thread(array $admin, ?int $caseNo, ?int $userId): array
 {
+    if ($caseNo !== null) {
+        $stmt = db()->prepare(
+            'SELECT r.report_no, r.user_id, r.is_anonymous, r.category, r.report_status, r.grade_level,
+                    u.account_type, u.guest_id, u.full_name, u.status AS account_status
+             FROM reports r LEFT JOIN users u ON u.user_id = r.user_id WHERE r.report_no = ?'
+        );
+        $stmt->execute([$caseNo]);
+        $r = $stmt->fetch();
+        if (!$r || !staff_sees_grade($admin, $r['grade_level'])) json_error('That report was not found.', 404);
+        if ($r['user_id'] === null) json_error('This old report is not linked to an account, so it has no chat.', 409);
+        $anonymous = (bool) $r['is_anonymous'];
+        return ['userId' => (int) $r['user_id'], 'caseNo' => $caseNo, 'info' => [
+            'key' => "case-$caseNo",
+            'kind' => 'case',
+            'reportNo' => $caseNo,
+            'anonymous' => $anonymous,
+            // never send the account of an anonymous reporter to the browser
+            'userId' => $anonymous ? null : (int) $r['user_id'],
+            'name' => $anonymous ? 'Anonymous reporter' : display_name($r),
+            'accountType' => $anonymous ? null : $r['account_type'],
+            'category' => $r['category'],
+            'status' => $r['report_status'],
+            'gradeLevel' => $r['grade_level'] !== null ? (int) $r['grade_level'] : null,
+            'expired' => $r['account_status'] === 'Expired',
+        ]];
+    }
+    if ($userId === null) json_error('Choose a chat first.');
     $user = find_user($userId);
-    if ($user === null) json_error('That account was not found.', 404);
-    return [
-        'userId' => (int) $user['user_id'],
+    if (!$user || !staff_sees_grade($admin, $user['grade_level'])) json_error('That chat is handled by another staff member.', 404);
+    return ['userId' => $userId, 'caseNo' => null, 'info' => [
+        'key' => "user-$userId",
+        'kind' => 'general',
+        'reportNo' => null,
+        'anonymous' => false,
+        'userId' => $userId,
         'name' => display_name($user),
         'accountType' => $user['account_type'],
-        'status' => $user['status'],
-        // Guests stay anonymous: staff only see their guest ID.
-        'gradeSection' => $user['account_type'] === 'student' ? $user['grade_section'] : null,
-        'adviser' => $user['account_type'] === 'student' ? $user['adviser_name'] : null,
-        'contactNumber' => $user['contact_number'], // guests too, so staff can reach them
-        'email' => $user['account_type'] === 'student' ? $user['email'] : null,
-    ];
+        'gradeLevel' => $user['grade_level'] !== null ? (int) $user['grade_level'] : null,
+        'expired' => $user['status'] === 'Expired',
+    ]];
 }
 
+$caseParam = $_SERVER['REQUEST_METHOD'] === 'POST' ? input('case') : (string) ($_GET['case'] ?? '');
+$userParam = $_SERVER['REQUEST_METHOD'] === 'POST' ? input('user') : (string) ($_GET['user'] ?? '');
+
+// ----- POST -----
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $userId = positive_int(input('userId'));
-    $text = input('text');
+    $action = input('action');
+    if ($action === 'edit' || $action === 'delete') edit_or_delete_message($action, ['staff' => $myId]);
+
+    $t = open_thread($admin, $caseParam === '' ? null : positive_int($caseParam), $userParam === '' ? null : positive_int($userParam));
     $reportNo = input('reportNo') === '' ? null : positive_int(input('reportNo'));
-    if ($userId === null) json_error('Choose a conversation first.');
     if (input('reportNo') !== '' && $reportNo === null) json_error('Choose a report to attach.');
-    person($userId); // checks the account exists
-
     if ($reportNo !== null) {
-        // The case must belong to this student and must NOT be anonymous
-        $stmt = db()->prepare('SELECT report_no FROM reports WHERE report_no = ? AND user_id = ? AND is_anonymous = FALSE');
-        $stmt->execute([$reportNo, $userId]);
-        if (!$stmt->fetch()) json_error('That report can\'t be attached to this conversation.', 403);
-        if ($text === '') $text = "Follow-up on your report #$reportNo.";
+        // Case cards only in the general chat, and only reports that show the student's name
+        // (attaching an anonymous report would reveal who sent it).
+        $stmt = db()->prepare('SELECT grade_level FROM reports WHERE report_no = ? AND user_id = ? AND is_anonymous = FALSE');
+        $stmt->execute([$reportNo, $t['userId']]);
+        $card = $stmt->fetch();
+        if ($t['caseNo'] !== null || !$card || !staff_sees_grade($admin, $card['grade_level'])) {
+            json_error('That report can\'t be attached to this chat.', 403);
+        }
     }
-    $file = read_attachment(); // optional: a form or other file (multipart field "file")
-    if ($text === '' && !$file) json_error('Type a message first.');
-    if (too_long($text, 2000)) json_error('Keep messages under 2,000 characters.');
+    $file = read_attachment(); // optional (multipart field "file")
+    $text = message_text_input(!$file && $reportNo === null);
+    if ($text === '' && $reportNo !== null) $text = "Follow-up on your report #$reportNo.";
 
-    save_message($userId, (int) $admin['admin_id'], 'Admin', $text, $file, $reportNo);
+    save_message($t['userId'], $myId, 'Admin', $text, $file, $t['caseNo'], $reportNo);
     json_success($reportNo ? "Report #$reportNo sent." : ($file ? 'File sent.' : 'Sent.'));
 }
 
-$userId = positive_int((string) ($_GET['userId'] ?? ''));
-
-if ($userId !== null) {
-    $stmt = db()->prepare(
-        'SELECT m.message_id, m.sender_type, m.message_text, m.sent_datetime, m.report_no, m.file_name, m.file_size, m.file_type, a.admin_fullname,
-                r.category, r.report_status, r.report_datetime
-         FROM messages m LEFT JOIN admin_profile a ON a.admin_id = m.admin_id
-         LEFT JOIN reports r ON r.report_no = m.report_no
-         WHERE m.user_id = ? ORDER BY m.sent_datetime ASC, m.message_id ASC'
-    );
-    $stmt->execute([$userId]);
+// ----- GET one chat -----
+if ($caseParam !== '' || $userParam !== '') {
+    $t = open_thread($admin, $caseParam === '' ? null : positive_int($caseParam), $userParam === '' ? null : positive_int($userParam));
     send_json([
         'success' => true,
-        'person' => person($userId),
-        'messages' => array_map(fn ($m) => [
-            'from' => $m['sender_type'] === 'Admin' ? 'guidance' : 'them',
-            'text' => $m['message_text'],
-            'sentAt' => $m['sent_datetime'],
-            'staffName' => $m['admin_fullname'],
-            'case' => message_case($m),
-            'file' => message_file($m),
-        ], $stmt->fetchAll()),
+        'thread' => $t['info'],
+        'messages' => array_map(fn ($m) => message_out($m, 'staff', $myId), thread_messages($t['userId'], $t['caseNo'])),
     ]);
 }
 
-$rows = db()->query(
-    'SELECT u.user_id, u.account_type, u.guest_id, u.full_name, last.message_text, last.sent_datetime, last.sender_type
-     FROM users u
-     JOIN LATERAL (
-         SELECT COALESCE(NULLIF(message_text, \'\'), \'File: \' || file_name) AS message_text, sent_datetime, sender_type FROM messages
-         WHERE messages.user_id = u.user_id
-         ORDER BY sent_datetime DESC, message_id DESC LIMIT 1
-     ) last ON TRUE
-     ORDER BY last.sent_datetime DESC'
-)->fetchAll();
+// ----- GET the list of chats -----
+// The newest message of each chat (a chat = one account + one case, or the account's general chat)
+$grade = staff_grade($admin);
+$stmt = db()->prepare(
+    "SELECT last.*, u.account_type, u.guest_id, u.full_name, u.grade_level AS user_grade,
+            r.is_anonymous, r.grade_level AS case_grade, r.category
+     FROM (
+         SELECT DISTINCT ON (m.user_id, m.case_no) m.user_id, m.case_no, m.message_text, m.file_name,
+                m.deleted_at, m.sent_datetime, m.sender_type
+         FROM messages m
+         ORDER BY m.user_id, m.case_no, m.sent_datetime DESC, m.message_id DESC
+     ) last
+     JOIN users u ON u.user_id = last.user_id
+     LEFT JOIN reports r ON r.report_no = last.case_no
+     WHERE CAST(? AS INT) IS NULL
+        OR (last.case_no IS NOT NULL AND r.grade_level = CAST(? AS INT))
+        OR (last.case_no IS NULL AND u.grade_level = CAST(? AS INT))
+     ORDER BY last.sent_datetime DESC"
+);
+$stmt->execute([$grade, $grade, $grade]);
 
-send_json(['success' => true, 'conversations' => array_map(fn ($r) => [
-    'userId' => (int) $r['user_id'],
-    'name' => display_name($r),
-    'accountType' => $r['account_type'],
-    'lastText' => $r['message_text'],
-    'lastAt' => $r['sent_datetime'],
-    'waitingForReply' => $r['sender_type'] === 'Student',
-], $rows)]);
+send_json(['success' => true, 'threads' => array_map(function ($r) {
+    $isCase = $r['case_no'] !== null;
+    $anonymous = $isCase && $r['is_anonymous'];
+    return [
+        'key' => $isCase ? 'case-' . $r['case_no'] : 'user-' . $r['user_id'],
+        'kind' => $isCase ? 'case' : 'general',
+        'reportNo' => $isCase ? (int) $r['case_no'] : null,
+        'userId' => $anonymous ? null : (int) $r['user_id'],
+        'anonymous' => $anonymous,
+        'name' => $anonymous ? 'Anonymous reporter' : display_name($r),
+        'accountType' => $anonymous ? null : $r['account_type'],
+        'category' => $isCase ? $r['category'] : null,
+        'lastText' => preview_text($r),
+        'lastAt' => $r['sent_datetime'],
+        'waitingForReply' => $r['sender_type'] === 'Student' && $r['deleted_at'] === null,
+    ];
+}, $stmt->fetchAll())]);

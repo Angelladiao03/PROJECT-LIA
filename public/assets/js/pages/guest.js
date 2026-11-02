@@ -109,7 +109,7 @@ emailForm.addEventListener('submit', async (e) => {
     // Email or phone already used: offer the way back in
     if (err.data?.hasAccount) {
       emailForm.querySelector('.form-error span').insertAdjacentHTML('beforeend',
-        ` <a href="/index.html">Sign in</a> · <a href="/reset.html?email=${encodeURIComponent(email)}">Reset password</a>`);
+        ` <a href="/index.html">Sign in</a> · <a href="/reset.html">Reset password</a>`);
     }
   }
 });

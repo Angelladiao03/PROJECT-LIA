@@ -44,10 +44,23 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
   staff can attach a report case to a message (`messages.report_no`); emails for registration, approval,
   report status changes and 1-hour unread reminders (`includes/notify.php`, piggybacks on requests;
   optional `/api/system/reminders.php?key=CRON_KEY`). Staff top bar shows "LagroInAction Administrator Access".
-- Files in messages: "+" at the left of the message box (`assets/js/chat-attach.js`) opens Attach File
+- Files in messages: "+" at the left of the message box (`assets/js/chat.js`) opens Attach File
   (staff + students) and Attach Case (staff). Files live in `messages.file_*` (bytea, 5 MB, PDF/Word/JPG/PNG,
   signature-checked in `includes/attachments.php`) and download via `api/messages/file.php?id=`.
   Purpose: the guidance office sends forms for reporters to fill up; students send them back.
+- alpha.4 (Nov 2 2026): staff roles (`admin_profile.staff_role` counselor/advocate/principal/security +
+  `grade_level`; `require_admin('counselor','advocate')`, `staff_grade()`, `staff_sees_grade()` in
+  includes/accounts.php; core.js `ADMIN_NAV[].roles` hides pages and redirects). Reports have `grade_level`
+  (student account's grade, or chosen by guests on the form). Grade + section dropdowns from
+  `public/assets/school-sections.json` (placeholders; PHP validates against the same file). Messages are
+  grouped by case (`messages.case_no`, NULL = general chat; anonymous case chats never send the account to
+  staff); sender can edit/delete (soft delete `deleted_at`, history in `message_edits`) via the ⋮ menu in
+  `assets/js/chat.js`. Student details need the staff password again (`api/admin/student.php`, 10 min,
+  audit `student.view_info`). Forgot password = username/guest ID → masked email → one-time link
+  (`password_resets`, `api/auth/reset_send.php` / `reset_confirm.php`, optional `APP_URL`). Staff My Account
+  (`admin/account.html`, `api/admin/account.php`). Every staff role has Home (`admin/home.html`) and My Account. Dashboard uses `api/admin/stats.php` (totals only), menu
+  counters use `api/admin/counts.php`. Sign-in fields use `LIA.noAutofill()`. Students have no guest ID
+  shown. Smaller corner radius. `reset_test_data.sql` erases everything and adds test accounts.
 - Purpose note from the team: LIA is for tracking reports, updates and case management. It does not
   solve cases or replace the guidance sessions themselves.
 - Settings via `setting()` in `includes/config.php`: env vars on Render (`DATABASE_URL`,
@@ -96,9 +109,9 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
 2. DONE: audit log (`audit_log` table, `audit()` in includes/audit.php, called by every staff action;
    shown as Case History), CSP/HSTS headers, victim/witness field, location dropdown + hotspot chart, Rejected with reason, archive
    instead of delete, SOS sound + red strip for staff, monthly bars, "What counts as bullying" guide.
-3. Still to do: severity + assigned staff (step 1 above), staff roles
-   (counselor / advocate by grade level / security / principal), evidence/screenshot upload,
-   printable invitation letters, Terms approval by adviser + Guidance Office.
+3. Still to do: severity + assigned staff (step 1 above), security role, real section list,
+   evidence/screenshot upload, printable invitation letters, Terms approval by adviser + Guidance Office.
+   (Staff roles by grade level: DONE in alpha.4.)
 4. Out of scope: separate mobile app, AI features
 
 ## Evaluation

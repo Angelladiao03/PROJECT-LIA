@@ -1,12 +1,12 @@
 <?php
-// Staff: SOS alerts.
+// Staff: SOS alerts. Every guidance counselor and advocate sees every SOS (emergencies aren't split by grade).
 // GET -> every SOS alert (newest first)
 // POST action=dispatch sosNo   Active -> Dispatched (someone is on the way)
 // POST action=respond  sosNo   -> Responded (the situation was handled)
 
 require_once __DIR__ . '/../../../includes/bootstrap.php';
 require_method('GET', 'POST');
-$admin = require_admin();
+$admin = require_admin('counselor', 'advocate');
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $rows = db()->query(

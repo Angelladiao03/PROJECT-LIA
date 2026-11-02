@@ -1,16 +1,65 @@
 // Staff: the "REPORT CASE NO. #" details window (like the prototype), shared by
 // Manage Reports, Report Records and Messages. It also holds the case actions:
 // accept, start investigation, resolve, reject (with a reason), archive, restore.
+// The student's personal details only show after the staff member types their password (showStudent).
 
 const CASE = (() => {
-  const reporterType = (r) => r.anonymous
-    ? (r.reporter === null ? 'Anonymous' : 'Anonymous')
-    : (r.reporter?.accountType === 'student' ? 'Identified student' : 'Guest');
+  const reporterType = (r) => (r.anonymous ? 'Anonymous' : r.reporter?.accountType === 'student' ? 'Identified student' : 'Guest');
+  const gradeText = (r) => (r.gradeLevel ? 'Grade ' + r.gradeLevel : 'Grade not given');
 
   function reporterLabel(r) {
-    if (r.anonymous) return '<span class="muted">Anonymous</span>' + (r.anonymousContact ? `<br><a class="small" href="tel:${LIA.esc(r.anonymousContact)}">${LIA.esc(r.anonymousContact)}</a>` : '');
-    const p = r.reporter || {};
-    return `<b>${LIA.esc(p.name)}</b>${p.gradeSection ? `<br><span class="small muted">${LIA.esc(p.gradeSection)}</span>` : ''}`;
+    const who = r.anonymous ? '<span class="muted">Anonymous</span>' : `<b>${LIA.esc(r.reporter?.name)}</b>`;
+    return `${who}<br><span class="small muted">${gradeText(r)}</span>`;
+  }
+
+  // ---------- Student details, behind the staff member's password ----------
+  // who = { report: N } (the reporter of report N) or { user: N } (a general chat)
+  // Returns the details, or null if the staff member cancelled.
+  async function studentDetails(who) {
+    const url = 'admin/student.php?' + (who.report ? 'report=' + who.report : 'user=' + who.user);
+    try { return (await LIA.api(url)).student; } catch (err) {
+      if (!err.data?.locked) { LIA.toast(err.message, 'error'); return null; }
+    }
+    const unlocked = await new Promise((resolve) => {
+      let done = false;
+      LIA.openModal({
+        title: 'Enter your password',
+        body: `<form id="unlockForm" novalidate>
+            <p>Student details are private. Type your own password to see them. They stay open for 10 minutes, and each view is recorded under your name.</p>
+            <div class="field"><label for="unlockPw">Your password</label>
+              <div class="pw-wrap"><input class="input" id="unlockPw" type="password" autocomplete="current-password"><button class="icon-btn pw-toggle" data-pw-toggle></button></div></div>
+          </form>`,
+        foot: '<button class="btn btn-quiet" data-close>Cancel</button><button class="btn" form="unlockForm" type="submit">Show details</button>',
+        onOpen: (el, close) => {
+          LIA.wirePasswordToggles(el);
+          el.querySelector('#unlockForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+              await LIA.busy(el.querySelector('[form=unlockForm]'), () => LIA.api('admin/student.php', { body: { action: 'unlock', password: el.querySelector('#unlockPw').value } }));
+              done = true; close(); resolve(true);
+            } catch (err) { LIA.showFormError(e.target, err.message); }
+          });
+          new MutationObserver((_, obs) => { if (!el.isConnected) { obs.disconnect(); if (!done) resolve(false); } })
+            .observe(document.body, { childList: true });
+        },
+      });
+    });
+    if (!unlocked) return null;
+    try { return (await LIA.api(url)).student; } catch (err) { LIA.toast(err.message, 'error'); return null; }
+  }
+
+  const row = (k, v) => `<dt>${LIA.esc(k)}:</dt><dd>${v ? LIA.esc(v) : '<span class="muted">-</span>'}</dd>`;
+  function studentFacts(s) {
+    if (s.anonymous) return `<p class="form-note" style="margin:0 0 10px">The reporter chose to stay anonymous (or used a guest account). Their identity stays hidden. Only their contact number is shown.</p>
+      <dl class="case-facts">${row('Contact Number', s.contactNumber)}</dl>`;
+    return `<dl class="case-facts">${row('Full Name', s.name)}${row('Account', s.accountType === 'student' ? 'Student' : 'Guest (anonymous)')}${row('Grade & Section', s.gradeSection)}
+      ${row('Username', s.username)}${row('Adviser', s.adviser)}${row('Email', s.email)}${row('Contact Number', s.contactNumber)}</dl>
+      ${s.expired ? '<p class="small muted" style="margin:8px 0 0">This guest account has expired.</p>' : ''}`;
+  }
+  // "View Info" in Messages: the details in their own window
+  async function showStudent(who) {
+    const s = await studentDetails(who);
+    if (s) LIA.openModal({ title: s.anonymous ? 'Reporter contact' : 'Student Information', body: studentFacts(s), foot: '<button class="btn btn-gray" data-close>Close</button>' });
   }
 
   // Which buttons each status gets
@@ -70,7 +119,7 @@ const CASE = (() => {
   // Opens the details window. onChange() runs after an action so the page can reload.
   function open(r, onChange) {
     const p = r.reporter || {};
-    const row = (k, v) => `<dt>${LIA.esc(k)}:</dt><dd>${v ? LIA.esc(v) : '<span class="muted">-</span>'}</dd>`;
+    let shown = null; // the student details, once the password was typed
     const buttons = actionsFor(r).map(([a, label, cls]) => `<button class="btn ${cls}" data-act="${a}">${label}</button>`).join('');
 
     LIA.openModal({
@@ -82,10 +131,10 @@ const CASE = (() => {
         <div class="case-grid">
           <section class="case-section">
             <h3>Student Account Details</h3>
-            ${r.anonymous
-              ? `<p class="form-note" style="margin:0 0 10px">The reporter chose to stay anonymous (or used a guest account). Their identity is hidden from staff. Only their contact number is shown.</p>
-                 <dl class="case-facts">${row('Contact Number', r.anonymousContact)}</dl>`
-              : `<dl class="case-facts">${row('Full Name', p.name)}${row('Account', p.accountType === 'student' ? 'Student' : 'Guest')}${row('Grade & Section', p.gradeSection)}${row('Username', p.username)}${row('Adviser', p.adviser)}${row('Email', p.email)}${row('Contact Number', p.contactNumber)}</dl>`}
+            <div data-student>
+              <dl class="case-facts">${row('Reporter', r.anonymous ? 'Anonymous (identity hidden)' : p.name)}${row('Grade Level', gradeText(r))}</dl>
+              ${r.reporter || r.anonymous ? `<button class="btn btn-quiet btn-sm" type="button" data-reveal style="margin-top:10px">${LIA.icon('lock')} ${r.anonymous ? 'Show contact number' : 'Show student details'}</button>` : ''}
+            </div>
           </section>
           <section class="case-section">
             <h3>Incident Report Details</h3>
@@ -106,11 +155,15 @@ const CASE = (() => {
         <h3 style="margin-top:16px">Case History</h3>
         <ol class="case-history" data-history><li class="muted">Loading...</li></ol>`,
       foot: `${buttons}
-        ${r.canMessage ? `<a class="btn btn-quiet" href="/admin/messages.html?userId=${p.userId}">Message</a>` : ''}
+        ${r.canMessage ? `<a class="btn btn-quiet" href="/admin/messages.html?case=${r.reportNo}">Message</a>` : ''}
         <button class="btn btn-ghost" data-print>Print</button>
         <button class="btn btn-ghost" data-pdf>Save as PDF</button>
         <button class="btn btn-gray" data-close>Close</button>`,
       onOpen: (el, close) => {
+        el.querySelector('[data-reveal]')?.addEventListener('click', async () => {
+          const s = await studentDetails({ report: r.reportNo });
+          if (s) { shown = s; el.querySelector('[data-student]').innerHTML = studentFacts(s); }
+        });
         // Who did what to this report, and when (from the audit log)
         const hist = el.querySelector('[data-history]');
         let historyRows = [];
@@ -124,8 +177,10 @@ const CASE = (() => {
           const rows = [
             ['Case No.', `#${r.reportNo}`],
             ['Status', r.status + (r.archived ? ' (archived)' : '')],
-            ['Reporter', r.anonymous ? `Anonymous${r.anonymousContact ? ' · Contact number: ' + r.anonymousContact : ''}`
-              : [p.name, p.accountType === 'student' ? 'Student' : 'Guest', p.gradeSection, p.adviser && 'Adviser: ' + p.adviser, p.contactNumber && 'Contact: ' + p.contactNumber].filter(Boolean).join(' · ')],
+            // Student details are only in the PDF if they were shown with the password first
+            ['Reporter', r.anonymous ? `Anonymous${shown?.contactNumber ? ' · Contact number: ' + shown.contactNumber : ''}`
+              : [p.name, shown ? (shown.accountType === 'student' ? 'Student' : 'Guest') : '', shown?.gradeSection, shown?.adviser && 'Adviser: ' + shown.adviser, shown?.contactNumber && 'Contact: ' + shown.contactNumber].filter(Boolean).join(' · ')],
+            ['Grade Level', gradeText(r)],
             ['Category of Bullying', r.category],
             ['Date of Incident', LIA.fmtDate(r.incidentDate)],
             ['Date & Time Filed', LIA.fmtDateTime(r.submittedAt)],
@@ -152,5 +207,5 @@ const CASE = (() => {
     });
   }
 
-  return { open, act, actionsFor, reporterType, reporterLabel };
+  return { open, act, actionsFor, reporterType, reporterLabel, showStudent };
 })();

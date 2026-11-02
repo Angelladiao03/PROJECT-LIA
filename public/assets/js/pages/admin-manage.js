@@ -1,27 +1,21 @@
 // Staff: Manage Reports - new reports, active cases, and SOS alerts on one page.
+// Advocates only get the reports of their grade level (the server filters them); SOS alerts are for everyone.
 
 (async () => {
   await LIA.start();
   let reports = [];
   let alerts = [];
-  const search = document.getElementById('search');
 
   const summary = (text) => {
     const t = String(text || '');
     return LIA.esc(t.length > 90 ? t.slice(0, 90) + '...' : t);
   };
-  const matches = (r) => {
-    const q = search.value.trim().toLowerCase();
-    if (!q) return true;
-    return ['#' + r.reportNo, String(r.reportNo), r.category, r.location, r.description, r.reporter?.name, r.reporter?.gradeSection]
-      .some((v) => String(v || '').toLowerCase().includes(q));
-  };
   const emptyRow = (cols, text) => `<tr><td colspan="${cols}" class="empty-cell">${text}</td></tr>`;
 
   function draw() {
     // 1. New reports
-    const fresh = reports.filter((r) => r.status === 'Pending').filter(matches);
-    document.getElementById('nNew').textContent = reports.filter((r) => r.status === 'Pending').length;
+    const fresh = reports.filter((r) => r.status === 'Pending');
+    document.getElementById('nNew').textContent = fresh.length;
     document.getElementById('newRows').innerHTML = fresh.length ? fresh.map((r) => `
       <tr>
         <td><b>#${r.reportNo}</b></td>
@@ -37,8 +31,8 @@
       </tr>`).join('') : emptyRow(6, 'No new reports to review.');
 
     // 2. Active cases
-    const active = reports.filter((r) => r.status === 'Active' || r.status === 'Under Investigation').filter(matches);
-    document.getElementById('nActive').textContent = reports.filter((r) => r.status === 'Active' || r.status === 'Under Investigation').length;
+    const active = reports.filter((r) => r.status === 'Active' || r.status === 'Under Investigation');
+    document.getElementById('nActive').textContent = active.length;
     document.getElementById('activeRows').innerHTML = active.length ? active.map((r) => `
       <tr>
         <td><b>#${r.reportNo}</b></td>
@@ -71,7 +65,7 @@
         <td class="actions">
           ${a.status === 'Active' ? `<button class="btn btn-sos btn-sm" data-sos="dispatch" data-id="${a.sosNo}">Dispatch</button>` : ''}
           ${a.status !== 'Responded' ? `<button class="btn btn-quiet btn-sm" data-sos="respond" data-id="${a.sosNo}">Mark responded</button>` : ''}
-          ${a.userId ? `<a class="btn btn-ghost btn-sm" href="/admin/messages.html?userId=${a.userId}">Message</a>` : ''}
+          ${a.userId ? `<a class="btn btn-ghost btn-sm" href="/admin/messages.html?user=${a.userId}">Message</a>` : ''}
         </td>
       </tr>`).join('') : emptyRow(6, 'No SOS alerts.');
   }
@@ -121,7 +115,6 @@
     LIA.toast('If you heard a beep, SOS alerts will make a sound on this device.');
   });
 
-  search.addEventListener('input', draw);
   document.addEventListener('lia:new-sos', load);
   await load();
   if (location.hash === '#sos') document.getElementById('sos').scrollIntoView({ behavior: 'smooth' });

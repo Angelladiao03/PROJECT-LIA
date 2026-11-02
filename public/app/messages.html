@@ -9,70 +9,124 @@
 </head>
 <body data-area="user" data-page="messages">
   <main>
-    <div class="narrow">
+    <div class="wide">
       <h1 class="visually-hidden">Messages with the guidance office</h1>
-      <section class="card chat">
-        <header class="chat-head">
-          <img src="/assets/img/lagro-seal.png" alt="" style="width:40px;height:40px">
-          <div><strong>Guidance office</strong><span class="small muted" id="chatSub">Messages are private between you and guidance staff.</span></div>
-        </header>
-        <div class="chat-log" id="log" aria-live="polite"></div>
-        <form class="chat-form" id="chatForm">
-          <label class="visually-hidden" for="text">Message</label>
-          <textarea class="input" id="text" name="text" rows="1" maxlength="2000" placeholder="Write a message"></textarea>
-          <button class="btn" type="submit" aria-label="Send"><span class="hide-sm">Send</span></button>
-        </form>
-      </section>
+      <div class="split" id="split">
+        <section class="card convo-list-card">
+          <div class="convo-list-head"><h2>Messages</h2><p class="small muted">One chat for each of your reports, plus a general chat.</p></div>
+          <div class="convo-list" id="convos"><div class="skeleton"></div></div>
+        </section>
+
+        <section class="card chat" id="chat">
+          <header class="chat-head">
+            <button class="icon-btn" id="back" aria-label="Back to chats" hidden></button>
+            <img src="/assets/img/lagro-seal.png" alt="" class="chat-seal">
+            <div class="chat-title"><strong id="chatName">Guidance Office</strong><span class="small muted" id="chatSub">Messages are private between you and guidance staff.</span></div>
+            <a class="btn btn-quiet btn-sm" id="viewReport" hidden>View Report</a>
+          </header>
+          <div class="chat-log" id="log" aria-live="polite"></div>
+          <form class="chat-form" id="chatForm">
+            <label class="visually-hidden" for="text">Message</label>
+            <textarea class="input" id="text" name="text" rows="1" maxlength="2000" placeholder="Write a message"></textarea>
+            <button class="btn" type="submit" aria-label="Send"><span class="hide-sm">Send</span></button>
+          </form>
+        </section>
+      </div>
     </div>
   </main>
   <script src="/assets/js/core.js"></script>
-  <script src="/assets/js/chat-attach.js"></script>
+  <script src="/assets/js/chat.js"></script>
   <script>
     (async () => {
       const me = await LIA.start();
+      const convosEl = document.getElementById('convos');
       const log = document.getElementById('log');
       const form = document.getElementById('chatForm');
-      if (me.account.accountType === 'guest') {
-        document.getElementById('chatSub').textContent = 'Staff see you only as Guest ' + me.account.guestId + '.';
-      }
+      const split = document.getElementById('split');
+      const back = document.getElementById('back');
+      back.innerHTML = LIA.icon('arrowLeft');
       form.querySelector('button[type=submit]').insertAdjacentHTML('afterbegin', LIA.icon('send'));
-      // "+" next to the message box: Attach File (e.g. send back a filled-up form)
-      const attach = ATTACH.setup({ form });
-      let lastCount = -1;
 
-      async function load() {
+      // The open chat: "general" or a report number, from the address (?case=12). Phones start on the list.
+      const asked = new URLSearchParams(location.search).get('case');
+      let current = asked || 'general';
+      if (asked) split.classList.add('has-chat');
+      let threads = [];
+      let messages = [];
+      let lastSig = '';
+
+      async function loadList() {
         try {
-          const { messages } = await LIA.api('messages/thread.php');
-          if (messages.length === lastCount) return;
-          lastCount = messages.length;
-          log.innerHTML = messages.length ? messages.map((m) => `
-            <div class="bubble ${m.from === 'me' ? 'mine' : 'theirs'}">${m.case ? `<a class="case-card" href="/app/account.html#report-${m.case.reportNo}">${LIA.icon('folder')}<span><b>Your report #${m.case.reportNo}</b>${LIA.esc(m.case.category)} · ${LIA.esc(LIA.STATUS[m.case.status]?.student || m.case.status)}</span></a>` : ''}${ATTACH.fileCard(m.file)}${LIA.esc(m.text)}</div>
-            <div class="bubble-meta ${m.from === 'me' ? 'mine' : ''}">${m.from === 'me' ? 'You' : LIA.esc(m.staffName || 'Guidance office')} · ${LIA.esc(LIA.fmtDateTime(m.sentAt))}</div>
-          `).join('') : `<div class="empty" style="margin:auto"><strong>Start a conversation</strong><span>Ask a question or tell the guidance office what's going on. A staff member will reply here.</span></div>`;
-          log.scrollTop = log.scrollHeight;
+          ({ threads } = await LIA.api('messages/thread.php'));
+          convosEl.innerHTML = threads.map((t) => `
+            <button class="convo" data-case="${t.case}" ${t.case === current ? 'aria-current="true"' : ''}>
+              ${t.reportNo ? '<span class="avatar case">#</span>' : '<img src="/assets/img/lagro-seal.png" alt="" class="avatar-img">'}
+              <span class="who"><strong>${LIA.esc(t.title)}</strong>
+                <span class="sub">${t.reportNo ? LIA.esc(t.category + ' · ' + (LIA.STATUS[t.status]?.student || t.status)) : 'Questions for the guidance office'}</span>
+                <span>${t.lastText ? LIA.esc(t.lastText) : 'No messages yet'}</span></span>
+              ${t.unread ? `<span class="count-pill" title="Unread messages">${t.unread}</span>` : ''}
+            </button>`).join('');
         } catch (e) { /* try again soon */ }
       }
 
-      form.text.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
-      });
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const text = form.text.value.trim();
-        if (!text && !attach.file) return;
-        let body = { text };
-        if (attach.file) { body = new FormData(); body.append('text', text); body.append('file', attach.file); }
+      async function loadChat() {
         try {
-          const res = await LIA.busy(form.querySelector('button[type=submit]'), () => LIA.api('messages/thread.php', { body }));
-          if (attach.file) LIA.toast(res.message);
-          form.text.value = '';
-          attach.clear();
-          await load();
-        } catch (err) { LIA.toast(err.message, 'error'); }
+          const res = await LIA.api('messages/thread.php?case=' + encodeURIComponent(current));
+          messages = res.messages;
+          const t = threads.find((x) => x.case === current);
+          document.getElementById('chatName').textContent = t ? t.title : 'Guidance Office';
+          document.getElementById('chatSub').textContent = !t?.reportNo
+            ? (me.account.accountType === 'guest' ? `Staff see you only as Guest ${me.account.guestId}.` : 'Messages are private between you and guidance staff.')
+            : `${t.category} · ${t.anonymous ? 'Your name stays hidden from staff in this chat.' : 'About this report.'}`;
+          const view = document.getElementById('viewReport');
+          view.hidden = !t?.reportNo;
+          if (t?.reportNo) view.href = `/app/account.html#report-${t.reportNo}`;
+          back.hidden = false;
+          const sig = current + JSON.stringify(messages.map((m) => [m.id, m.text, m.deleted, m.edited]));
+          if (sig === lastSig) return;
+          lastSig = sig;
+          log.innerHTML = messages.length
+            ? CHAT.render(messages, {
+                who: (m) => m.staffName || 'Guidance office',
+                caseCard: (c) => `<a class="case-card" href="/app/account.html#report-${c.reportNo}">${LIA.icon('folder')}<span><b>Your report #${c.reportNo}</b>${LIA.esc(c.category)} · ${LIA.esc(LIA.STATUS[c.status]?.student || c.status)}</span></a>`,
+              })
+            : `<div class="empty"><strong>Start a conversation</strong><span>${current === 'general' ? "Ask a question or tell the guidance office what's going on." : 'Ask about this report or add more details.'} A staff member will reply here.</span></div>`;
+          log.scrollTop = log.scrollHeight;
+          if (threads.find((x) => x.case === current)?.unread) loadList(); // opening the chat marked them read
+        } catch (e) { LIA.toast(e.message, 'error'); }
+      }
+
+      convosEl.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-case]');
+        if (!b) return;
+        current = b.dataset.case;
+        composer.stopEditing();
+        history.replaceState(null, '', '?case=' + current);
+        convosEl.querySelectorAll('.convo').forEach((x) => x.toggleAttribute('aria-current', x === b));
+        split.classList.add('has-chat');
+        lastSig = '';
+        loadChat();
+      });
+      back.addEventListener('click', () => split.classList.remove('has-chat'));
+
+      // "+": Attach File (e.g. send back a filled-up form). ⋮ next to your messages: Edit / Delete.
+      const attach = ATTACH.setup({ form });
+      const composer = CHAT.composer({
+        form, log, attach,
+        messages: () => messages,
+        send: (text, file) => {
+          let body = { case: current, text };
+          if (file) { body = new FormData(); body.append('case', current); body.append('text', text); body.append('file', file); }
+          return LIA.api('messages/thread.php', { body });
+        },
+        edit: (id, text) => LIA.api('messages/thread.php', { body: { action: 'edit', id, text } }),
+        remove: (id) => LIA.api('messages/thread.php', { body: { action: 'delete', id } }),
+        reload: () => { lastSig = ''; return Promise.all([loadChat(), loadList()]); },
       });
 
-      await load();
-      setInterval(load, 10000); // check for replies every 10 seconds
+      await loadList();
+      await loadChat();
+      setInterval(() => { loadList(); if (!composer.isEditing()) loadChat(); }, 10000); // check for replies every 10 seconds
     })();
   </script>
 </body>

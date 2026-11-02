@@ -1,0 +1,11 @@
+{
+  "_note": "Sections per grade level for the Grade and Section dropdowns. These are PLACEHOLDERS: replace them with the real section names of Lagro High School. The website and the server both read this one file.",
+  "sections": {
+    "7": ["Section A", "Section B", "Section C", "Section D"],
+    "8": ["Section A", "Section B", "Section C", "Section D"],
+    "9": ["Section A", "Section B", "Section C", "Section D"],
+    "10": ["Section A", "Section B", "Section C", "Section D"],
+    "11": ["Section A", "Section B", "Section C", "Section D"],
+    "12": ["Section A", "Section B", "Section C", "Section D"]
+  }
+}

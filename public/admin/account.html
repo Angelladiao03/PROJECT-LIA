@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Account · LagroInAction staff</title>
+  <link rel="icon" href="/assets/img/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/lia.css">
+</head>
+<body data-area="admin" data-page="staff-account">
+  <main>
+    <div class="wide">
+      <h1 class="visually-hidden">My Account</h1>
+      <!-- Profile card (same look as the students' My Account) -->
+      <section class="card profile-card">
+        <span class="avatar xl" id="bigAvatar"></span>
+        <div class="profile-details">
+          <h2 id="who"></h2>
+          <p class="profile-type" id="whoType"></p>
+          <dl class="profile-facts" id="facts"></dl>
+        </div>
+        <div class="profile-actions">
+          <button class="btn" id="editProfile" type="button">Edit Profile</button>
+          <button class="btn btn-quiet" id="changePw" type="button">Change Password</button>
+          <button class="btn btn-danger" id="logOut" type="button">Log Out</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>What your account can open</h2>
+        <ul class="plain-list" id="access"></ul>
+        <p class="small muted" style="margin:0">Your role and grade level are set by the system administrator. Every action you take is recorded under your own account.</p>
+      </section>
+    </div>
+  </main>
+  <script src="/assets/js/core.js"></script>
+  <script>
+    (async () => {
+      const me = await LIA.start();
+      let a = me.account;
+
+      const ACCESS = {
+        counselor: ['Dashboard and insights', 'Manage Reports and Report Records of every grade level', 'All SOS alerts', 'Registration requests of every grade level', 'Every chat with students'],
+        advocate: [`Manage Reports and Report Records of Grade ${a.gradeLevel} only`, 'All SOS alerts', `Registration requests of Grade ${a.gradeLevel}`, `Chats about Grade ${a.gradeLevel} reports and with Grade ${a.gradeLevel} students`],
+        principal: ['Dashboard and insights (totals only, no student names or case details)'],
+        security: ['Nothing yet: what security staff can open is still being decided.'],
+      };
+
+      function draw() {
+        document.getElementById('bigAvatar').textContent = LIA.initials(a.displayName);
+        document.getElementById('who').textContent = a.displayName;
+        document.getElementById('whoType').textContent = a.roleLabel;
+        const fact = (k, v) => v ? `<dt>${LIA.esc(k)}:</dt><dd>${LIA.esc(v)}</dd>` : '';
+        document.getElementById('facts').innerHTML = fact('Username', a.username) + fact('Role', a.roleLabel.split(' · ')[0])
+          + fact('Grade Level', a.gradeLevel ? 'Grade ' + a.gradeLevel : (a.role === 'counselor' ? 'All grade levels' : ''));
+        document.getElementById('access').innerHTML = (ACCESS[a.role] || []).map((t) => `<li>${LIA.icon('check')}<span>${LIA.esc(t)}</span></li>`).join('');
+      }
+      draw();
+
+      document.getElementById('changePw').addEventListener('click', () => LIA.changePasswordModal(null, null, true));
+      document.getElementById('logOut').addEventListener('click', async () => {
+        if (!await LIA.confirmBox({ title: 'Log out', text: 'Do you want to log out?', confirmLabel: 'Log out' })) return;
+        try { await LIA.api('auth/logout.php', { body: {} }); } catch (e) { /* leaving anyway */ }
+        location.href = '/staff.html';
+      });
+
+      document.getElementById('editProfile').addEventListener('click', () => {
+        LIA.openModal({
+          title: 'Edit Profile',
+          body: `<form id="profileForm" novalidate>
+              <div class="field"><label for="pName">Full Name</label><input class="input" id="pName" name="fullName" maxlength="150" value="${LIA.esc(a.displayName)}"></div>
+              <div class="field"><label for="pUser">Username</label><input class="input" id="pUser" name="username" maxlength="24" value="${LIA.esc(a.username)}">
+                <p class="hint">8 to 24 letters, numbers, dots or underscores. You sign in with it.</p></div>
+            </form>`,
+          foot: '<button class="btn btn-quiet" data-close>Cancel</button><button class="btn" form="profileForm" type="submit">Save changes</button>',
+          onOpen: (el, close) => {
+            const form = el.querySelector('#profileForm');
+            form.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const fd = new FormData(form);
+              fd.set('action', 'profile');
+              try {
+                const res = await LIA.busy(el.querySelector('button[type=submit]'), () => LIA.api('admin/account.php', { body: fd }));
+                a = res.account;
+                draw();
+                document.querySelectorAll('.menu-name, .menu-head strong').forEach((n) => { n.textContent = a.displayName; });
+                close();
+                LIA.toast('Profile updated.');
+              } catch (err) { LIA.showFormError(form, err.message); }
+            });
+          },
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

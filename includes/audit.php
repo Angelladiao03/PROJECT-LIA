@@ -4,7 +4,7 @@
 // Rows are never edited or deleted.
 
 // $action      short code, e.g. 'report.approve', 'sos.dispatch', 'account.decline'
-// $targetType  'report', 'sos', 'activation' or 'staff'
+// $targetType  'report', 'sos', 'activation', 'staff', 'message' or 'user'
 // $targetId    the report number, SOS number, request id or staff id
 // $details     optional extra text (e.g. the reject reason)
 function audit(int $adminId, string $action, string $targetType, ?int $targetId, string $details = ''): void
@@ -34,6 +34,11 @@ function audit_label(string $action): string
         'sos.respond' => 'Marked the SOS as responded',
         'account.approve' => 'Approved the permanent account',
         'account.decline' => 'Declined the account request',
+        'message.edit' => 'Edited a message',
+        'message.delete' => 'Deleted a message',
+        'student.view_info' => 'Viewed the student details',
+        'staff.profile' => 'Updated their profile',
+        'staff.password' => 'Changed their password',
         'staff.sign_in' => 'Signed in',
         'staff.sign_out' => 'Signed out',
     ][$action] ?? $action;

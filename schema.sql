@@ -248,10 +248,60 @@ CREATE TABLE IF NOT EXISTS audit_log (
 CREATE INDEX IF NOT EXISTS audit_log_target ON audit_log (target_type, target_id);
 
 -- =====================================================================
--- First staff account (run separately, with your own values):
+-- alpha.4 additions
+-- =====================================================================
+
+-- Staff roles. Existing staff accounts become Guidance Counselors (they keep full access).
+--   counselor = everything, all grade levels      advocate = only their grade level (grade_level)
+--   principal = dashboard only                    security = to be decided
+ALTER TABLE admin_profile ADD COLUMN IF NOT EXISTS staff_role VARCHAR(12) NOT NULL DEFAULT 'counselor'
+    CHECK (staff_role IN ('counselor', 'advocate', 'principal', 'security'));
+ALTER TABLE admin_profile ADD COLUMN IF NOT EXISTS grade_level SMALLINT CHECK (grade_level BETWEEN 7 AND 12);
+
+-- Grade level and section (dropdowns). grade_section stays as the text shown on pages, e.g. "Grade 10 - Section A".
+ALTER TABLE users               ADD COLUMN IF NOT EXISTS grade_level SMALLINT CHECK (grade_level BETWEEN 7 AND 12);
+ALTER TABLE users               ADD COLUMN IF NOT EXISTS section     VARCHAR(50);
+ALTER TABLE activation_requests ADD COLUMN IF NOT EXISTS grade_level SMALLINT;
+ALTER TABLE activation_requests ADD COLUMN IF NOT EXISTS section     VARCHAR(50);
+-- The grade level a report belongs to. It decides which grade's advocate sees it (the counselor sees all).
+ALTER TABLE reports             ADD COLUMN IF NOT EXISTS grade_level SMALLINT;
+-- Older accounts typed their grade as text ("10 - Sampaguita"): take the number from it.
+UPDATE users SET grade_level = SUBSTRING(grade_section FROM '^\D*(\d{1,2})')::SMALLINT
+ WHERE grade_level IS NULL AND SUBSTRING(grade_section FROM '^\D*(\d{1,2})')::INT BETWEEN 7 AND 12;
+UPDATE reports r SET grade_level = u.grade_level
+  FROM users u WHERE r.grade_level IS NULL AND u.user_id = r.user_id AND u.grade_level IS NOT NULL;
+
+-- Messages are grouped by case: case_no = the report the chat is about, NULL = the general chat.
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS case_no    INT REFERENCES reports(report_no);
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS edited_at  TIMESTAMPTZ;
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ; -- "deleted" messages are hidden, never erased
+CREATE INDEX IF NOT EXISTS messages_thread ON messages (user_id, case_no, sent_datetime);
+-- The text a message had before each edit (kept for the record; never shown on pages)
+CREATE TABLE IF NOT EXISTS message_edits (
+    edit_id    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    message_id INT NOT NULL REFERENCES messages(message_id),
+    old_text   TEXT NOT NULL,
+    edited_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Forgot password: one-time links sent by email (only a hash of the link's secret is saved)
+CREATE TABLE IF NOT EXISTS password_resets (
+    reset_id   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id    INT NOT NULL REFERENCES users(user_id),
+    token_hash CHAR(64) NOT NULL UNIQUE,
+    ip_address VARCHAR(64),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ NOT NULL,
+    used_at    TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS password_resets_user ON password_resets (user_id, created_at DESC);
+
+-- =====================================================================
+-- Test accounts: run reset_test_data.sql (it ERASES everything first).
 --
---   INSERT INTO admin_profile (admin_username, admin_password, admin_fullname)
---   VALUES ('yourusername', 'TemporaryPass123', 'Your Full Name');
---
+-- Or add one real staff account by hand (run separately, with your own values):
+--   INSERT INTO admin_profile (admin_username, admin_password, admin_fullname, staff_role, grade_level)
+--   VALUES ('yourusername', 'TemporaryPass123', 'Your Full Name', 'advocate', 10);
+--   (staff_role: counselor, advocate, principal; grade_level only for advocates)
 -- The password is turned into a secure hash the first time you sign in.
 -- =====================================================================

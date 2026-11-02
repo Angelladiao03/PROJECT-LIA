@@ -1,6 +1,6 @@
 <?php
 // Ask the guidance office to turn a guest account into a permanent student account.
-// POST (multipart form): fullName, username, gradeSection, adviser, contactNumber,
+// POST (multipart form): fullName, username, gradeLevel (7-12), section (from the list), adviser, contactNumber,
 //                        consent ("yes"), idPhoto (JPG, PNG or WEBP image, max 3 MB)
 //
 // Privacy: the ID photo is only visible to guidance staff, and it is
@@ -20,13 +20,15 @@ if ($stmt->fetch()) json_error('You already sent a request. Wait for the guidanc
 
 $fullName = input('fullName');
 $username = input('username');
-$gradeSection = input('gradeSection');
+$grade = grade_input('gradeLevel');
+$section = input('section');
 $adviser = input('adviser');
 $contact = input('contactNumber');
 
 if ($fullName === '' || too_long($fullName, 150)) json_error('Enter your full name.');
 if ($error = username_error($username)) json_error($error);
-if ($gradeSection === '' || too_long($gradeSection, 50)) json_error('Enter your grade and section, like 10 - Sampaguita.');
+if ($grade === null) json_error('Choose your grade level.');
+if ($error = section_error($grade, $section)) json_error($error);
 if ($adviser === '' || too_long($adviser, 150)) json_error("Enter your adviser's name.");
 if ($error = contact_number_error($contact)) json_error($error);
 if (contact_in_use($contact, (int) $user['user_id'])) json_error('This phone number already belongs to another account.', 409);
@@ -57,17 +59,19 @@ $photo = file_get_contents($file['tmp_name']);
 
 $stmt = db()->prepare(
     'INSERT INTO activation_requests
-        (user_id, full_name, username, grade_section, adviser_name, contact_number, id_photo, id_photo_type)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        (user_id, full_name, username, grade_section, adviser_name, contact_number, id_photo, id_photo_type, grade_level, section)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
 );
 $stmt->bindValue(1, $user['user_id'], PDO::PARAM_INT);
 $stmt->bindValue(2, $fullName);
 $stmt->bindValue(3, $username);
-$stmt->bindValue(4, $gradeSection);
+$stmt->bindValue(4, grade_section_label($grade, $section));
 $stmt->bindValue(5, $adviser);
 $stmt->bindValue(6, $contact);
 $stmt->bindValue(7, $photo, PDO::PARAM_LOB);
 $stmt->bindValue(8, $allowed[$info[2]]);
+$stmt->bindValue(9, $grade, PDO::PARAM_INT);
+$stmt->bindValue(10, $section);
 $stmt->execute();
 
-json_success('Request sent. The guidance office will review it and email you the result.');
+json_success('Request sent. The guidance office (your grade level\'s advocate or the counselor) will review it and email you the result.');

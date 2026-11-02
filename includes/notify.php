@@ -28,7 +28,7 @@ function notify_report_update(int $reportNo, string $action, ?string $reason = n
         "Update on your LagroInAction report #$reportNo",
         "Your report #$reportNo $what\n\n"
         . "Sign in to LagroInAction and open My Account > My Report History to see the details. "
-        . "You can also message the guidance office there.\n\n- Lagro High School Guidance Office"
+        . "You can also message the guidance office about it on the Message page.\n\n- Lagro High School Guidance Office"
     );
 }
 
@@ -43,7 +43,7 @@ function send_unread_message_reminders(): int
     $stmt = db()->prepare(
         "SELECT u.user_id, u.email, COUNT(*) AS unread
          FROM messages m JOIN users u ON u.user_id = m.user_id
-         WHERE m.sender_type = 'Admin' AND m.read_at IS NULL AND m.notified_at IS NULL
+         WHERE m.sender_type = 'Admin' AND m.read_at IS NULL AND m.notified_at IS NULL AND m.deleted_at IS NULL
            AND m.sent_datetime < (NOW() AT TIME ZONE 'UTC') - make_interval(mins => ?)
            AND u.status = 'Active' AND u.email IS NOT NULL
          GROUP BY u.user_id, u.email
@@ -53,7 +53,7 @@ function send_unread_message_reminders(): int
     $sent = 0;
     foreach ($stmt->fetchAll() as $row) {
         // Count every unread message (not just the old ones) for the email
-        $all = db()->prepare("SELECT COUNT(*) FROM messages WHERE user_id = ? AND sender_type = 'Admin' AND read_at IS NULL");
+        $all = db()->prepare("SELECT COUNT(*) FROM messages WHERE user_id = ? AND sender_type = 'Admin' AND read_at IS NULL AND deleted_at IS NULL");
         $all->execute([$row['user_id']]);
         $n = (int) $all->fetchColumn();
         db()->prepare("UPDATE messages SET notified_at = NOW() WHERE user_id = ? AND sender_type = 'Admin' AND read_at IS NULL AND notified_at IS NULL")
@@ -87,16 +87,4 @@ function maybe_run_background_jobs(): void
     } catch (Throwable $e) {
         error_log('[LIA] reminders: ' . $e->getMessage()); // never break the page because of a reminder
     }
-}
-
-// The report case attached to a message (for the case card in the chat), or null.
-function message_case(array $m): ?array
-{
-    if (empty($m['report_no'])) return null;
-    return [
-        'reportNo' => (int) $m['report_no'],
-        'category' => $m['category'],
-        'status' => $m['report_status'],
-        'submittedAt' => $m['report_datetime'],
-    ];
 }

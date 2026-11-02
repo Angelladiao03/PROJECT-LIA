@@ -9,6 +9,8 @@
   // Submission preference: students choose, guests are always anonymous
   document.getElementById('anonStudent').hidden = isGuest;
   document.getElementById('anonGuest').hidden = !isGuest;
+  const askGrade = !acct.gradeLevel; // guests (students already have a grade level)
+  document.getElementById('gradeField').hidden = !askGrade;
   if (!isGuest) {
     document.getElementById('idName').value = acct.fullName || '';
     document.getElementById('idGrade').value = acct.gradeSection || '';
@@ -67,6 +69,7 @@
   });
 
   function check() {
+    if (askGrade && !form.gradeLevel.value) return 'Choose your grade level.';
     if (!form.reporterRole.value) return 'Choose who you are in this incident: bullied, witness, or other.';
     if (!form.category.value) return 'Select the category of bullying.';
     if (form.category.value === 'Other' && !form.categoryOther.value.trim()) return 'Please specify the category.';

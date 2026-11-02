@@ -21,11 +21,12 @@
         <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
       </div>
 
+      <section class="card">
+        <div class="card-title"><h2>Monthly Incident Trends</h2><span class="small muted">Reports per month, last 6 months</span></div>
+        <div class="cols" id="monthly"></div>
+      </section>
+
       <div class="dash-grid">
-        <section class="card">
-          <div class="card-title"><h2>Monthly Incident Trends</h2><span class="small muted">Last 6 months</span></div>
-          <div class="cols" id="monthly"></div>
-        </section>
         <section class="card">
           <div class="card-title"><h2>Reports by Location</h2><span class="small muted">All reports</span></div>
           <div class="bars" id="byLocation"></div>
@@ -35,13 +36,17 @@
           <div class="bars" id="byCategory"></div>
         </section>
         <section class="card">
+          <div class="card-title"><h2>Reports by Grade Level</h2><span class="small muted">All reports</span></div>
+          <div class="bars" id="byGrade"></div>
+        </section>
+        <section class="card">
           <div class="card-title"><h2>Reporter Type</h2><span class="small muted">All reports</span></div>
           <div class="bars" id="byRole"></div>
         </section>
       </div>
 
-      <section class="card" style="margin-top:16px">
-        <div class="card-title"><h2>Recent SOS Emergency Dispatches</h2><a class="small" href="/admin/cases.html#sos">See all</a></div>
+      <section class="card">
+        <div class="card-title"><h2>Recent SOS Alerts</h2><a class="small" id="sosLink" href="/admin/cases.html#sos">See all</a></div>
         <div class="table-scroll" id="recentSos"></div>
       </section>
     </div>

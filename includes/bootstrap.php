@@ -16,6 +16,7 @@ require_once __DIR__ . '/mailer.php';
 require_once __DIR__ . '/audit.php';
 require_once __DIR__ . '/notify.php';
 require_once __DIR__ . '/attachments.php';
+require_once __DIR__ . '/messages.php';
 
 // After each API request, maybe send the "unread messages" reminder emails (at most every 10 minutes).
 register_shutdown_function('maybe_run_background_jobs');

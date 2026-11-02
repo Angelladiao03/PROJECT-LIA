@@ -5,6 +5,9 @@
 //       involvedKnown ("yes"/"no"), involvedDescription,
 //       anonymous ("yes"/"no") - only permanent student accounts can choose;
 //       guest reports are always anonymous.
+//       gradeLevel (7-12) - asked on the form when the account has no grade level (guests).
+//       Students' reports use the grade level of their account.
+// The grade level decides which grade's guidance advocate sees the report (the counselor sees every report).
 
 require_once __DIR__ . '/../../../includes/bootstrap.php';
 require_method('POST');
@@ -17,6 +20,10 @@ $date = input('incidentDate');
 $description = input('description');
 $involvedKnown = input('involvedKnown') === 'yes';
 $involved = input('involvedDescription');
+
+// Checked first because it is the first question on the form for guests
+$grade = $user['grade_level'] !== null ? (int) $user['grade_level'] : grade_input('gradeLevel');
+if ($grade === null) json_error('Choose your grade level, so the report reaches your grade\'s guidance advocate.');
 
 if (!in_array($role, REPORTER_ROLES, true)) json_error('Tell us if you were the one bullied, a witness, or other.');
 if (!in_array($category, REPORT_CATEGORIES, true)) json_error('Choose what kind of bullying happened.');
@@ -46,8 +53,8 @@ $anonymous = $user['account_type'] === 'guest' ? true : input('anonymous') === '
 
 $stmt = db()->prepare(
     'INSERT INTO reports (user_id, is_anonymous, reporter_role, category, report_location, incident_date,
-                          report_description, involved_person_known, involved_person_description)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING report_no'
+                          report_description, involved_person_known, involved_person_description, grade_level)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING report_no'
 );
 $stmt->bindValue(1, $user['user_id'], PDO::PARAM_INT);
 $stmt->bindValue(2, $anonymous, PDO::PARAM_BOOL);
@@ -58,6 +65,7 @@ $stmt->bindValue(6, $date);
 $stmt->bindValue(7, $description);
 $stmt->bindValue(8, $involvedKnown, PDO::PARAM_BOOL);
 $stmt->bindValue(9, $involvedKnown ? $involved : null, $involvedKnown ? PDO::PARAM_STR : PDO::PARAM_NULL);
+$stmt->bindValue(10, $grade, PDO::PARAM_INT);
 $stmt->execute();
 $reportNo = (int) $stmt->fetchColumn();
 

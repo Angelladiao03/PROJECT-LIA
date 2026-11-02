@@ -9,7 +9,7 @@
 
 const LIA = (() => {
   // The version shown on the sign-in pages. Change it here when you tag a new version.
-  const VERSION = 'v1.0.0-alpha.3';
+  const VERSION = 'v1.0.0-alpha.4';
   document.querySelectorAll('[data-version]').forEach((el) => { el.textContent = VERSION; });
 
   // ---------- Icons (simple line drawings, 24x24) ----------
@@ -45,6 +45,10 @@ const LIA = (() => {
     pin: '<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
     star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
     arrowLeft: '<path d="M19 12H5M12 19l-7-7 7-7"/>',
+    dots: '<circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/>',
+    edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>',
+    trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+    file: '<path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/>',
   };
   function icon(name, extraClass = '') {
     return `<svg class="icon ${extraClass}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ''}</svg>`;
@@ -159,10 +163,6 @@ const LIA = (() => {
     const d = toDate(value);
     return d ? d.toLocaleString('en-PH', { timeZone: TZ, month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
   }
-  function fmtTime(value) {
-    const d = toDate(value);
-    return d ? d.toLocaleTimeString('en-PH', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }) : '';
-  }
   function timeAgo(value) {
     const d = toDate(value);
     if (!d) return '';
@@ -233,6 +233,8 @@ const LIA = (() => {
       previousFocus?.focus?.();
     };
     const onKey = (e) => {
+      // Only the window on top reacts (e.g. the password window opened over a case window)
+      if (wrap !== [...document.querySelectorAll('.modal-wrap')].pop()) return;
       if (e.key === 'Escape' && dismissable) close();
       if (e.key === 'Tab') trapFocus(e, wrap);
     };
@@ -311,9 +313,10 @@ const LIA = (() => {
     catch (e) { toast('Could not copy. Select the text and copy it instead.', 'error'); }
   }
 
-  // ---------- Change password (used on the guest welcome page and Account page) ----------
+  // ---------- Change password (guest welcome page, student My Account, staff My Account) ----------
   // knownCurrentPassword: on the welcome page we already know it, so we don't ask for it.
-  function changePasswordModal(knownCurrentPassword = null, onDone) {
+  // staff = true sends it to the staff account instead of the student/guest account.
+  function changePasswordModal(knownCurrentPassword = null, onDone, staff = false) {
     const askCurrent = knownCurrentPassword === null;
     openModal({
       title: 'Change password',
@@ -342,9 +345,10 @@ const LIA = (() => {
           e.preventDefault();
           const fd = new FormData(form);
           if (!askCurrent) fd.set('currentPassword', knownCurrentPassword);
+          if (staff) fd.set('action', 'password');
           if (fd.get('newPassword') !== fd.get('confirmPassword')) return showFormError(form, "The new passwords don't match.");
           try {
-            await busy(el.querySelector('button[type=submit]'), () => api('account/password.php', { body: fd }));
+            await busy(el.querySelector('button[type=submit]'), () => api(staff ? 'admin/account.php' : 'account/password.php', { body: fd }));
             close();
             toast('Password changed.');
             onDone?.(fd.get('newPassword'));
@@ -352,6 +356,46 @@ const LIA = (() => {
         });
       },
     });
+  }
+
+  // ---------- Sign-in forms: don't let the browser fill in a saved username and password ----------
+  // (On a shared computer the next person would see them.) The fields start read-only, which
+  // browsers skip when auto-filling, and become typeable the moment someone taps or tabs into them.
+  function noAutofill(form) {
+    const fields = [...form.querySelectorAll('input:not([type=hidden])')];
+    const unlock = (e) => { e.currentTarget.readOnly = false; };
+    fields.forEach((f) => {
+      f.setAttribute('autocomplete', f.type === 'password' ? 'new-password' : 'off');
+      f.readOnly = true;
+      f.addEventListener('pointerdown', unlock);
+      f.addEventListener('focus', unlock);
+    });
+    // Coming back with the browser's Back button: start empty again
+    window.addEventListener('pageshow', () => { fields.forEach((f) => { f.value = ''; f.readOnly = true; }); });
+  }
+
+  // ---------- Grade level and section dropdowns ----------
+  // The sections are in /assets/school-sections.json (the server checks the same file).
+  let sectionsPromise = null;
+  function sections() {
+    sectionsPromise ??= fetch('/assets/school-sections.json').then((r) => r.json()).then((j) => j.sections);
+    return sectionsPromise;
+  }
+  // Fills a Grade level <select> and a Section <select>; the sections change with the grade.
+  async function gradeSectionFields(gradeSelect, sectionSelect, grade = null, section = null) {
+    const all = await sections();
+    gradeSelect.innerHTML = '<option value="">Select grade level...</option>' +
+      Object.keys(all).map((g) => `<option value="${g}">Grade ${g}</option>`).join('');
+    const fill = () => {
+      const list = all[gradeSelect.value] || [];
+      sectionSelect.innerHTML = `<option value="">${gradeSelect.value ? 'Select section...' : 'Choose the grade level first'}</option>` +
+        list.map((s) => `<option>${esc(s)}</option>`).join('');
+      sectionSelect.disabled = !list.length;
+    };
+    gradeSelect.value = grade ? String(grade) : '';
+    fill();
+    if (section) sectionSelect.value = section;
+    gradeSelect.addEventListener('change', fill);
   }
 
   // ---------- SOS ----------
@@ -423,14 +467,22 @@ const LIA = (() => {
     { id: 'guide', href: '/app/guide.html', icon: 'book', label: 'What counts as bullying' },
     { id: 'terms', href: '/terms.html', icon: 'shield', label: 'Terms & privacy' },
   ];
+  // Staff pages and which staff roles can open them (the server checks the same rules on every request).
+  //   counselor: everything (all grade levels)   advocate: their grade level + all SOS   principal: dashboard   all: Home + My Account
   const ADMIN_NAV = [
-    { id: 'home', href: '/admin/home.html', icon: 'home', label: 'Home' },
-    { id: 'dashboard', href: '/admin/index.html', icon: 'chart', label: 'Dashboard' },
-    { id: 'cases', href: '/admin/cases.html', icon: 'folder', label: 'Manage Reports', count: 'cases' },
-    { id: 'records', href: '/admin/records.html', icon: 'archive', label: 'Report Records' },
-    { id: 'accounts', href: '/admin/accounts.html', icon: 'users', label: 'Registration Requests', count: 'accounts' },
-    { id: 'messages', href: '/admin/messages.html', icon: 'chat', label: 'Messages', count: 'messages' },
+    { id: 'home', href: '/admin/home.html', icon: 'home', label: 'Home', roles: ['counselor', 'advocate', 'principal', 'security'] },
+    { id: 'dashboard', href: '/admin/index.html', icon: 'chart', label: 'Dashboard', roles: ['counselor', 'principal'] },
+    { id: 'cases', href: '/admin/cases.html', icon: 'folder', label: 'Manage Reports', count: 'cases', roles: ['counselor', 'advocate'] },
+    { id: 'records', href: '/admin/records.html', icon: 'archive', label: 'Report Records', roles: ['counselor', 'advocate'] },
+    { id: 'accounts', href: '/admin/accounts.html', icon: 'users', label: 'Registration Requests', count: 'accounts', roles: ['counselor', 'advocate'] },
+    { id: 'messages', href: '/admin/messages.html', icon: 'chat', label: 'Messages', count: 'messages', roles: ['counselor', 'advocate'] },
+    { id: 'staff-account', href: '/admin/account.html', icon: 'user', label: 'My Account', roles: ['counselor', 'advocate', 'principal', 'security'] },
   ];
+  const staffNav = (acct) => ADMIN_NAV.filter((i) => i.roles.includes(acct.role));
+  // The first page a staff member sees after signing in
+  function staffHome(acct) {
+    return acct.role === 'advocate' ? '/admin/cases.html' : acct.role === 'principal' || acct.role === 'counselor' ? '/admin/index.html' : '/admin/home.html';
+  }
 
   function initials(name) {
     if (/^Guest\b/.test(String(name))) return 'G';
@@ -451,13 +503,14 @@ const LIA = (() => {
     const acct = me.account;
     const isGuest = !isAdmin && acct.accountType === 'guest';
     const name = isAdmin ? acct.displayName : (isGuest ? 'Guest ' + acct.guestId : acct.fullName || acct.username);
+    const accountHref = isAdmin ? '/admin/account.html' : '/app/account.html';
 
     const top = document.createElement('header');
     top.className = 'topbar';
     top.innerHTML = `
       <button class="icon-btn" id="navToggle" aria-label="Menu" aria-expanded="false">${icon('menu')}</button>
       <img class="seal" src="/assets/img/lagro-seal.png" alt="Lagro High School">
-      <a class="topbar-title" href="${isAdmin ? '/admin/index.html' : '/app/home.html'}">Lagro<b>In</b>Action</a>
+      <a class="topbar-title" href="${isAdmin ? staffHome(acct) : '/app/home.html'}">Lagro<b>In</b>Action</a>
       <div class="topbar-right">
       ${isAdmin ? `<span class="admin-tag" title="You are signed in to the staff side of LagroInAction">${icon('shield')}<span class="hide-sm">LagroInAction Administrator Access</span><span class="show-sm">Admin</span></span>` : ''}
       <div class="menu">
@@ -468,9 +521,9 @@ const LIA = (() => {
         <div class="menu-panel" id="acctMenu" hidden>
           <div class="menu-head">
             <span class="avatar ${isGuest ? 'guest' : ''}">${esc(initials(name))}</span>
-            <div><strong>${esc(name)}</strong><span class="small muted">${isAdmin ? 'Guidance staff' : isGuest ? 'Guest account' : 'Student account'}</span></div>
+            <div><strong>${esc(name)}</strong><span class="small muted">${isAdmin ? esc(acct.roleLabel) : isGuest ? 'Guest account' : 'Student account'}</span></div>
           </div>
-          ${isAdmin ? '' : `<a class="menu-item" href="/app/account.html">${icon('user')} Account</a>`}
+          <a class="menu-item" href="${accountHref}">${icon('user')} My Account</a>
           <button class="menu-item" id="signOut">${icon('logout')} Sign out</button>
         </div>
       </div>
@@ -480,7 +533,7 @@ const LIA = (() => {
     side.className = 'sidebar';
     side.setAttribute('aria-label', 'Main menu');
     side.innerHTML = isAdmin
-      ? `<div class="nav-group">${ADMIN_NAV.map((i) => navLink(i, current)).join('')}</div>
+      ? `<div class="nav-group">${staffNav(acct).map((i) => navLink(i, current)).join('')}</div>
          <p class="sidebar-foot">LagroInAction · Lagro High School Guidance Office</p>`
       : `<button class="sidebar-sos" id="sosSide" type="button">SOS<small>Tap if you need help now</small></button>
          <div class="nav-group">${USER_NAV.map((i) => navLink(i, current)).join('')}</div>
@@ -587,14 +640,11 @@ const LIA = (() => {
   }
   async function watchStaffCounts() {
     try {
-      const [sos, reports, accounts, messages] = await Promise.all([
-        api('admin/sos.php'), api('admin/reports.php'), api('admin/activations.php'), api('admin/messages.php'),
-      ]);
-      const active = sos.alerts.filter((a) => a.status === 'Active');
-      const newReports = reports.reports.filter((r) => r.status === 'Pending').length;
-      if (active.length) setCount('cases', active.length); else setCount('cases', newReports, true);
-      setCount('accounts', accounts.pending.length, true);
-      setCount('messages', messages.conversations.filter((c) => c.waitingForReply).length, true);
+      const counts = await api('admin/counts.php');
+      const active = counts.activeSos;
+      if (active.length) setCount('cases', active.length); else setCount('cases', counts.newReports, true);
+      setCount('accounts', counts.pendingAccounts, true);
+      setCount('messages', counts.waitingChats, true);
 
       // red strip across the top while any SOS is waiting
       let strip = document.querySelector('.sos-strip');
@@ -642,11 +692,16 @@ const LIA = (() => {
       return new Promise(() => {}); // stop here while the browser leaves
     }
     if ((area === 'admin') !== (me.role === 'admin')) {
-      location.href = me.role === 'admin' ? '/admin/index.html' : '/app/home.html';
+      location.href = me.role === 'admin' ? staffHome(me.account) : '/app/home.html';
+      return new Promise(() => {});
+    }
+    // Staff: a page this role can't use goes to the role's first page instead
+    if (area === 'admin' && !staffNav(me.account).some((i) => i.id === document.body.dataset.page)) {
+      location.replace(staffHome(me.account));
       return new Promise(() => {});
     }
     buildShell(me);
-    if (area === 'admin') {
+    if (area === 'admin' && ['counselor', 'advocate'].includes(me.account.role)) {
       watchStaffCounts();
       setInterval(watchStaffCounts, 20000);
       // Update counters right after any action (small delay groups several quick clicks into one check)
@@ -675,7 +730,7 @@ const LIA = (() => {
 
   return {
     VERSION, api, esc, icon, toast, openModal, confirmBox, showFormError, busy, wirePasswordToggles, copyText,
-    changePasswordModal, openSos, start, setCount, initials, chip, STATUS, ROLE,
-    toDate, fmtDate, fmtDateTime, fmtTime, timeAgo, daysLeft, todayInManila,
+    changePasswordModal, start, initials, chip, STATUS, ROLE, staffHome, noAutofill, gradeSectionFields,
+    toDate, fmtDate, fmtDateTime, timeAgo, daysLeft, todayInManila,
   };
 })();

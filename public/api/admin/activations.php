@@ -7,15 +7,18 @@
 // POST action=decline requestId, reason
 //
 // The ID photo is deleted as soon as the request is approved or declined.
+// Counselor: every request. Advocate: requests from students of their grade level.
 
 require_once __DIR__ . '/../../../includes/bootstrap.php';
 require_method('GET', 'POST');
-$admin = require_admin();
+$admin = require_admin('counselor', 'advocate');
+$grade = staff_grade($admin); // null = all grade levels
+$inScope = 'CAST(? AS INT) IS NULL OR r.grade_level = CAST(? AS INT)';
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['photo'])) {
     $id = positive_int((string) $_GET['photo']);
-    $stmt = db()->prepare("SELECT id_photo, id_photo_type FROM activation_requests WHERE request_id = ? AND status = 'Pending'");
-    $stmt->execute([$id ?? 0]);
+    $stmt = db()->prepare("SELECT id_photo, id_photo_type FROM activation_requests r WHERE request_id = ? AND status = 'Pending' AND ($inScope)");
+    $stmt->execute([$id ?? 0, $grade, $grade]);
     $row = $stmt->fetch();
     if (!$row || $row['id_photo'] === null) {
         http_response_code(404);
@@ -39,6 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'fullName' => $r['full_name'],
         'username' => $r['username'],
         'gradeSection' => $r['grade_section'],
+        'gradeLevel' => $r['grade_level'] !== null ? (int) $r['grade_level'] : null,
         'adviser' => $r['adviser_name'],
         'contactNumber' => $r['contact_number'],
         'status' => $r['status'],
@@ -48,14 +52,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'reviewedBy' => $r['reviewer'],
         'hasPhoto' => (bool) $r['has_photo'],
     ];
-    $select = 'SELECT r.request_id, r.user_id, r.full_name, r.username, r.grade_section, r.adviser_name,
+    $select = 'SELECT r.request_id, r.user_id, r.full_name, r.username, r.grade_section, r.grade_level, r.adviser_name,
                       r.contact_number, r.status, r.decline_reason, r.submitted_at, r.reviewed_at,
                       (r.id_photo IS NOT NULL) AS has_photo, u.guest_id, u.email, a.admin_fullname AS reviewer
                FROM activation_requests r
                JOIN users u ON u.user_id = r.user_id
                LEFT JOIN admin_profile a ON a.admin_id = r.reviewed_by ';
-    $pending = db()->query($select . "WHERE r.status = 'Pending' ORDER BY r.submitted_at ASC")->fetchAll();
-    $recent = db()->query($select . "WHERE r.status <> 'Pending' ORDER BY r.reviewed_at DESC LIMIT 20")->fetchAll();
+    $pending = db()->prepare($select . "WHERE r.status = 'Pending' AND ($inScope) ORDER BY r.submitted_at ASC");
+    $pending->execute([$grade, $grade]);
+    $recent = db()->prepare($select . "WHERE r.status <> 'Pending' AND ($inScope) ORDER BY r.reviewed_at DESC LIMIT 20");
+    $recent->execute([$grade, $grade]);
+    $pending = $pending->fetchAll();
+    $recent = $recent->fetchAll();
     send_json(['success' => true, 'pending' => array_map($map, $pending), 'recent' => array_map($map, $recent)]);
 }
 
@@ -76,9 +84,9 @@ $pdo->beginTransaction();
 
 $stmt = $pdo->prepare(
     "SELECT r.*, u.email, u.account_type FROM activation_requests r JOIN users u ON u.user_id = r.user_id
-     WHERE r.request_id = ? AND r.status = 'Pending' FOR UPDATE"
+     WHERE r.request_id = ? AND r.status = 'Pending' AND ($inScope) FOR UPDATE OF r"
 );
-$stmt->execute([$requestId]);
+$stmt->execute([$requestId, $grade, $grade]);
 $request = $stmt->fetch();
 if (!$request) {
     $pdo->rollBack();
@@ -93,11 +101,11 @@ if ($action === 'approve') {
         json_error('Another account now uses this username. Decline and ask the student to choose another.', 409);
     }
     $pdo->prepare(
-        "UPDATE users SET account_type = 'student', username = ?, full_name = ?, grade_section = ?,
-                adviser_name = ?, contact_number = ?, expires_at = NULL, status = 'Active'
+        "UPDATE users SET account_type = 'student', username = ?, full_name = ?, grade_section = ?, grade_level = ?,
+                section = ?, adviser_name = ?, contact_number = ?, expires_at = NULL, status = 'Active'
          WHERE user_id = ?"
-    )->execute([$request['username'], $request['full_name'], $request['grade_section'],
-                $request['adviser_name'], $request['contact_number'], $request['user_id']]);
+    )->execute([$request['username'], $request['full_name'], $request['grade_section'], $request['grade_level'],
+                $request['section'], $request['adviser_name'], $request['contact_number'], $request['user_id']]);
 }
 
 // Record the decision and delete the ID photo.
@@ -120,7 +128,7 @@ if ($action === 'approve') {
         "Hi $name,\n\nCongratulations! You are now registered as a student in Lagro High School's LagroInAction. "
         . "The guidance office approved your request, and your account is now a permanent student account.\n\n"
         . "Sign in on the Student tab with your username ({$request['username']}) or this email, "
-        . "using the same password you use now.\n\nYour ID photo has been deleted from our system."
+        . "using the same password you use now. Your username is now your ID (you no longer need your guest ID).\n\nYour ID photo has been deleted from our system."
     );
 } else {
     $sent = send_email(

@@ -16,7 +16,7 @@
 
         <!-- Submission preference (permanent student accounts) -->
         <fieldset class="pref-box" id="anonStudent" hidden>
-          <legend>Submission Preference:</legend>
+          <legend>Submission Preference</legend>
           <div class="pref-options">
             <label><input type="radio" name="submitAs" value="anonymous" checked> Submit Anonymously</label>
             <label><input type="radio" name="submitAs" value="identity"> Include My Identity</label>
@@ -28,8 +28,19 @@
           </div>
         </fieldset>
         <div class="pref-box" id="anonGuest" hidden>
-          <strong>Submission Preference:</strong> Anonymous
-          <p class="small muted" style="margin:6px 0 0">You're using a guest account, so staff won't see your name. They will only see your phone number, so they can contact you if needed.</p>
+          <p class="pref-title">Submission Preference: Anonymous</p>
+          <p class="small muted" style="margin:0">You're using a guest account, so staff won't see your name. They will only see your phone number, so they can contact you if needed.</p>
+        </div>
+
+        <!-- Asked only when the account has no grade level (guests): it decides which grade's advocate gets the report -->
+        <div class="field" id="gradeField" hidden>
+          <label for="gradeLevel">Your Grade Level <span class="req">*</span></label>
+          <select class="input" id="gradeLevel" name="gradeLevel">
+            <option value="">Select grade level...</option>
+            <option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option>
+            <option value="10">Grade 10</option><option value="11">Grade 11</option><option value="12">Grade 12</option>
+          </select>
+          <p class="hint">So your report goes to your grade level's guidance advocate. Your name and section are not asked.</p>
         </div>
 
         <div class="field">

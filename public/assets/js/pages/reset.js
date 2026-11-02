@@ -1,51 +1,55 @@
-// Forgot password: email -> code + new password -> done.
+// Forgot password:
+//   1. type your username or guest ID  ->  a link is emailed to your account's address (shown partly hidden)
+//   2. the link opens this page again with ?token=...  ->  choose a new password  ->  done
 
 const steps = [...document.querySelectorAll('[data-step]')];
-const emailForm = document.getElementById('emailForm');
+const askForm = document.getElementById('askForm');
 const resetForm = document.getElementById('resetForm');
-let email = '';
+const token = new URLSearchParams(location.search).get('token');
 
 LIA.wirePasswordToggles();
 const show = (n) => {
   steps.forEach((s) => { s.hidden = Number(s.dataset.step) !== n; });
-  steps[n - 1].querySelector('input, a.btn')?.focus();
+  steps[n - 1].querySelector('input, a.btn, button')?.focus();
 };
 
-// Coming from "Reset password" on the sign-up page fills in the email
-const fromLink = new URLSearchParams(location.search).get('email');
-if (fromLink) emailForm.email.value = fromLink;
-
-emailForm.addEventListener('submit', async (e) => {
+askForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  email = emailForm.email.value.trim().toLowerCase();
-  if (!/^\S+@\S+\.\S+$/.test(email)) return LIA.showFormError(emailForm, 'Enter a valid email address, like name@gmail.com.');
+  const identifier = askForm.identifier.value.trim();
+  if (!identifier) return LIA.showFormError(askForm, 'Enter your username or guest ID.');
   try {
-    const data = await LIA.busy(emailForm.querySelector('button[type=submit]'), () => LIA.api('auth/reset_send.php', { body: { email } }));
-    LIA.showFormError(emailForm, '');
-    document.getElementById('sentTo').innerHTML = `We sent a code to <b>${LIA.esc(email)}</b>. Check your inbox and spam folder. It works for 10 minutes.`;
-    const dev = document.getElementById('devCode');
-    dev.hidden = !data.devCode;
-    if (data.devCode) dev.innerHTML = `Testing mode (no email service set up): your code is <b>${data.devCode}</b>`;
+    const data = await LIA.busy(askForm.querySelector('button[type=submit]'), () => LIA.api('auth/reset_send.php', { body: { identifier } }));
+    LIA.showFormError(askForm, '');
+    document.getElementById('sentTo').textContent = data.sentTo;
+    const dev = document.getElementById('devLink');
+    dev.hidden = !data.devLink;
+    if (data.devLink) dev.innerHTML = `Testing mode (no email service set up): <a href="${LIA.esc(data.devLink)}">open the reset link</a>`;
     show(2);
-  } catch (err) { LIA.showFormError(emailForm, err.message); }
+  } catch (err) { LIA.showFormError(askForm, err.message); }
 });
+document.getElementById('again').addEventListener('click', () => show(1));
 
-resetForm.code.addEventListener('input', () => { resetForm.code.value = resetForm.code.value.replace(/\D/g, '').slice(0, 6); });
+// Opened from the email: check the link first
+if (token) {
+  show(3);
+  LIA.api('auth/reset_confirm.php?token=' + encodeURIComponent(token))
+    .then((d) => { document.getElementById('forWho').textContent = `For ${d.signInAs === 'guest' ? 'guest' : 'student'} account ${d.name}.`; })
+    .catch((err) => {
+      LIA.showFormError(resetForm, err.message);
+      resetForm.querySelector('button[type=submit]').disabled = true;
+      resetForm.insertAdjacentHTML('beforeend', '<p style="text-align:center;margin:12px 0 0"><a href="/reset.html">Ask for a new link</a></p>');
+    });
+}
 
 resetForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (resetForm.code.value.length !== 6) return LIA.showFormError(resetForm, 'Enter the 6-digit code from the email.');
   if (resetForm.newPassword.value !== resetForm.confirmPassword.value) return LIA.showFormError(resetForm, "The new passwords don't match.");
   try {
     const body = new FormData(resetForm);
-    body.append('email', email);
+    body.append('token', token);
     const data = await LIA.busy(resetForm.querySelector('button[type=submit]'), () => LIA.api('auth/reset_confirm.php', { body }));
-    document.getElementById('toSignIn').href = `/index.html?as=${data.signInAs}&id=${encodeURIComponent(data.identifier)}`;
-    show(3);
-  } catch (err) {
-    LIA.showFormError(resetForm, err.message);
-    if (err.data?.codeExpired) document.getElementById('again').textContent = 'Send a new code';
-  }
+    history.replaceState(null, '', '/reset.html'); // the link can't be used again, so take it out of the address bar
+    document.getElementById('toSignIn').href = `/index.html?as=${data.signInAs}`;
+    show(4);
+  } catch (err) { LIA.showFormError(resetForm, err.message); }
 });
-
-document.getElementById('again').addEventListener('click', () => { resetForm.reset(); LIA.showFormError(resetForm, ''); show(1); });

@@ -1,81 +1,59 @@
-// Staff dashboard: counts, monthly bars, hotspots, recent SOS.
+// Staff dashboard (Guidance Counselor and Principal): totals, monthly bars, where and what kind of bullying.
+// Uses admin/stats.php, which only sends numbers (no names or case details).
 
 (async () => {
   const me = await LIA.start();
-  document.getElementById('signedInAs').textContent = 'Signed in as ' + me.account.displayName + '. Here is what needs attention, and where bullying is happening.';
+  const counselor = me.account.role === 'counselor'; // the principal sees the same numbers, without links to cases
+  document.getElementById('signedInAs').textContent = `Signed in as ${me.account.displayName} · ${me.account.roleLabel}`;
+  document.getElementById('sosLink').hidden = !counselor;
 
   async function render() {
-    let reports, alerts, pending;
-    try {
-      [{ reports }, { alerts }, { pending }] = await Promise.all([
-        LIA.api('admin/reports.php'), LIA.api('admin/sos.php'), LIA.api('admin/activations.php'),
-      ]);
-    } catch (e) {
+    let s;
+    try { s = await LIA.api('admin/stats.php'); } catch (e) {
       document.getElementById('tiles').innerHTML = `<div class="empty"><strong>Couldn't load the dashboard</strong><span>${LIA.esc(e.message)}</span></div>`;
       return;
     }
 
-    const count = (status) => reports.filter((r) => r.status === status && !r.archived).length;
-    const activeSos = alerts.filter((a) => a.status === 'Active').length;
-    const tile = (n, label, sub, href, color, alert = false) =>
-      `<a class="tile ${color} ${alert && n ? 'alert' : ''}" href="${href}"><span class="t">${label}</span><span class="n">${n}</span><span>${sub}</span></a>`;
+    // Number tiles. Only "Active SOS" turns red, and only when there is one.
+    const t = s.tiles;
+    const tile = (n, label, sub, href, alert = false) => {
+      const inner = `<span class="t">${label}</span><span class="n">${n}</span><span class="sub">${sub}</span>`;
+      return counselor ? `<a class="tile ${alert && n ? 'alert' : ''}" href="${href}">${inner}</a>` : `<div class="tile ${alert && n ? 'alert' : ''}">${inner}</div>`;
+    };
     document.getElementById('tiles').innerHTML =
-      tile(activeSos, 'Active SOS', 'Needs response now', '/admin/cases.html#sos', 'c-sos', true) +
-      tile(pending.length, 'Registration Requests', 'Pending account approvals', '/admin/accounts.html', '') +
-      tile(reports.length, 'Total Reports', 'All reports received', '/admin/records.html', 'c-blue') +
-      tile(count('Pending'), 'Pending Review', 'Requires admin action', '/admin/cases.html', 'c-yellow') +
-      tile(count('Under Investigation'), 'In Investigation', 'Ongoing guidance sessions', '/admin/cases.html', 'c-orange') +
-      tile(count('Resolved'), 'Resolved Cases', 'Successfully addressed', '/admin/records.html', 'c-green');
+      tile(t.activeSos, 'Active SOS', 'Needs response now', '/admin/cases.html#sos', true) +
+      (t.pendingAccounts !== null ? tile(t.pendingAccounts, 'Registration Requests', 'Waiting for approval', '/admin/accounts.html') : '') +
+      tile(t.total, 'Total Reports', 'All reports received', '/admin/records.html') +
+      tile(t.pending, 'Pending Review', 'New, not yet reviewed', '/admin/cases.html') +
+      tile(t.investigating, 'Being Handled', 'Accepted or under investigation', '/admin/cases.html') +
+      tile(t.resolved, 'Resolved', 'Cases closed', '/admin/records.html');
 
-    // Reports per month (bars, not a curved line: each bar is a real count)
-    const months = [];
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push({ key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'), label: d.toLocaleDateString('en-PH', { month: 'short' }), n: 0 });
-    }
-    reports.forEach((r) => {
-      const d = LIA.toDate(r.submittedAt);
-      if (!d) return;
-      const key = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }).slice(0, 7);
-      const m = months.find((x) => x.key === key);
-      if (m) m.n++;
-    });
-    const maxM = Math.max(1, ...months.map((m) => m.n));
-    document.getElementById('monthly').innerHTML = months.map((m) => `
-      <div class="col" title="${m.n} reports in ${m.label}">
-        <span class="v">${m.n}</span>
-        <span class="stick" style="height:${(m.n / maxM) * 100}%"></span>
-        <span class="m">${m.label}</span>
-      </div>`).join('');
+    // Reports per month: plain bars (each bar is a real count)
+    const maxM = Math.max(1, ...s.monthly.map((m) => m.n));
+    document.getElementById('monthly').innerHTML = s.monthly.map((m) => {
+      const label = new Date(m.month + '-01T00:00:00+08:00').toLocaleDateString('en-PH', { month: 'short', timeZone: 'Asia/Manila' });
+      return `<div class="col" title="${m.n} ${m.n === 1 ? 'report' : 'reports'} in ${label}">
+        <span class="v">${m.n}</span><span class="stick" style="height:${(m.n / maxM) * 100}%"></span><span class="m">${label}</span></div>`;
+    }).join('');
 
-    // Bar lists
-    const tally = (pick) => {
-      const map = new Map();
-      reports.forEach((r) => { const k = pick(r); if (k) map.set(k, (map.get(k) || 0) + 1); });
-      return [...map.entries()].sort((a, b) => b[1] - a[1]);
-    };
-    const bars = (el, rows, hotTop = false) => {
-      const box = document.getElementById(el);
+    const bars = (id, rows, name = (k) => k) => {
+      const box = document.getElementById(id);
       if (!rows.length) { box.innerHTML = '<p class="muted small">No reports yet.</p>'; return; }
-      const max = rows[0][1];
-      box.innerHTML = rows.slice(0, 8).map(([k, n], i) => `
-        <div class="bar-row ${hotTop && i === 0 ? 'hot' : ''}">
-          <span>${LIA.esc(k)}</span><span class="track"><span class="fill" style="width:${(n / max) * 100}%;display:block"></span></span><b>${n}</b>
-        </div>`).join('');
+      const max = Math.max(...rows.map((r) => r[1]));
+      box.innerHTML = rows.slice(0, 8).map(([k, n]) => `
+        <div class="bar-row"><span>${LIA.esc(name(k))}</span><span class="track"><span class="fill" style="width:${(n / max) * 100}%"></span></span><b>${n}</b></div>`).join('');
     };
-    bars('byLocation', tally((r) => r.location.startsWith('Other: ') ? 'Other' : r.location), true);
-    bars('byCategory', tally((r) => r.category.startsWith('Other: ') ? 'Other' : r.category));
-    bars('byRole', tally((r) => LIA.ROLE[r.reporterRole] || 'Not given (older report)'));
+    bars('byLocation', s.byLocation);
+    bars('byCategory', s.byCategory);
+    bars('byGrade', s.byGrade);
+    bars('byRole', s.byRole, (k) => LIA.ROLE[k] || 'Not given (older report)');
 
-    // Recent SOS
-    const recent = alerts.slice(0, 5);
-    document.getElementById('recentSos').innerHTML = recent.length ? `
+    document.getElementById('recentSos').innerHTML = s.recentSos.length ? `
       <table class="plain">
-        <thead><tr><th>When</th><th>From</th><th>Where</th><th>What</th><th>Status</th></tr></thead>
-        <tbody>${recent.map((a) => `
-          <tr><td>${LIA.esc(LIA.fmtDateTime(a.sentAt))}</td><td>${LIA.esc(a.name)}</td><td>${LIA.esc(a.location)}</td>
-          <td>${LIA.esc(a.description)}</td><td><span class="chip ${a.status === 'Active' ? 'sos' : a.status === 'Dispatched' ? 'active' : 'resolved'}">${LIA.esc(a.status)}</span></td></tr>`).join('')}
+        <thead><tr><th>When</th><th>Where</th><th>Status</th></tr></thead>
+        <tbody>${s.recentSos.map((a) => `
+          <tr><td>${LIA.esc(LIA.fmtDateTime(a.sentAt))}</td><td>${LIA.esc(a.location)}</td>
+          <td><span class="chip ${a.status === 'Active' ? 'sos' : a.status === 'Dispatched' ? 'active' : 'resolved'}">${LIA.esc(a.status)}</span></td></tr>`).join('')}
         </tbody>
       </table>` : '<p class="muted small" style="margin:0">No SOS alerts yet.</p>';
   }

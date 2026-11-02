@@ -7,12 +7,15 @@ const idHint = document.getElementById('idHint');
 const idInput = document.getElementById('identifier');
 
 LIA.wirePasswordToggles();
+LIA.noAutofill(form); // a saved username and password are never filled in by themselves
 
 function choose(kind) {
   form.kind.value = kind;
   tabs.student.setAttribute('aria-selected', String(kind === 'student'));
   tabs.guest.setAttribute('aria-selected', String(kind === 'guest'));
   idLabel.textContent = kind === 'guest' ? 'Guest ID' : 'Username or email';
+  idInput.value = '';
+  form.password.value = '';
   document.getElementById('authTitle').textContent = kind === 'guest' ? 'Guest log in' : 'Student log in';
   idInput.placeholder = kind === 'guest' ? 'LIA-' : '';
   idInput.autocapitalize = kind === 'guest' ? 'characters' : 'none';
@@ -23,9 +26,9 @@ function choose(kind) {
 tabs.student.addEventListener('click', () => choose('student'));
 tabs.guest.addEventListener('click', () => choose('guest'));
 try { if (localStorage.getItem('lia-signin-kind') === 'guest') choose('guest'); } catch (e) {}
-// After resetting a password, the reset page sends people here with their account filled in
+// After resetting a password, the reset page opens the right tab (Student or Guest)
 const params = new URLSearchParams(location.search);
-if (params.get('as')) { choose(params.get('as') === 'guest' ? 'guest' : 'student'); idInput.value = params.get('id') || ''; form.password.focus(); }
+if (params.get('as')) choose(params.get('as') === 'guest' ? 'guest' : 'student');
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -41,5 +44,5 @@ form.addEventListener('submit', async (e) => {
 
 // Already signed in? Go straight in.
 LIA.api('auth/me.php', { allow401: true })
-  .then((me) => { location.href = me.role === 'admin' ? '/admin/index.html' : '/app/home.html'; })
+  .then((me) => { location.href = me.role === 'admin' ? LIA.staffHome(me.account) : '/app/home.html'; })
   .catch(() => {});

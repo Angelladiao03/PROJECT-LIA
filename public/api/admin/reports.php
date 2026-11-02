@@ -1,8 +1,10 @@
 <?php
 // Staff: incident reports.
 //
-// GET -> every report (newest first). The page filters by status.
-//        Anonymous reports never include who sent them, only their phone number (anonymousContact).
+// GET -> the reports this staff member may see (newest first). The page filters by status.
+//        Counselor: every report. Advocate: only reports of their grade level.
+//        Only the reporter's NAME is included. Their other details (and the phone number of an
+//        anonymous reporter) come from admin/student.php after the staff member re-enters their password.
 //
 // POST action=approve     reportNo   Pending -> Active
 // POST action=investigate reportNo   Active -> Under Investigation
@@ -16,12 +18,23 @@
 
 require_once __DIR__ . '/../../../includes/bootstrap.php';
 require_method('GET', 'POST');
-$admin = require_admin();
+$admin = require_admin('counselor', 'advocate');
+
+// Stops unless this staff member may see report N (advocates: only their grade level). Returns the report.
+function report_in_scope(array $admin, ?int $reportNo): array
+{
+    if ($reportNo === null) json_error('Missing report number.');
+    $stmt = db()->prepare('SELECT report_status, archived_at, grade_level FROM reports WHERE report_no = ?');
+    $stmt->execute([$reportNo]);
+    $report = $stmt->fetch();
+    if (!$report || !staff_sees_grade($admin, $report['grade_level'])) json_error('That report was not found.', 404);
+    return $report;
+}
 
 // GET ?history=N -> the case history of one report (from the audit log)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['history'])) {
-    $reportNo = positive_int($_GET['history']);
-    if ($reportNo === null) json_error('Missing report number.');
+    $reportNo = positive_int((string) $_GET['history']);
+    report_in_scope($admin, $reportNo);
     $stmt = db()->prepare(
         "SELECT l.action, l.details, l.created_at, a.admin_fullname
          FROM audit_log l LEFT JOIN admin_profile a ON a.admin_id = l.admin_id
@@ -37,16 +50,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['history'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $rows = db()->query(
-        'SELECT r.*, u.account_type, u.guest_id, u.full_name, u.username, u.grade_section,
-                u.adviser_name, u.contact_number, u.email
+    $grade = staff_grade($admin); // null = all grade levels
+    $stmt = db()->prepare(
+        'SELECT r.*, u.account_type, u.guest_id, u.full_name
          FROM reports r LEFT JOIN users u ON u.user_id = r.user_id
+         WHERE CAST(? AS INT) IS NULL OR r.grade_level = CAST(? AS INT)
          ORDER BY r.report_datetime DESC'
-    )->fetchAll();
+    );
+    $stmt->execute([$grade, $grade]);
+    $rows = $stmt->fetchAll();
 
     $reports = array_map(function ($r) {
         $anonymous = (bool) $r['is_anonymous'];
-        $canMessage = !$anonymous && $r['user_id'] !== null;
         return [
             'reportNo' => (int) $r['report_no'],
             'anonymous' => $anonymous,
@@ -54,15 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'userId' => $r['user_id'] !== null ? (int) $r['user_id'] : null,
                 'name' => $r['user_id'] !== null ? display_name($r) : 'Unknown (old record)',
                 'accountType' => $r['account_type'],
-                'username' => $r['username'],
-                'gradeSection' => $r['grade_section'],
-                'adviser' => $r['adviser_name'],
-                'contactNumber' => $r['contact_number'],
-                'email' => $r['account_type'] === 'student' ? $r['email'] : null,
             ],
-            // Anonymous reports: staff get the phone number ONLY (no name), so they can still reach the student.
-            'anonymousContact' => $anonymous ? $r['contact_number'] : null,
-            'canMessage' => $canMessage,
+            'gradeLevel' => $r['grade_level'] !== null ? (int) $r['grade_level'] : null,
+            // Staff can message every report's reporter, anonymous ones too (in that report's case chat).
+            'canMessage' => $r['user_id'] !== null,
             'reporterRole' => $r['reporter_role'],
             'category' => $r['category'],
             'location' => $r['report_location'],
@@ -84,12 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 // ----- POST: change a report -----
 $action = input('action');
 $reportNo = positive_int(input('reportNo'));
-if ($reportNo === null) json_error('Missing report number.');
-
-$stmt = db()->prepare('SELECT report_status, archived_at FROM reports WHERE report_no = ?');
-$stmt->execute([$reportNo]);
-$report = $stmt->fetch();
-if (!$report) json_error('That report no longer exists.', 404);
+$report = report_in_scope($admin, $reportNo);
 $status = $report['report_status'];
 
 // Which status each action needs first, and what it changes to.

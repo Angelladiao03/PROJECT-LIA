@@ -12,6 +12,8 @@
 //   BREVO_API_KEY    key for sending emails through Brevo
 //   MAIL_FROM_EMAIL  the email address emails are sent from
 //   MAIL_FROM_NAME   the name shown as the sender (default: LagroInAction)
+//   APP_URL          the website's address, e.g. https://lagroinaction.onrender.com
+//                    (used in password reset links; optional, the address in the browser is used otherwise)
 
 function setting(string $name, ?string $default = null): ?string
 {
@@ -49,4 +51,14 @@ function lia_database_url(): string
 function is_development(): bool
 {
     return setting('APP_ENV', 'production') === 'development';
+}
+
+// The address of the website, for links in emails (no "/" at the end).
+function site_url(): string
+{
+    $url = setting('APP_URL');
+    if ($url !== null) return rtrim($url, '/');
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    $host = preg_replace('/[^A-Za-z0-9.:\-]/', '', $_SERVER['HTTP_HOST'] ?? 'localhost');
+    return ($https ? 'https' : 'http') . '://' . $host;
 }

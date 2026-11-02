@@ -17,6 +17,20 @@ alerts, approve student accounts, and see where bullying happens.
 | **Student** | A guest asks for it (details + school ID photo); staff approve | Username or email + same password | Permanent |
 | **Staff** | Created in the database (see below) | Staff username + password | Permanent |
 
+**Staff roles** (column `admin_profile.staff_role`; the server checks them on every request):
+
+| Role | Can open |
+|---|---|
+| Every staff role | Home (Anti-Bullying Act, posters, articles, videos) and My Account |
+| Guidance Counselor (`counselor`) | Everything, every grade level |
+| Guidance Advocate (`advocate` + `grade_level`) | Manage Reports, Report Records, Registration Requests and chats of **their grade level only**, plus every SOS alert |
+| Principal (`principal`) | Dashboard (totals, no names or case details) |
+| Security (`security`) | Nothing else yet (to be decided) |
+
+Every report has a grade level (students: from their account; guests: chosen on the report form),
+which decides which advocate gets it. A student's personal details (grade & section, adviser, email,
+phone) only show to staff after they type their own password again (10 minutes, logged).
+
 - Guest reports are always anonymous. Student accounts can turn on
   **"Hide my name from staff"** (the report stays linked to the account so the
   student can track it; staff can't see who sent it).
@@ -38,14 +52,14 @@ PROJECT-LIA/
 ├── public/                     ← everything the browser can open
 │   ├── index.html              sign in (Student / Guest). The version number in the corner opens staff log in
 │   ├── guest.html              create a guest account (Terms → email + phone → code → done)
-│   ├── reset.html              forgot password (code by email → new password)
+│   ├── reset.html              forgot password (username → link by email → new password)
 │   ├── staff.html              guidance staff sign in
 │   ├── terms.html              Terms of Use & Privacy Notice (EXAMPLE DRAFT)
 │   ├── app/                    student & guest pages
 │   │   ├── home.html           feed: report box, posters, articles, videos, hotlines
 │   │   ├── report.html         report an incident
 │   │   ├── reports.html        old link, now opens My Account → My Report History
-│   │   ├── messages.html       chat with the guidance office
+│   │   ├── messages.html       chats with the guidance office: one per report + a general chat
 │   │   ├── account.html        profile (Edit Profile, password, log out), report history,
 │   │   │                       request a permanent account
 │   │   └── guide.html          what counts as bullying, what to do
@@ -54,15 +68,17 @@ PROJECT-LIA/
 │   │   ├── index.html          dashboard (counts, monthly bars, hotspots)
 │   │   ├── cases.html          Manage Reports: new reports, active cases, SOS alerts (with sound)
 │   │   ├── records.html        resolved / rejected / archived
-│   │   ├── messages.html       conversations (+ student info and linked cases)
-│   │   └── accounts.html       permanent-account requests (ID photo review)
+│   │   ├── messages.html       chats by case (anonymous reports too) + general chats
+│   │   ├── accounts.html       permanent-account requests (ID photo review)
+│   │   └── account.html        staff My Account (Edit Profile, Change Password)
 │   ├── assets/
 │   │   ├── css/lia.css         all styles (colours and sizes are at the top)
 │   │   ├── js/core.js          shared code: top bar, side menu, SOS, API calls, loading line, VERSION
 │   │   ├── js/pdf.js           makes PDF files in the browser (tables, page numbers), no library needed
 │   │   ├── js/print.js         "Print or save as PDF" window used by Records, Messages and the case window
-│   │   ├── js/chat-attach.js   the "+" next to the message box: Attach File (and Attach Case for staff)
+│   │   ├── js/chat.js          Messages: the "+" (Attach File / Attach Case), message bubbles, ⋮ Edit / Delete
 │   │   ├── js/pages/*.js       code for individual pages (admin-case.js = the case details window)
+│   │   ├── school-sections.json  the Section dropdown lists per grade (PLACEHOLDERS: put the real sections here)
 │   │   └── img/                seal, posters, favicon
 │   └── api/                    PHP endpoints the pages call
 │       ├── auth/               me, login, staff_login, logout, reset_send, reset_confirm
@@ -71,7 +87,8 @@ PROJECT-LIA/
 │       ├── reports/            create, mine
 │       ├── sos/                create
 │       ├── messages/           thread, file (download a file sent in a message)
-│       ├── admin/              reports, sos, messages, activations
+│       ├── admin/              reports, sos, messages, activations, student (details behind a password),
+│       │                       stats (dashboard), counts (menu numbers), account (staff My Account)
 │       └── system/             reminders (optional: for a free scheduler like cron-job.org)
 ├── includes/                   ← private PHP code (not reachable from the browser)
 │   ├── bootstrap.php           loads everything below
@@ -82,12 +99,14 @@ PROJECT-LIA/
 │   ├── mailer.php              sends email through Brevo
 │   ├── notify.php              report-update emails + "you have unread messages" reminders
 │   ├── attachments.php         files in messages: allowed types, 5 MB limit, checks the real file type
+│   ├── messages.php            chats by case, sending, editing and deleting messages
 │   ├── audit.php               audit log of staff actions
 │   ├── passwords.php           password hashing
 │   ├── validation.php          form checks + the category/location lists
 │   └── json.php                JSON responses
 ├── docker/apache-lia.conf      caching + security headers
 ├── schema.sql                  creates/updates the database tables
+├── reset_test_data.sql         ERASES everything and adds the test accounts (development only)
 └── Dockerfile                  how Render builds and runs the site
 ```
 
@@ -102,15 +121,23 @@ the old LRN-based student accounts** into the new accounts table, keeping their
 usernames, emails and passwords, and links their old reports, SOS alerts and
 messages. Nothing is deleted.
 
+### Test accounts (development only)
+
+`reset_test_data.sql` **erases everything** and creates made-up accounts: `studentaccount`, `guestaccount`,
+`guidancecounselor`, `principal`, and `grade7advocate` … `grade12advocate`, each with the password
+"username + 123" (e.g. `principal123`). Run `schema.sql` first. Never run it once real students use the system.
+
 ### Staff accounts
 
 Each staff member gets their own account (so every action shows who did it).
 Run this in the SQL Editor, once per person:
 
 ```sql
-INSERT INTO admin_profile (admin_username, admin_password, admin_fullname)
-VALUES ('reyes.guidance', 'TemporaryPass123', 'Ms. Reyes');
+INSERT INTO admin_profile (admin_username, admin_password, admin_fullname, staff_role, grade_level)
+VALUES ('reyes.guidance', 'TemporaryPass123', 'Ms. Reyes', 'advocate', 10);
 ```
+
+`staff_role` is `counselor`, `advocate` (with its `grade_level`, 7 to 12) or `principal`.
 
 The password becomes a secure hash the first time they sign in.
 
@@ -143,6 +170,7 @@ The password becomes a secure hash the first time they sign in.
    | `MAIL_FROM_NAME` | `LagroInAction` |
    | `PORT` | `10000` |
    | `CRON_KEY` | *(optional)* a long random word, only if you use cron-job.org for reminders (see below) |
+   | `APP_URL` | *(optional)* the site address, e.g. `https://lagroinaction.onrender.com`, used in password reset links |
 
    Do **not** set `APP_ENV` on Render (it must stay "production").
 3. Push to GitHub. Render rebuilds automatically.
@@ -186,13 +214,22 @@ didn't get a code. The email text itself is not stored.
   for 15 minutes.
 - **Email codes** expire after 10 minutes, allow 5 tries, and are limited to
   one per minute per email.
+- **Forgot password** emails a one-time link (30 minutes, single use, only its hash is saved). The page
+  shows the email partly hidden (`an**********01@gmail.com`).
+- **Sign-in boxes** never fill in a saved username and password by themselves (shared school computers).
 - **Every query uses prepared statements** (no SQL injection).
 - **Role checks on every endpoint:** students only see their own data; staff
-  pages need a staff account.
+  pages need a staff account, and each staff role only gets what it needs (advocates: their grade level;
+  principal: totals only).
 - **Requests from other websites are blocked** (`X-LIA` header + `SameSite`
   cookies), sessions are `HttpOnly`, and the session ID changes at sign-in.
-- **Anonymous reports** never send the reporter's name to staff browsers, only their phone number
-  (`anonymousContact`) so the guidance office can still reach them. The report form and the Terms say so.
+- **Anonymous reports** never send the reporter's name to staff browsers. Staff can message the reporter in
+  the report's own chat, and can see only their phone number (after typing their password). The report form
+  and the Terms say so.
+- **Student details behind a password:** staff lists show only names; grade & section, adviser, email and
+  phone need the staff member's password (unlocked for 10 minutes, every view logged).
+- **Messages** can be edited or deleted by their sender, but nothing is erased: deleted messages are hidden,
+  earlier versions are kept in `message_edits`, and staff edits/deletes are in the audit log.
 - **Files in messages** (PDF, Word, JPG, PNG, up to 5 MB) are checked by their real contents, stored in
   the database, always downloaded (never opened inside the site), and only the student's own conversation
   or staff can download them.
@@ -214,6 +251,5 @@ didn't get a code. The email text itself is not stored.
 ## Still to do
 
 See `CLAUDE.md` for the full list. Biggest items: severity levels and
-assigned staff (revised RA 10627 IRR), staff
-roles (counselor / advocate / security / principal), evidence uploads, and
-final approval of the Terms by the adviser and the Guidance Office.
+assigned staff (revised RA 10627 IRR), what Security staff can do, the real section list,
+printable invitation letters, and final approval of the Terms by the adviser and the Guidance Office.

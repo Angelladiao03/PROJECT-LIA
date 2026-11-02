@@ -7,7 +7,7 @@ $user = require_user();
 
 $stmt = db()->prepare(
     'SELECT report_no, is_anonymous, reporter_role, category, report_location, incident_date,
-            report_description, report_status, reject_reason, report_datetime, updated_at
+            report_description, report_status, reject_reason, report_datetime, updated_at, grade_level
      FROM reports WHERE user_id = ? ORDER BY report_datetime DESC'
 );
 $stmt->execute([$user['user_id']]);
@@ -22,6 +22,7 @@ $reports = array_map(fn ($r) => [
     'description' => $r['report_description'],
     'status' => $r['report_status'],
     'rejectReason' => $r['reject_reason'],
+    'gradeLevel' => $r['grade_level'] !== null ? (int) $r['grade_level'] : null,
     'submittedAt' => $r['report_datetime'],
     'updatedAt' => $r['updated_at'],
 ], $stmt->fetchAll());

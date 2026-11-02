@@ -11,24 +11,24 @@
   <main>
     <div class="wide">
       <div class="split" id="split">
-        <section class="card convo-list-card" style="padding:0">
-          <div style="padding:16px 16px 8px"><h1 style="margin:0;font-size:1.3rem">Messages</h1><p class="small muted" style="margin:0">Yellow dot: waiting for a reply.</p></div>
-          <div class="convo-list" id="convos"><div class="skeleton" style="margin:8px"></div></div>
+        <section class="card convo-list-card">
+          <div class="convo-list-head"><h1>Messages</h1><p class="small muted">Chats are grouped by case. Yellow dot: waiting for a reply.</p></div>
+          <div class="convo-list" id="convos"><div class="skeleton"></div></div>
         </section>
 
         <section class="card chat" id="chat">
           <header class="chat-head">
-            <button class="icon-btn" id="back" aria-label="Back to conversations" hidden></button>
+            <button class="icon-btn" id="back" aria-label="Back to chats" hidden></button>
             <span class="avatar" id="chatAvatar" hidden></span>
-            <div style="flex:1;min-width:0"><strong id="chatName">Choose a conversation</strong><span class="small muted" id="chatInfo"></span></div>
+            <div class="chat-title"><strong id="chatName">Choose a chat</strong><span class="small muted" id="chatInfo"></span></div>
             <div class="chat-tools" id="chatTools" hidden>
               <button class="btn btn-quiet btn-sm" id="viewInfo" type="button">View Info</button>
-              <button class="btn btn-quiet btn-sm" id="viewCase" type="button">View Linked Case</button>
+              <button class="btn btn-quiet btn-sm" id="viewCase" type="button">View Case</button>
               <button class="btn btn-quiet btn-sm" id="printReports" type="button">Print Reports</button>
             </div>
           </header>
           <div class="chat-log" id="log" aria-live="polite">
-            <div class="empty" style="margin:auto"><strong>No conversation open</strong><span>Pick someone on the left to read and reply.</span></div>
+            <div class="empty"><strong>No chat open</strong><span>Pick a chat on the left. To message the reporter of a report (even an anonymous one), open the report and press Message.</span></div>
           </div>
           <form class="chat-form" id="chatForm" hidden>
             <label class="visually-hidden" for="text">Reply</label>
@@ -43,7 +43,7 @@
   <script src="/assets/js/pages/admin-case.js"></script>
   <script src="/assets/js/pdf.js"></script>
   <script src="/assets/js/print.js"></script>
-  <script src="/assets/js/chat-attach.js"></script>
+  <script src="/assets/js/chat.js"></script>
   <script>
     (async () => {
       await LIA.start();
@@ -53,60 +53,153 @@
       const split = document.getElementById('split');
       const back = document.getElementById('back');
       back.innerHTML = LIA.icon('arrowLeft');
-      let current = Number(new URLSearchParams(location.search).get('userId')) || null;
-      let conversations = [];
-      let currentPerson = null;
 
-      // "View Info": the student's details (guests stay anonymous)
+      // The open chat: { case: 12 } or { user: 5 }, from the address (?case=12 or ?user=5)
+      const params = new URLSearchParams(location.search);
+      let current = params.get('case') ? { case: Number(params.get('case')) } : params.get('user') ? { user: Number(params.get('user')) } : null;
+      const keyOf = (c) => (c ? (c.case ? 'case-' + c.case : 'user-' + c.user) : '');
+      let thread = null;     // what the server says about the open chat
+      let messages = [];
+      let lastSig = '';
+
+      // ----- List of chats -----
+      async function loadList() {
+        try {
+          const { threads } = await LIA.api('admin/messages.php');
+          convosEl.innerHTML = threads.length ? threads.map((t) => `
+            <button class="convo" data-key="${t.key}" ${t.key === keyOf(current) ? 'aria-current="true"' : ''}>
+              <span class="avatar ${t.kind === 'case' ? 'case' : t.accountType === 'guest' ? 'guest' : ''}">${t.kind === 'case' ? '#' : LIA.esc(LIA.initials(t.name))}</span>
+              <span class="who"><strong>${t.kind === 'case' ? `Case #${t.reportNo}` : LIA.esc(t.name)}</strong>
+                <span class="sub">${t.kind === 'case' ? LIA.esc(t.name + ' · ' + t.category) : 'General chat'}</span>
+                <span>${LIA.esc(t.lastText)}</span></span>
+              ${t.waitingForReply ? '<span class="dot" title="Waiting for a reply"></span>' : ''}
+            </button>`).join('')
+            : '<p class="small muted convo-empty">No messages yet. Students can message the guidance office from their Message page, and you can message the reporter of any report from its details window.</p>';
+        } catch (e) { convosEl.innerHTML = `<p class="small muted convo-empty">${LIA.esc(e.message)}</p>`; }
+      }
+      convosEl.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-key]');
+        if (!b) return;
+        const [kind, n] = b.dataset.key.split('-');
+        open(kind === 'case' ? { case: Number(n) } : { user: Number(n) });
+      });
+      function open(c) {
+        current = c;
+        composer.stopEditing();
+        history.replaceState(null, '', '?' + (c.case ? 'case=' + c.case : 'user=' + c.user));
+        convosEl.querySelectorAll('.convo').forEach((x) => x.toggleAttribute('aria-current', x.dataset.key === keyOf(c)));
+        lastSig = '';
+        loadChat();
+      }
+
+      // ----- One chat -----
+      const caseCard = (c) => `<button type="button" class="case-card" data-case-no="${c.reportNo}">${LIA.icon('folder')}<span><b>Report #${c.reportNo}</b>${LIA.esc(c.category)} · ${LIA.esc(c.status)}</span></button>`;
+
+      async function loadChat() {
+        if (!current) return;
+        try {
+          const res = await LIA.api('admin/messages.php?' + (current.case ? 'case=' + current.case : 'user=' + current.user));
+          thread = res.thread;
+          messages = res.messages;
+          split.classList.add('has-chat');
+          back.hidden = false;
+          form.hidden = false;
+          document.getElementById('chatTools').hidden = false;
+          const isCase = thread.kind === 'case';
+          document.getElementById('viewCase').textContent = isCase ? 'View Case' : 'View Linked Cases';
+          document.getElementById('printReports').hidden = isCase || thread.accountType === 'guest';
+          const av = document.getElementById('chatAvatar');
+          av.hidden = false;
+          av.textContent = isCase ? '#' : LIA.initials(thread.name);
+          av.className = 'avatar ' + (isCase ? 'case' : thread.accountType === 'guest' ? 'guest' : '');
+          document.getElementById('chatName').textContent = isCase ? `Case #${thread.reportNo} · ${thread.name}` : thread.name;
+          document.getElementById('chatInfo').textContent = [
+            isCase ? `${thread.category} · ${LIA.STATUS[thread.status]?.staff || thread.status}` : 'General chat',
+            thread.anonymous ? 'Identity hidden: your replies reach the reporter' : '',
+            thread.expired ? 'Account expired: they can no longer read replies' : '',
+          ].filter(Boolean).join(' · ');
+          const sig = thread.key + JSON.stringify(messages.map((m) => [m.id, m.text, m.deleted, m.edited]));
+          if (sig === lastSig) return;
+          lastSig = sig;
+          log.innerHTML = messages.length
+            ? CHAT.render(messages, { caseCard, who: () => (thread.anonymous ? 'Reporter' : thread.name) })
+            : '<div class="empty"><strong>No messages yet</strong><span>Write the first message below.</span></div>';
+          log.scrollTop = log.scrollHeight;
+        } catch (e) { LIA.toast(e.message, 'error'); }
+      }
+
+      // Opening a case card in the chat
+      log.addEventListener('click', async (e) => {
+        const b = e.target.closest('[data-case-no]');
+        if (b) openCase(Number(b.dataset.caseNo));
+      });
+      async function openCase(no) {
+        try {
+          const { reports } = await LIA.api('admin/reports.php');
+          const r = reports.find((x) => x.reportNo === no);
+          if (r) CASE.open(r, () => { lastSig = ''; loadChat(); }); else LIA.toast('That report was not found.', 'error');
+        } catch (err) { LIA.toast(err.message, 'error'); }
+      }
+
+      // "View Info": the student's details, after typing your password (anonymous reports: contact number only)
       document.getElementById('viewInfo').addEventListener('click', () => {
-        const p = currentPerson;
-        if (!p) return;
-        const row = (k, v) => `<dt>${k}:</dt><dd>${v ? LIA.esc(v) : '<span class="muted">-</span>'}</dd>`;
+        if (thread) CASE.showStudent(thread.kind === 'case' ? { report: thread.reportNo } : { user: thread.userId });
+      });
+
+      // This student's reports that show their name (anonymous reports are never linked to a person)
+      async function linkedReports() {
+        const { reports } = await LIA.api('admin/reports.php');
+        return reports.filter((r) => !r.anonymous && r.reporter && r.reporter.userId === thread.userId);
+      }
+      const noLinkedText = () => `No linked cases. ${thread.accountType === 'guest' ? 'Guest reports are always anonymous, so they are never linked to a person.' : 'This student has no reports with their name shown that you can open.'}`;
+
+      // "View Case" (case chat) / "View Linked Cases" (general chat)
+      document.getElementById('viewCase').addEventListener('click', async () => {
+        if (!thread) return;
+        if (thread.kind === 'case') return openCase(thread.reportNo);
+        let linked;
+        try { linked = await linkedReports(); } catch (e) { return LIA.toast(e.message, 'error'); }
         LIA.openModal({
-          title: 'Student Information',
-          body: p.accountType === 'guest'
-            ? `<p><b>${LIA.esc(p.name)}</b></p><p class="form-note">This is a guest account. Guests are anonymous, so staff only see their guest ID and contact number.${p.status === 'Expired' ? ' This guest account has expired.' : ''}</p>
-               <dl class="case-facts">${row('Contact Number', p.contactNumber)}</dl>`
-            : `<dl class="case-facts">${row('Full Name', p.name)}${row('Grade & Section', p.gradeSection)}${row('Adviser', p.adviser)}${row('Email', p.email)}${row('Contact Number', p.contactNumber)}</dl>`,
+          title: 'Linked Cases',
+          wide: true,
+          body: linked.length
+            ? `<p class="small muted">Reports sent by ${LIA.esc(thread.name)} with their name shown.</p>
+               <div class="table-scroll"><table class="data-table"><thead><tr><th>Report</th><th>Category</th><th>Filed</th><th>Status</th><th></th></tr></thead><tbody>
+               ${linked.map((r) => `<tr><td><b>#${r.reportNo}</b></td><td>${LIA.esc(r.category)}</td><td>${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</td><td>${LIA.chip(r.status, 'staff')}</td><td><button class="btn btn-quiet btn-sm" data-case="${r.reportNo}">View Details</button></td></tr>`).join('')}
+               </tbody></table></div>`
+            : `<p class="form-note" style="margin:0">${noLinkedText()}</p>`,
           foot: '<button class="btn btn-gray" data-close>Close</button>',
+          onOpen: (el, close) => {
+            el.addEventListener('click', (e) => {
+              const b = e.target.closest('[data-case]');
+              if (b) { close(); CASE.open(linked.find((r) => r.reportNo === Number(b.dataset.case))); }
+            });
+          },
         });
       });
 
-      // This person's reports that show their name (anonymous reports are never linked to a person)
-      async function linkedReports(p) {
-        const { reports } = await LIA.api('admin/reports.php');
-        return reports.filter((r) => !r.anonymous && r.reporter && r.reporter.userId === p.userId);
-      }
-      const noLinkedText = (p) => `No linked cases. ${p.accountType === 'guest' ? 'Guest reports are always anonymous, so they are never linked to a person.' : 'This student has no reports with their name shown.'}`;
-
-      // "Print Reports": this student's reports as a table, printed or saved as PDF
+      // "Print Reports" (general chat): this student's reports as a table, printed or saved as PDF
       document.getElementById('printReports').addEventListener('click', async () => {
-        const p = currentPerson;
-        if (!p) return;
         let linked;
-        try { linked = await linkedReports(p); } catch (e) { return LIA.toast(e.message, 'error'); }
-        if (!linked.length) return LIA.toast(noLinkedText(p), 'error');
+        try { linked = await linkedReports(); } catch (e) { return LIA.toast(e.message, 'error'); }
+        if (!linked.length) return LIA.toast(noLinkedText(), 'error');
         PRINT.choose({
-          title: `Reports of ${p.name}${p.gradeSection ? ' (' + p.gradeSection + ')' : ''}`,
+          title: `Reports of ${thread.name}`,
           columns: [{ label: 'Case ID', width: 50 }, { label: 'Incident Category', width: 110 }, { label: 'Location', width: 110 },
             { label: 'Date Filed', width: 105 }, { label: 'Status', width: 95 }, { label: 'Last Update', width: 105 }, { label: 'Reason (if not accepted)' }],
-          sets: [{ label: `All reports with ${p.name}'s name shown (${linked.length})`, rows: linked.map((r) => [
+          sets: [{ label: `All reports with ${thread.name}'s name shown (${linked.length})`, rows: linked.map((r) => [
             `#${r.reportNo}`, r.category, r.location, LIA.fmtDateTime(r.submittedAt), r.status + (r.archived ? ' (archived)' : ''),
             LIA.fmtDateTime(r.updatedAt || r.submittedAt), r.status === 'Rejected' ? (r.rejectReason || '') : '']) }],
-          filename: `reports-${(p.name || 'student').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+          filename: `reports-${(thread.name || 'student').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
         });
       });
 
-      // "+" next to the message box: Attach File / Attach Case
-      const attach = ATTACH.setup({ form: document.getElementById('chatForm'), onCase: () => attachCase() });
-
-      // "Attach Case": send one of the student's report cases into the chat to follow up
+      // "+" next to the message box: Attach File, and (general chats) Attach Case
+      const attach = ATTACH.setup({ form, onCase: () => attachCase(), canCase: () => thread?.kind === 'general' });
       async function attachCase() {
-        const p = currentPerson;
-        if (!p) return;
         let linked;
-        try { linked = await linkedReports(p); } catch (e) { return LIA.toast(e.message, 'error'); }
-        if (!linked.length) return LIA.toast(noLinkedText(p), 'error');
+        try { linked = await linkedReports(); } catch (e) { return LIA.toast(e.message, 'error'); }
+        if (!linked.length) return LIA.toast(noLinkedText(), 'error');
         LIA.openModal({
           title: 'Attach a report case',
           wide: true,
@@ -125,7 +218,7 @@
               const f = e.target;
               try {
                 const res = await LIA.busy(el.querySelector('[form=attachForm]'), () =>
-                  LIA.api('admin/messages.php', { body: { userId: p.userId, reportNo: f.reportNo.value, text: f.text.value.trim() } }));
+                  LIA.api('admin/messages.php', { body: { user: thread.userId, reportNo: f.reportNo.value, text: f.text.value.trim() } }));
                 close(); LIA.toast(res.message);
                 lastSig = ''; await Promise.all([loadChat(), loadList()]);
               } catch (err) { LIA.showFormError(f, err.message); }
@@ -134,115 +227,25 @@
         });
       }
 
-      // "View Linked Case": reports this person sent with their name shown
-      document.getElementById('viewCase').addEventListener('click', async () => {
-        const p = currentPerson;
-        if (!p) return;
-        let linked;
-        try { linked = await linkedReports(p); } catch (e) { return LIA.toast(e.message, 'error'); }
-        LIA.openModal({
-          title: 'Linked Cases',
-          wide: true,
-          body: linked.length
-            ? `<p class="small muted">Reports sent by ${LIA.esc(p.name)} with their name shown. Anonymous reports are never linked to a person.</p>
-               <div class="table-scroll"><table class="data-table"><thead><tr><th>Report</th><th>Category</th><th>Filed</th><th>Status</th><th></th></tr></thead><tbody>
-               ${linked.map((r) => `<tr><td><b>#${r.reportNo}</b></td><td>${LIA.esc(r.category)}</td><td>${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</td><td>${LIA.chip(r.status, 'staff')}</td><td><button class="btn btn-quiet btn-sm" data-case="${r.reportNo}">View Details</button></td></tr>`).join('')}
-               </tbody></table></div>`
-            : `<p class="form-note" style="margin:0">${noLinkedText(p)}</p>`,
-          foot: '<button class="btn btn-gray" data-close>Close</button>',
-          onOpen: (el, close) => {
-            el.addEventListener('click', (e) => {
-              const b = e.target.closest('[data-case]');
-              if (b) { close(); CASE.open(linked.find((r) => r.reportNo === Number(b.dataset.case))); }
-            });
-          },
-        });
-      });
-      let lastSig = '';
-
-      async function loadList() {
-        try {
-          ({ conversations } = await LIA.api('admin/messages.php'));
-          convosEl.innerHTML = conversations.length ? conversations.map((c) => `
-            <button class="convo" data-user="${c.userId}" ${c.userId === current ? 'aria-current="true"' : ''}>
-              <span class="avatar ${c.accountType === 'guest' ? 'guest' : ''}">${LIA.esc(LIA.initials(c.name))}</span>
-              <span class="who"><strong>${LIA.esc(c.name)}</strong><span>${LIA.esc(c.lastText)}</span></span>
-              ${c.waitingForReply ? '<span class="dot" title="Waiting for a reply"></span>' : ''}
-            </button>`).join('')
-            : '<p class="small muted" style="padding:8px">No messages yet. Students and guests can message the guidance office from their Messages page.</p>';
-        } catch (e) { convosEl.innerHTML = `<p class="small muted" style="padding:8px">${LIA.esc(e.message)}</p>`; }
-      }
-
-      // A report case attached to a message
-      const caseCard = (c) => `<button type="button" class="case-card" data-case-no="${c.reportNo}">${LIA.icon('folder')}<span><b>Report #${c.reportNo}</b>${LIA.esc(c.category)} · ${LIA.esc(c.status)}</span></button>`;
-      log.addEventListener('click', async (e) => {
-        const b = e.target.closest('[data-case-no]');
-        if (!b) return;
-        try {
-          const { reports } = await LIA.api('admin/reports.php');
-          const r = reports.find((x) => x.reportNo === Number(b.dataset.caseNo));
-          if (r) CASE.open(r, () => { lastSig = ''; loadChat(); });
-        } catch (err) { LIA.toast(err.message, 'error'); }
+      // Send, edit and delete (the ⋮ menu next to your own messages)
+      const target = () => (current.case ? { case: current.case } : { user: current.user });
+      const composer = CHAT.composer({
+        form, log, attach,
+        messages: () => messages,
+        send: (text, file) => {
+          let body = { ...target(), text };
+          if (file) { body = new FormData(); Object.entries(target()).forEach(([k, v]) => body.append(k, v)); body.append('text', text); body.append('file', file); }
+          return LIA.api('admin/messages.php', { body });
+        },
+        edit: (id, text) => LIA.api('admin/messages.php', { body: { action: 'edit', id, text } }),
+        remove: (id) => LIA.api('admin/messages.php', { body: { action: 'delete', id } }),
+        reload: () => { lastSig = ''; return Promise.all([loadChat(), loadList()]); },
       });
 
-      async function loadChat() {
-        if (!current) return;
-        try {
-          const { person, messages } = await LIA.api('admin/messages.php?userId=' + current);
-          split.classList.add('has-chat');
-          back.hidden = false;
-          form.hidden = false;
-          currentPerson = person;
-          document.getElementById('chatTools').hidden = false;
-          const av = document.getElementById('chatAvatar');
-          av.hidden = false;
-          av.textContent = LIA.initials(person.name);
-          av.classList.toggle('guest', person.accountType === 'guest');
-          document.getElementById('chatName').textContent = person.name;
-          document.getElementById('chatInfo').textContent = person.accountType === 'guest'
-            ? 'Guest account: identity hidden' + (person.contactNumber ? ' · ' + person.contactNumber : '') + (person.status === 'Expired' ? ' · expired, they can no longer read replies' : '')
-            : [person.gradeSection, person.adviser && 'Adviser: ' + person.adviser, person.contactNumber].filter(Boolean).join(' · ');
-          const sig = person.userId + ':' + messages.length;
-          if (sig === lastSig) return;
-          lastSig = sig;
-          log.innerHTML = messages.length ? messages.map((m) => `
-            <div class="bubble ${m.from === 'guidance' ? 'mine' : 'theirs'}">${m.case ? caseCard(m.case) : ''}${ATTACH.fileCard(m.file)}${LIA.esc(m.text)}</div>
-            <div class="bubble-meta ${m.from === 'guidance' ? 'mine' : ''}">${m.from === 'guidance' ? LIA.esc(m.staffName || 'Guidance office') : LIA.esc(person.name)} · ${LIA.esc(LIA.fmtDateTime(m.sentAt))}</div>`).join('')
-            : '<div class="empty" style="margin:auto"><strong>No messages yet</strong><span>Write the first message below.</span></div>';
-          log.scrollTop = log.scrollHeight;
-        } catch (e) { LIA.toast(e.message, 'error'); }
-      }
-
-      convosEl.addEventListener('click', (e) => {
-        const b = e.target.closest('[data-user]');
-        if (!b) return;
-        current = Number(b.dataset.user);
-        history.replaceState(null, '', '?userId=' + current);
-        convosEl.querySelectorAll('.convo').forEach((x) => x.toggleAttribute('aria-current', x === b));
-        lastSig = '';
-        loadChat();
-      });
       back.addEventListener('click', () => { split.classList.remove('has-chat'); });
-      form.text.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const text = form.text.value.trim();
-        if ((!text && !attach.file) || !current) return;
-        // With a file the message is sent as a form upload (FormData)
-        let body = { userId: current, text };
-        if (attach.file) { body = new FormData(); body.append('userId', current); body.append('text', text); body.append('file', attach.file); }
-        try {
-          const res = await LIA.busy(form.querySelector('button[type=submit]'), () => LIA.api('admin/messages.php', { body }));
-          if (attach.file) LIA.toast(res.message);
-          form.text.value = '';
-          attach.clear();
-          await Promise.all([loadChat(), loadList()]);
-        } catch (err) { LIA.toast(err.message, 'error'); }
-      });
-
       await loadList();
       await loadChat();
-      setInterval(() => { loadList(); loadChat(); }, 10000);
+      setInterval(() => { loadList(); if (!composer.isEditing()) loadChat(); }, 10000);
     })();
   </script>
 </body>

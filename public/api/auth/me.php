@@ -12,15 +12,7 @@ start_session();
 
 if (!empty($_SESSION['adminId'])) {
     $admin = require_admin();
-    send_json([
-        'success' => true,
-        'role' => 'admin',
-        'account' => [
-            'adminId' => (int) $admin['admin_id'],
-            'username' => $admin['admin_username'],
-            'displayName' => $admin['admin_fullname'],
-        ],
-    ]);
+    send_json(['success' => true, 'role' => 'admin', 'account' => public_staff($admin)]);
 }
 
 $user = require_user();

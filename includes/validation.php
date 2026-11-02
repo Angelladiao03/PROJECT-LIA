@@ -68,6 +68,41 @@ function contact_number_error(string $number): ?string
     return null;
 }
 
+// ---------- Grade level and section ----------
+// The sections come from public/assets/school-sections.json (the dropdowns on the pages read the same file).
+const GRADE_LEVELS = [7, 8, 9, 10, 11, 12];
+
+function school_sections(): array
+{
+    static $sections = null;
+    if ($sections === null) {
+        $json = json_decode((string) file_get_contents(__DIR__ . '/../public/assets/school-sections.json'), true);
+        $sections = $json['sections'] ?? [];
+    }
+    return $sections;
+}
+
+// Reads a grade level (7 to 12) from a POST field. Returns null if it isn't one.
+function grade_input(string $name): ?int
+{
+    $grade = positive_int(input($name));
+    return in_array($grade, GRADE_LEVELS, true) ? $grade : null;
+}
+
+function section_error(int $grade, string $section): ?string
+{
+    if ($section === '') return 'Choose your section.';
+    if (!in_array($section, school_sections()[(string) $grade] ?? [], true)) return 'Choose a section from the list.';
+    return null;
+}
+
+// "Grade 10 - Section A" (shown on pages and saved in grade_section)
+function grade_section_label(?int $grade, ?string $section): ?string
+{
+    if (!$grade) return null;
+    return 'Grade ' . $grade . ($section ? ' - ' . $section : '');
+}
+
 // Returns the value if it's a whole positive number, otherwise null.
 function positive_int(string $value): ?int
 {

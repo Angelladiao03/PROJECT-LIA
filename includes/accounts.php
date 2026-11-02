@@ -4,7 +4,7 @@
 
 const GUEST_LIFETIME_DAYS = 30;
 const OPEN_CASE_STATUSES = ['Pending', 'Active', 'Under Investigation'];
-const TERMS_VERSION = 'draft-2026-11';
+const TERMS_VERSION = 'draft-2026-11-02';
 
 // Letters and numbers that are easy to read (no 0/O, 1/I/L).
 const READABLE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -104,22 +104,75 @@ function require_user(): array
     return $user;
 }
 
-// Stops the request unless a guidance staff member is signed in. Returns the staff account.
-function require_admin(): array
+// ---------- Staff accounts and roles ----------
+// counselor = everything, every grade level
+// advocate  = reports, records, messages and registration requests of THEIR grade level, plus all SOS alerts
+// principal = dashboard only
+// security  = not used yet (to be decided)
+const STAFF_ROLE_NAMES = [
+    'counselor' => 'Guidance Counselor',
+    'advocate' => 'Guidance Advocate',
+    'principal' => 'Principal',
+    'security' => 'Security',
+];
+
+// Stops the request unless a staff member is signed in. Returns the staff account.
+// require_admin('counselor', 'advocate') also stops anyone whose role isn't listed.
+function require_admin(string ...$roles): array
 {
     if (!has_session_cookie()) {
         json_session_expired();
     }
     start_session();
     if (!empty($_SESSION['adminId'])) {
-        $stmt = db()->prepare('SELECT admin_id, admin_username, admin_fullname FROM admin_profile WHERE admin_id = ?');
+        $stmt = db()->prepare(
+            'SELECT admin_id, admin_username, admin_fullname, admin_password, staff_role, grade_level
+             FROM admin_profile WHERE admin_id = ?'
+        );
         $stmt->execute([(int) $_SESSION['adminId']]);
         $admin = $stmt->fetch();
         if ($admin) {
+            if ($roles && !in_array($admin['staff_role'], $roles, true)) {
+                json_error('Your staff account (' . staff_role_label($admin) . ") can't open this.", 403);
+            }
             return $admin;
         }
     }
     json_session_expired();
+}
+
+// "Guidance Advocate · Grade 10"
+function staff_role_label(array $admin): string
+{
+    $label = STAFF_ROLE_NAMES[$admin['staff_role']] ?? $admin['staff_role'];
+    return $admin['staff_role'] === 'advocate' && $admin['grade_level'] ? "$label · Grade {$admin['grade_level']}" : $label;
+}
+
+// The one grade level this staff member is limited to, or null for "all grade levels" (counselor).
+function staff_grade(array $admin): ?int
+{
+    return $admin['staff_role'] === 'counselor' ? null : (int) $admin['grade_level'];
+}
+
+// True if this staff member may see a report (or its chat) of this grade level.
+// Reports with no grade level (older ones) are for the counselor only.
+function staff_sees_grade(array $admin, $gradeLevel): bool
+{
+    $limit = staff_grade($admin);
+    return $limit === null || ($gradeLevel !== null && (int) $gradeLevel === $limit);
+}
+
+// Safe staff details for the staff member's own browser.
+function public_staff(array $admin): array
+{
+    return [
+        'adminId' => (int) $admin['admin_id'],
+        'username' => $admin['admin_username'],
+        'displayName' => $admin['admin_fullname'],
+        'role' => $admin['staff_role'],
+        'roleLabel' => staff_role_label($admin),
+        'gradeLevel' => $admin['grade_level'] !== null ? (int) $admin['grade_level'] : null,
+    ];
 }
 
 // How the account appears to staff. Guests are shown only by guest ID.
@@ -132,23 +185,36 @@ function display_name(array $row): string
 }
 
 // Safe account details to send to the account owner's own browser.
+// Students sign in with their username, so they never see a guest ID.
 function public_account(array $user): array
 {
+    $isGuest = $user['account_type'] === 'guest';
     return [
         'userId' => (int) $user['user_id'],
         'accountType' => $user['account_type'],
-        'guestId' => $user['guest_id'],
+        'guestId' => $isGuest ? $user['guest_id'] : null,
         'username' => $user['username'],
         'email' => $user['email'],
         'fullName' => $user['full_name'],
+        'gradeLevel' => $user['grade_level'] !== null ? (int) $user['grade_level'] : null,
+        'section' => $user['section'],
         'gradeSection' => $user['grade_section'],
         'adviser' => $user['adviser_name'],
         'contactNumber' => $user['contact_number'],
-        'displayName' => $user['account_type'] === 'student' && $user['full_name']
-            ? $user['full_name'] : 'Guest',
+        'displayName' => !$isGuest && $user['full_name'] ? $user['full_name'] : 'Guest',
         'createdAt' => $user['created_at'],
         'expiresAt' => $user['expires_at'],
     ];
+}
+
+// "an**************01@gmail.com": enough to recognise your own email, not enough to learn someone else's.
+function mask_email(string $email): string
+{
+    [$name, $domain] = array_pad(explode('@', $email, 2), 2, '');
+    $len = strlen($name);
+    $shown = $len <= 4 ? substr($name, 0, 1) . str_repeat('*', max(3, $len - 1))
+                       : substr($name, 0, 2) . str_repeat('*', $len - 4) . substr($name, -2);
+    return $shown . '@' . $domain;
 }
 
 // ---------- Blocking password guessing ----------

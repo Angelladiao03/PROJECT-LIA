@@ -18,7 +18,7 @@
       ? fact('Guest ID', a.guestId) + fact('Gmail', a.email) + fact('Created', LIA.fmtDate(a.createdAt))
         + fact('Expires', a.expiresAt ? `${LIA.fmtDate(a.expiresAt)} (kept open while a report or request is being handled)` : '')
       : fact('Username', a.username) + fact('Grade & Section', a.gradeSection) + fact('Adviser', a.adviser)
-        + fact('Gmail', a.email) + fact('Contact Number', a.contactNumber) + fact('Guest ID', a.guestId);
+        + fact('Gmail', a.email) + fact('Contact Number', a.contactNumber); // students sign in with their username (no guest ID)
   }
   drawProfile();
 
@@ -41,7 +41,10 @@
       body: `
         <form id="profileForm" novalidate>
           <div class="field"><label for="pUsername">Username</label><input class="input" id="pUsername" name="username" maxlength="24" value="${LIA.esc(a.username)}"></div>
-          <div class="field"><label for="pGrade">Grade &amp; Section</label><input class="input" id="pGrade" name="gradeSection" maxlength="50" value="${LIA.esc(a.gradeSection)}"></div>
+          <div class="form-row">
+            <div class="field"><label for="pGrade">Grade Level</label><select class="input" id="pGrade" name="gradeLevel"></select></div>
+            <div class="field"><label for="pSection">Section</label><select class="input" id="pSection" name="section"></select></div>
+          </div>
           <div class="field"><label for="pAdviser">Adviser</label><input class="input" id="pAdviser" name="adviser" maxlength="150" value="${LIA.esc(a.adviser)}"></div>
           <div class="field"><label for="pContact">Contact Number</label><input class="input" id="pContact" name="contactNumber" inputmode="numeric" maxlength="11" value="${LIA.esc(a.contactNumber)}"></div>
           <p class="small muted" style="margin:0">To change your full name or email, message the guidance office.</p>
@@ -49,6 +52,7 @@
       foot: `<button class="btn btn-quiet" data-close>Cancel</button><button class="btn" form="profileForm" type="submit">Save changes</button>`,
       onOpen: (el, close) => {
         const form = el.querySelector('#profileForm');
+        LIA.gradeSectionFields(form.gradeLevel, form.section, a.gradeLevel, a.section);
         form.contactNumber.addEventListener('input', () => { form.contactNumber.value = form.contactNumber.value.replace(/\D/g, '').slice(0, 11); });
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
@@ -82,6 +86,7 @@
       document.getElementById('c' + id).textContent = n;
       document.getElementById('s' + id).innerHTML = `<b>${pct}%</b> of your ${reports.length} report${reports.length === 1 ? '' : 's'}`;
     });
+    tabs.querySelectorAll('[data-filter]').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.filter === filter)));
     document.querySelectorAll('.stat-card').forEach((c) => {
       c.classList.toggle('selected', c.dataset.filter === filter);
       c.setAttribute('aria-pressed', String(c.dataset.filter === filter));
@@ -126,7 +131,7 @@
           <dt>Name shown to staff</dt><dd>${r.anonymous ? 'No (anonymous: staff see your phone number only)' : 'Yes'}</dd>
         </dl>
         <div class="quote-box">${LIA.esc(r.description)}</div>`,
-      foot: `<a class="btn btn-quiet" href="/app/messages.html">Message the guidance office</a><button class="btn" data-close>Close</button>`,
+      foot: `<a class="btn btn-quiet" href="/app/messages.html?case=${r.reportNo}">Message about this report</a><button class="btn" data-close>Close</button>`,
     });
   }
 
@@ -184,10 +189,13 @@ function drawActivation(req) {
         <div class="field"><label for="username">Username</label><input class="input" id="username" name="username" maxlength="24" autocomplete="username"><p class="hint">8 to 24 letters, numbers, dots or underscores.</p></div>
       </div>
       <div class="form-row">
-        <div class="field"><label for="gradeSection">Grade &amp; Section</label><input class="input" id="gradeSection" name="gradeSection" maxlength="50" placeholder="e.g. 10 - Sampaguita"></div>
-        <div class="field"><label for="adviser">Adviser</label><input class="input" id="adviser" name="adviser" maxlength="150"></div>
+        <div class="field"><label for="gradeLevel">Grade Level</label><select class="input" id="gradeLevel" name="gradeLevel"></select></div>
+        <div class="field"><label for="section">Section</label><select class="input" id="section" name="section"></select></div>
       </div>
-      <div class="field" style="max-width:300px"><label for="contactNumber">Contact Number</label><input class="input" id="contactNumber" name="contactNumber" inputmode="numeric" maxlength="11" placeholder="09XXXXXXXXX"></div>
+      <div class="form-row">
+        <div class="field"><label for="adviser">Adviser</label><input class="input" id="adviser" name="adviser" maxlength="150"></div>
+        <div class="field"><label for="contactNumber">Contact Number</label><input class="input" id="contactNumber" name="contactNumber" inputmode="numeric" maxlength="11" placeholder="09XXXXXXXXX"></div>
+      </div>
       <div class="field">
         <span class="label">Photo of your school ID</span>
         <label class="choice" for="idPhoto" style="align-items:center">
@@ -211,6 +219,7 @@ function drawActivation(req) {
   const fileInput = document.getElementById('idPhoto');
   const preview = document.getElementById('photoPreview');
   let photoBlob = null;
+  LIA.gradeSectionFields(form.gradeLevel, form.section);
 
   form.contactNumber.addEventListener('input', () => { form.contactNumber.value = form.contactNumber.value.replace(/\D/g, '').slice(0, 11); });
 
@@ -236,7 +245,8 @@ function drawActivation(req) {
     let problem = null;
     if (!val('fullName')) problem = 'Enter your full name.';
     else if (!/^[A-Za-z0-9._]{8,24}$/.test(val('username'))) problem = 'Username must be 8 to 24 letters, numbers, dots or underscores.';
-    else if (!val('gradeSection')) problem = 'Enter your grade and section.';
+    else if (!val('gradeLevel')) problem = 'Choose your grade level.';
+    else if (!val('section')) problem = 'Choose your section.';
     else if (!val('adviser')) problem = "Enter your adviser's name.";
     else if (!/^09\d{9}$/.test(val('contactNumber'))) problem = 'Contact number must be 11 digits and start with 09.';
     else if (!photoBlob) problem = 'Add a photo of your school ID.';

@@ -1,41 +1,86 @@
 <?php
-// Your conversation with the guidance office.
-// GET  -> { messages: [{ from: "me" | "guidance", text, sentAt, staffName, case }] }
-//         (opening the conversation marks the guidance office's messages as read)
-// POST text=..., file (optional) -> send a message, optionally with a file (PDF, Word, JPG, PNG; up to 5 MB)
+// Your chats with the guidance office: one general chat, plus one chat per report you sent.
+//
+// GET                 -> { threads: [...] }  the general chat first, then your reports (newest first)
+// GET ?case=general   -> the general chat
+// GET ?case=12        -> the chat about your report #12
+//                        (opening a chat marks the guidance office's messages in it as read)
+// POST case=general|12, text, file (optional) -> send (PDF, Word, JPG, PNG; up to 5 MB)
+// POST action=edit   id, text   -> edit one of your own messages
+// POST action=delete id         -> delete one of your own messages
+//
+// Staff never see who sent an anonymous report, even when they reply in its chat.
 
 require_once __DIR__ . '/../../../includes/bootstrap.php';
 require_method('GET', 'POST');
 $user = require_user();
+$userId = (int) $user['user_id'];
+
+// 'general' -> null; a report number -> that number, if the report is yours
+function my_case(int $userId, string $value): ?int
+{
+    if ($value === '' || $value === 'general') return null;
+    $caseNo = positive_int($value);
+    $stmt = db()->prepare('SELECT 1 FROM reports WHERE report_no = ? AND user_id = ?');
+    $stmt->execute([$caseNo ?? 0, $userId]);
+    if (!$stmt->fetch()) json_error('That report was not found.', 404);
+    return $caseNo;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $text = input('text');
-    $file = read_attachment(); // optional: e.g. the filled-up form sent back (multipart field "file")
-    if ($text === '' && !$file) json_error('Type a message first.');
-    if (too_long($text, 2000)) json_error('Keep messages under 2,000 characters.');
+    $action = input('action');
+    if ($action === 'edit' || $action === 'delete') edit_or_delete_message($action, ['student' => $userId]);
 
-    save_message((int) $user['user_id'], null, 'Student', $text, $file);
+    $caseNo = my_case($userId, input('case'));
+    $file = read_attachment(); // optional: e.g. the filled-up form sent back (multipart field "file")
+    $text = message_text_input(!$file);
+    save_message($userId, null, 'Student', $text, $file, $caseNo);
     json_success($file ? 'File sent.' : 'Sent.');
 }
 
-// Opening the conversation marks the guidance office's messages as read
-db()->prepare("UPDATE messages SET read_at = NOW() WHERE user_id = ? AND sender_type = 'Admin' AND read_at IS NULL")
-    ->execute([$user['user_id']]);
+// ----- One chat -----
+if (isset($_GET['case'])) {
+    $caseNo = my_case($userId, (string) $_GET['case']);
+    db()->prepare(
+        "UPDATE messages SET read_at = NOW()
+         WHERE user_id = ? AND case_no IS NOT DISTINCT FROM CAST(? AS INT) AND sender_type = 'Admin' AND read_at IS NULL"
+    )->execute([$userId, $caseNo]);
+    send_json([
+        'success' => true,
+        'messages' => array_map(fn ($m) => message_out($m, 'student'), thread_messages($userId, $caseNo)),
+    ]);
+}
 
+// ----- List of chats -----
 $stmt = db()->prepare(
-    'SELECT m.message_id, m.sender_type, m.message_text, m.sent_datetime, m.report_no, m.file_name, m.file_size, m.file_type, a.admin_fullname,
-            r.category, r.report_status, r.report_datetime
-     FROM messages m LEFT JOIN admin_profile a ON a.admin_id = m.admin_id
-     LEFT JOIN reports r ON r.report_no = m.report_no
-     WHERE m.user_id = ? ORDER BY m.sent_datetime ASC, m.message_id ASC'
+    "SELECT DISTINCT ON (m.case_no) m.case_no, m.message_text, m.file_name, m.deleted_at, m.sent_datetime, m.sender_type,
+            COUNT(*) FILTER (WHERE m.sender_type = 'Admin' AND m.read_at IS NULL AND m.deleted_at IS NULL)
+                OVER (PARTITION BY m.case_no) AS unread
+     FROM messages m WHERE m.user_id = ?
+     ORDER BY m.case_no, m.sent_datetime DESC, m.message_id DESC"
 );
-$stmt->execute([$user['user_id']]);
+$stmt->execute([$userId]);
+$last = [];
+foreach ($stmt->fetchAll() as $row) $last[$row['case_no'] ?? 'general'] = $row;
 
-send_json(['success' => true, 'messages' => array_map(fn ($m) => [
-    'from' => $m['sender_type'] === 'Admin' ? 'guidance' : 'me',
-    'text' => $m['message_text'],
-    'sentAt' => $m['sent_datetime'],
-    'staffName' => $m['sender_type'] === 'Admin' ? $m['admin_fullname'] : null,
-    'case' => message_case($m), // a report case the guidance office attached, if any
-    'file' => message_file($m), // a file in the message, downloaded from messages/file.php?id=...
-], $stmt->fetchAll())]);
+$thread = fn (string $key, array $extra) => $extra + [
+    'key' => $key,
+    'lastText' => isset($last[$key]) ? preview_text($last[$key]) : null,
+    'lastAt' => $last[$key]['sent_datetime'] ?? null,
+    'unread' => (int) ($last[$key]['unread'] ?? 0),
+];
+
+$threads = [$thread('general', ['case' => 'general', 'title' => 'Guidance Office', 'reportNo' => null])];
+$reports = db()->prepare('SELECT report_no, category, report_status, is_anonymous FROM reports WHERE user_id = ? ORDER BY report_datetime DESC');
+$reports->execute([$userId]);
+foreach ($reports->fetchAll() as $r) {
+    $threads[] = $thread((string) $r['report_no'], [
+        'case' => (string) $r['report_no'],
+        'title' => 'Report #' . $r['report_no'],
+        'reportNo' => (int) $r['report_no'],
+        'category' => $r['category'],
+        'status' => $r['report_status'],
+        'anonymous' => (bool) $r['is_anonymous'],
+    ]);
+}
+send_json(['success' => true, 'threads' => $threads]);

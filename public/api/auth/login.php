@@ -1,7 +1,7 @@
 <?php
 // Sign in as a guest or as a student.
 // POST: kind ("guest" or "student"), identifier, password
-//   guest:   identifier = guest ID (e.g. LIA-7K3P9Q, the "LIA-" is optional)
+//   guest:   identifier = guest ID (e.g. LIA-7K3P9Q, the "LIA-" is optional), or the guest's username if it has one (test accounts)
 //   student: identifier = username or email
 
 require_once __DIR__ . '/../../../includes/bootstrap.php';
@@ -20,8 +20,9 @@ if ($kind === 'guest') {
     if (!str_starts_with($guestId, 'LIA-')) {
         $guestId = 'LIA-' . $guestId;
     }
-    $stmt = db()->prepare("SELECT * FROM users WHERE guest_id = ? AND account_type = 'guest'");
-    $stmt->execute([$guestId]);
+    $stmt = db()->prepare("SELECT * FROM users WHERE account_type = 'guest' AND (guest_id = ? OR LOWER(username) = LOWER(?))
+                           ORDER BY (status = 'Active') DESC LIMIT 1");
+    $stmt->execute([$guestId, $identifier]);
     $lockKey = 'guest:' . $guestId;
 } else {
     $stmt = db()->prepare(
