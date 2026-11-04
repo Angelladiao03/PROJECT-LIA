@@ -21,8 +21,9 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
   linked to the account for their own tracking; staff never receive reporter details).
 - Report statuses: Pending → Active → Under Investigation → Resolved, or Rejected (reason shown to
   student). Resolved/Rejected can be archived (`archived_at`); nothing is hard-deleted.
-- Fixed lists (categories, locations, reporter roles) live in `includes/validation.php` and must
-  match `public/app/report.html`.
+- Fixed lists (categories, reporter roles) live in `includes/validation.php` and must
+  match `public/app/report.html`. Locations live in `public/assets/locations.json` (one list for
+  Submit Report, SOS and the server; "Other" is added automatically).
 - Layout: `public/` = web root (`index.html`, `guest.html`, `staff.html`, `terms.html`, `app/*`,
   `admin/*`, `assets/`, `api/<group>/*.php`); `includes/` = private helpers. Endpoints start with
   `require_once __DIR__ . '/../../../includes/bootstrap.php';` then `require_method(...)` and
@@ -38,7 +39,7 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
   animations short and opacity-only). `LIA.VERSION` in core.js is the version shown on the
   sign-in pages (clicking it on index.html opens staff.html; there is no staff link otherwise).
 - alpha.3 (Oct 31 2026): guest sign-up needs email + phone (one account per email/phone, checked in PHP);
-  forgot password (`reset.html`, `email_codes.purpose='reset'`); SOS location is a dropdown (REPORT_LOCATIONS);
+  forgot password (`reset.html`, `email_codes.purpose='reset'`); SOS location is a dropdown (places in `public/assets/locations.json`, read by `report_locations()` and `LIA.fillLocations()`);
   anonymous reports show staff the phone number only; Records has 10 per page, sortable headings and
   Print / Save as PDF (`pdf.js` + `print.js`, also in the case window and per student in Messages);
   staff can attach a report case to a message (`messages.report_no`); emails for registration, approval,

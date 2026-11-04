@@ -32,7 +32,7 @@ if ($category === 'Other') {
     if ($other === '' || too_long($other, 80)) json_error('Describe the kind of bullying in a few words.');
     $category = 'Other: ' . $other;
 }
-if (!in_array($location, REPORT_LOCATIONS, true)) json_error('Choose where it happened.');
+if (!in_array($location, report_locations(), true)) json_error('Choose where it happened.');
 if ($location === 'Other') {
     $other = input('locationOther');
     if ($other === '' || too_long($other, 120)) json_error('Type where it happened.');

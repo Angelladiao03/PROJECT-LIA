@@ -374,6 +374,9 @@ const LIA = (() => {
     window.addEventListener('pageshow', () => { fields.forEach((f) => { f.value = ''; f.readOnly = true; }); });
   }
 
+  // Sorts names A to Z, with numbers in counting order ("Section 2" before "Section 10").
+  const sortAZ = (list) => [...new Set(list)].sort((a, b) => a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' }));
+
   // ---------- Grade level and section dropdowns ----------
   // The sections are in /assets/school-sections.json (the server checks the same file).
   let sectionsPromise = null;
@@ -387,7 +390,7 @@ const LIA = (() => {
     gradeSelect.innerHTML = '<option value="">Select grade level...</option>' +
       Object.keys(all).map((g) => `<option value="${g}">Grade ${g}</option>`).join('');
     const fill = () => {
-      const list = all[gradeSelect.value] || [];
+      const list = sortAZ(all[gradeSelect.value] || []); // shown A to Z
       sectionSelect.innerHTML = `<option value="">${gradeSelect.value ? 'Select section...' : 'Choose the grade level first'}</option>` +
         list.map((s) => `<option>${esc(s)}</option>`).join('');
       sectionSelect.disabled = !list.length;
@@ -398,12 +401,27 @@ const LIA = (() => {
     gradeSelect.addEventListener('change', fill);
   }
 
-  // ---------- SOS ----------
-  // Places for SOS alerts. Must match REPORT_LOCATIONS in includes/validation.php.
-  const SOS_LOCATIONS = ['Classroom', 'Hallway or stairs', 'Canteen', 'Comfort room', 'School gate',
-    'Covered court or field', 'Library', 'Online or group chat', 'Outside school', 'Other'];
+  // ---------- Locations (Submit Report and SOS) ----------
+  // The places are in /assets/locations.json (the server checks the same file).
+  // "Others" (type the place) is always the last choice.
+  let locationsPromise = null;
+  function locations() {
+    locationsPromise ??= fetch('/assets/locations.json').then((r) => r.json())
+      .then((j) => (Array.isArray(j.locations) ? j.locations : []).map((p) => String(p).trim()).filter((p) => p && p !== 'Other'))
+      .catch(() => { locationsPromise = null; return []; }); // if it can't load, "Others" still works
+    return locationsPromise;
+  }
+  function locationOptions(list) {
+    return '<option value="">Select location...</option>' +
+      sortAZ(list).map((p) => `<option>${esc(p)}</option>`).join('') + '<option value="Other">Others</option>'; // A to Z, "Others" last
+  }
+  async function fillLocations(select) {
+    select.innerHTML = locationOptions(await locations());
+  }
 
-  function openSos() {
+  // ---------- SOS ----------
+  async function openSos() {
+    const places = await locations();
     openModal({
       title: 'Send an SOS',
       className: 'sos-modal',
@@ -413,8 +431,7 @@ const LIA = (() => {
           <div class="field">
             <label for="sosWhere">Where are you right now?</label>
             <select class="input" id="sosWhere" name="location" required>
-              <option value="">Select location...</option>
-              ${SOS_LOCATIONS.map((p) => `<option${p === 'Other' ? ' value="Other">Others' : `>${p}`}</option>`).join('')}
+              ${locationOptions(places)}
             </select>
           </div>
           <div class="field" id="sosOtherField" hidden>
@@ -730,7 +747,7 @@ const LIA = (() => {
 
   return {
     VERSION, api, esc, icon, toast, openModal, confirmBox, showFormError, busy, wirePasswordToggles, copyText,
-    changePasswordModal, start, initials, chip, STATUS, ROLE, staffHome, noAutofill, gradeSectionFields,
+    changePasswordModal, start, initials, chip, STATUS, ROLE, staffHome, noAutofill, gradeSectionFields, fillLocations,
     toDate, fmtDate, fmtDateTime, timeAgo, daysLeft, todayInManila,
   };
 })();

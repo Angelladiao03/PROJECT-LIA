@@ -11,10 +11,6 @@ const REPORT_CATEGORIES = [
     'Verbal bullying', 'Physical bullying', 'Social exclusion', 'Cyberbullying',
     'Threats or intimidation', 'Other',
 ];
-const REPORT_LOCATIONS = [
-    'Classroom', 'Hallway or stairs', 'Canteen', 'Comfort room', 'School gate',
-    'Covered court or field', 'Library', 'Online or group chat', 'Outside school', 'Other',
-];
 const REPORTER_ROLES = ['victim', 'witness', 'other'];
 
 // Reads a POST field as trimmed text. Returns '' when missing.
@@ -80,6 +76,26 @@ function school_sections(): array
         $sections = $json['sections'] ?? [];
     }
     return $sections;
+}
+
+// Places for the Location dropdowns (Submit Report and SOS), from public/assets/locations.json
+// (the pages read the same file). "Other" is always added at the end, so people can type a place.
+function report_locations(): array
+{
+    static $places = null;
+    if ($places === null) {
+        $json = json_decode((string) @file_get_contents(__DIR__ . '/../public/assets/locations.json'), true);
+        $list = is_array($json['locations'] ?? null) ? $json['locations'] : [];
+        $places = [];
+        foreach ($list as $place) {
+            if (is_string($place) && trim($place) !== '' && mb_strlen($place) <= 100 && trim($place) !== 'Other') {
+                $places[] = trim($place);
+            }
+        }
+        $places = array_values(array_unique($places));
+        $places[] = 'Other';
+    }
+    return $places;
 }
 
 // Reads a grade level (7 to 12) from a POST field. Returns null if it isn't one.

@@ -25,6 +25,9 @@
     updatePref();
   }
 
+  // Location choices come from /assets/locations.json
+  await LIA.fillLocations(form.location);
+
   // Date: today by default, no future dates
   const today = LIA.todayInManila();
   form.incidentDate.max = today;

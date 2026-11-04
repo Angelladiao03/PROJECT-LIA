@@ -79,6 +79,7 @@ PROJECT-LIA/
 │   │   ├── js/chat.js          Messages: the "+" (Attach File / Attach Case), message bubbles, ⋮ Edit / Delete
 │   │   ├── js/pages/*.js       code for individual pages (admin-case.js = the case details window)
 │   │   ├── school-sections.json  the Section dropdown lists per grade (PLACEHOLDERS: put the real sections here)
+│   │   ├── locations.json        the Location dropdown places (Submit Report + SOS); add places here
 │   │   └── img/                seal, posters, favicon
 │   └── api/                    PHP endpoints the pages call
 │       ├── auth/               me, login, staff_login, logout, reset_send, reset_confirm
