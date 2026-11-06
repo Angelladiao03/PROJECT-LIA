@@ -14,7 +14,7 @@
 --   Student            studentaccount     / studentaccount123     (Grade 10 - Section A)
 --   Guest              guestaccount       / guestaccount123       (sign in on the Guest tab)
 --   Guidance Counselor guidancecounselor  / guidancecounselor123  (all grade levels)
---   Principal          principal          / principal123          (dashboard only)
+--   Principal          principal          / principal123          (dashboard + staff chat)
 --   Grade 7 advocate   grade7advocate     / grade7advocate123
 --   Grade 8 advocate   grade8advocate     / grade8advocate123
 --   Grade 9 advocate   grade9advocate     / grade9advocate123
@@ -27,7 +27,7 @@
 
 BEGIN;
 
-TRUNCATE message_edits, messages, password_resets, reports, sos_alerts, activation_requests,
+TRUNCATE staff_message_edits, staff_messages, message_edits, messages, password_resets, reports, sos_alerts, activation_requests,
          email_codes, login_attempts, email_outbox, php_sessions, app_state, audit_log,
          users, admin_profile
          RESTART IDENTITY CASCADE;

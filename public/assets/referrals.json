@@ -1,0 +1,19 @@
+{
+  "_note": "Offices a case can be referred to (Manage Reports > For referral). Taken from the Lagro High School Referral Services sheet. Each one has a name and its contact details (shown to staff only). To add one, copy a { ... } block, put a comma between blocks, and change the text. \"Other\" (type the office) is always added at the end by itself.",
+  "agencies": [
+    { "name": "LGU Quezon City Crisis Hotline", "contact": "122" },
+    { "name": "Quezon City Health Center", "contact": "Local 1607 · 8988 4242" },
+    { "name": "Quezon City General Hospital", "contact": "(02) 8863 0995 / (02) 8863 0800" },
+    { "name": "National Center for Mental Health (NCMH)", "contact": "Crisis hotline 1553 · Local 293 (02) 8531 9001 · ncmhchildops@gmail.com" },
+    { "name": "Philippine Children's Medical Center (PCMC), Adolescent Medicine Division", "contact": "Local 1336 · 8588 9900 · 0917 842 2084 · adolescent@stg.pcmc.gov.ph" },
+    { "name": "Mental Health Hub, District 1 (San Francisco Super Health Center)", "contact": "0995 108 6175" },
+    { "name": "Mental Health Hub, District 2 (Batasan Hills Super Health Center)", "contact": "0935 791 9496" },
+    { "name": "Mental Health Hub, District 3 (Project 4 Health Center)", "contact": "(02) 7149 0023" },
+    { "name": "Mental Health Hub, District 4 (Kamuning Super Health Center)", "contact": "(02) 7092 8594" },
+    { "name": "Mental Health Hub, District 5 (AJ Maximo Super Health Center)", "contact": "(02) 7004 7692" },
+    { "name": "Mental Health Hub, District 6 (Banlat Health Center)", "contact": "(02) 7003 2412" },
+    { "name": "Social Services Development Department (SSDD), Quezon City Hall", "contact": "Local 8863 · 8988 4242 · 893 8405 · 0919 067 0499 · ssdd@quezoncity.gov.ph" },
+    { "name": "Kabahagi Center for Children with Disabilities", "contact": "Local 103, 106, 107 · 8246 2350 · qckabahagicenter@quezoncity.gov.ph" },
+    { "name": "Hopeline", "contact": "(02) 8804 4673 · Smart/Sun/TNT 0918 873 4673 · Globe 0917 558 4673" }
+  ]
+}

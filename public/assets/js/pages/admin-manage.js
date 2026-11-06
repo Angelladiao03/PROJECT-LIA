@@ -31,7 +31,7 @@
       </tr>`).join('') : emptyRow(6, 'No new reports to review.');
 
     // 2. Active cases
-    const active = reports.filter((r) => r.status === 'Active' || r.status === 'Under Investigation');
+    const active = reports.filter((r) => ['Active', 'Under Investigation', 'For Intervention', 'For Referral'].includes(r.status));
     document.getElementById('nActive').textContent = active.length;
     document.getElementById('activeRows').innerHTML = active.length ? active.map((r) => `
       <tr>
@@ -43,6 +43,8 @@
           <select class="input input-sm" data-update="${r.reportNo}" aria-label="New status for report ${r.reportNo}">
             <option value="">Update status...</option>
             ${r.status === 'Active' ? '<option value="investigate">Under investigation</option>' : ''}
+            ${r.status !== 'For Intervention' ? '<option value="intervene">For intervention</option>' : ''}
+            ${r.status !== 'For Referral' ? '<option value="refer">For referral</option>' : ''}
             <option value="resolve">Resolved</option>
             ${r.status === 'Active' ? '<option value="reject">Rejected</option>' : ''}
           </select>
@@ -107,12 +109,10 @@
     }
   });
 
+  // Plays the same beeps as a real SOS alert (and switches the sound on for this page)
   document.getElementById('testSound').addEventListener('click', () => {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = 880;
-    const g = ctx.createGain(); g.gain.value = 0.2; o.connect(g).connect(ctx.destination);
-    o.start(); o.stop(ctx.currentTime + 0.3);
-    LIA.toast('If you heard a beep, SOS alerts will make a sound on this device.');
+    LIA.sosSound();
+    LIA.toast('If you heard SOS in Morse code (3 short, 3 long, 3 short), alerts will make a sound on this device. Check that the volume is up.');
   });
 
   document.addEventListener('lia:new-sos', load);

@@ -1,6 +1,7 @@
 // Staff: the "REPORT CASE NO. #" details window (like the prototype), shared by
 // Manage Reports, Report Records and Messages. It also holds the case actions:
-// accept, start investigation, resolve, reject (with a reason), archive, restore.
+// accept, start investigation, for intervention, for referral (asks where), resolve, reject (with a reason),
+// archive, restore. Print / Save as PDF only show once a report is accepted (not while it waits for approval).
 // The student's personal details only show after the staff member types their password (showStudent).
 
 const CASE = (() => {
@@ -67,7 +68,10 @@ const CASE = (() => {
     const list = [];
     if (r.status === 'Pending') list.push(['approve', 'Accept report', '']);
     if (r.status === 'Active') list.push(['investigate', 'Start investigation', '']);
-    if (r.status === 'Active' || r.status === 'Under Investigation') list.push(['resolve', 'Mark resolved', '']);
+    const handling = ['Active', 'Under Investigation', 'For Intervention', 'For Referral'].includes(r.status);
+    if (handling && r.status !== 'For Intervention') list.push(['intervene', 'For intervention', 'btn-quiet']);
+    if (handling && r.status !== 'For Referral') list.push(['refer', 'For referral', 'btn-quiet']);
+    if (handling) list.push(['resolve', 'Mark resolved', '']);
     if (r.status === 'Pending' || r.status === 'Active') list.push(['reject', 'Reject', 'btn-danger']);
     if ((r.status === 'Resolved' || r.status === 'Rejected') && !r.archived) list.push(['archive', 'Archive', 'btn-quiet']);
     if (r.archived) list.push(['unarchive', 'Restore to records', 'btn-quiet']);
@@ -97,13 +101,67 @@ const CASE = (() => {
     });
   }
 
+  // The offices a case can be referred to (public/assets/referrals.json, the server checks the same file)
+  let agenciesPromise = null;
+  const agencies = () => (agenciesPromise ??= fetch('/assets/referrals.json').then((x) => x.json())
+    .then((j) => (Array.isArray(j.agencies) ? j.agencies : []).filter((a) => a && a.name && a.name !== 'Other'))
+    .catch(() => { agenciesPromise = null; return []; }));
+
+  // "For referral": where the case goes, plus an optional note. Resolves { agency, agencyOther, note } or null.
+  async function askReferral(r) {
+    const list = await agencies();
+    return new Promise((resolve) => {
+      let done = false;
+      LIA.openModal({
+        title: `Refer case #${r.reportNo}`,
+        body: `<form id="refForm" novalidate>
+            <div class="field"><label for="agency">Referred to</label>
+              <select class="input" id="agency" name="agency">
+                <option value="">Select an office...</option>
+                ${list.map((a, i) => `<option value="${LIA.esc(a.name)}" data-i="${i}">${LIA.esc(a.name)}</option>`).join('')}
+                <option value="Other">Other (type it)</option>
+              </select>
+              <p class="hint" id="agencyContact"></p></div>
+            <div class="field" id="agencyOtherField" hidden><label for="agencyOther">Office</label>
+              <input class="input" id="agencyOther" name="agencyOther" maxlength="150" placeholder="e.g. Barangay Greater Lagro VAWC Desk"></div>
+            <div class="field"><label for="refNote">Note for staff (optional)</label>
+              <textarea class="input" id="refNote" name="note" maxlength="1000" placeholder="e.g. Parents informed. Appointment on Monday."></textarea>
+              <p class="hint">Only staff see where the case was referred and this note. The student sees "Referred for more support".</p></div>
+          </form>`,
+        foot: `<button class="btn btn-quiet" data-close>Cancel</button><button class="btn" form="refForm" type="submit">Refer case</button>`,
+        onOpen: (el, close) => {
+          const f = el.querySelector('#refForm');
+          f.agency.addEventListener('change', () => {
+            el.querySelector('#agencyOtherField').hidden = f.agency.value !== 'Other';
+            const a = list[f.agency.selectedOptions[0]?.dataset.i];
+            el.querySelector('#agencyContact').textContent = a?.contact ? 'Contact: ' + a.contact : '';
+          });
+          f.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!f.agency.value) return LIA.showFormError(f, 'Choose where the case is referred to.');
+            if (f.agency.value === 'Other' && !f.agencyOther.value.trim()) return LIA.showFormError(f, 'Type the office the case is referred to.');
+            done = true; close();
+            resolve({ agency: f.agency.value, agencyOther: f.agencyOther.value.trim(), note: f.note.value.trim() });
+          });
+          new MutationObserver((_, obs) => { if (!el.isConnected) { obs.disconnect(); if (!done) resolve(null); } })
+            .observe(document.body, { childList: true });
+        },
+      });
+    });
+  }
+
   // Runs one action. Returns true if it worked.
   async function act(r, action, button) {
-    const body = { action, reportNo: r.reportNo };
+    let body = { action, reportNo: r.reportNo };
     if (action === 'reject') {
       const reason = await askReason();
       if (!reason) return false;
       body.reason = reason;
+    }
+    if (action === 'refer') {
+      const ref = await askReferral(r);
+      if (!ref) return false;
+      body = { ...body, ...ref };
     }
     try {
       const run = () => LIA.api('admin/reports.php', { body });
@@ -152,12 +210,13 @@ const CASE = (() => {
         <h3 style="margin-top:16px">Description</h3>
         <div class="quote-box">${LIA.esc(r.description)}</div>
         ${r.status === 'Rejected' ? `<h3 style="margin-top:16px">Reason given to the student</h3><div class="reason">${LIA.esc(r.rejectReason)}</div>` : ''}
+        ${r.referredTo ? `<h3 style="margin-top:16px">${r.status === 'For Referral' ? 'Referred to' : 'Last referred to'}</h3><div class="quote-box"><b>${LIA.esc(r.referredTo)}</b>${r.referralNote ? `<br>${LIA.esc(r.referralNote)}` : ''}</div>` : ''}
         <h3 style="margin-top:16px">Case History</h3>
         <ol class="case-history" data-history><li class="muted">Loading...</li></ol>`,
       foot: `${buttons}
         ${r.canMessage ? `<a class="btn btn-quiet" href="/admin/messages.html?case=${r.reportNo}">Message</a>` : ''}
-        <button class="btn btn-ghost" data-print>Print</button>
-        <button class="btn btn-ghost" data-pdf>Save as PDF</button>
+        ${r.status !== 'Pending' ? `<button class="btn btn-ghost" data-print>Print</button>
+        <button class="btn btn-ghost" data-pdf>Save as PDF</button>` : ''}
         <button class="btn btn-gray" data-close>Close</button>`,
       onOpen: (el, close) => {
         el.querySelector('[data-reveal]')?.addEventListener('click', async () => {
@@ -168,12 +227,12 @@ const CASE = (() => {
         const hist = el.querySelector('[data-history]');
         let historyRows = [];
         LIA.api('admin/reports.php?history=' + r.reportNo).then(({ history }) => {
-          historyRows = history.map((h) => [`Case history · ${LIA.fmtDateTime(h.at)}`, `${h.what} by ${h.by}`]);
+          historyRows = history.map((h) => [`Case history · ${LIA.fmtDateTime(h.at)}`, `${h.what} by ${h.by}${h.action === 'report.refer' && h.details ? ' · ' + h.details : ''}`]);
           hist.innerHTML = `<li><b>Report submitted</b> <span class="muted">· ${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</span></li>` +
-            history.map((h) => `<li><b>${LIA.esc(h.what)}</b> by ${LIA.esc(h.by)} <span class="muted">· ${LIA.esc(LIA.fmtDateTime(h.at))}</span></li>`).join('');
+            history.map((h) => `<li><b>${LIA.esc(h.what)}</b> by ${LIA.esc(h.by)} <span class="muted">· ${LIA.esc(LIA.fmtDateTime(h.at))}</span>${h.action === 'report.refer' && h.details ? `<br><span class="small">${LIA.esc(h.details)}</span>` : ''}</li>`).join('');
         }).catch((e) => { hist.innerHTML = `<li class="muted">${LIA.esc(e.message)}</li>`; });
         // Save this case record as a PDF (two columns: field and details)
-        el.querySelector('[data-pdf]').addEventListener('click', () => {
+        el.querySelector('[data-pdf]')?.addEventListener('click', () => {
           const rows = [
             ['Case No.', `#${r.reportNo}`],
             ['Status', r.status + (r.archived ? ' (archived)' : '')],
@@ -190,12 +249,13 @@ const CASE = (() => {
             ...(r.involvedKnown ? [['Person(s) Involved', r.involvedDescription]] : []),
             ['Description', r.description],
             ...(r.status === 'Rejected' ? [['Reason given to the student', r.rejectReason || '']] : []),
+            ...(r.referredTo ? [['Referred to', r.referredTo + (r.referralNote ? ' · ' + r.referralNote : '')]] : []),
             ['Case history · ' + LIA.fmtDateTime(r.submittedAt), 'Report submitted'],
             ...historyRows,
           ];
           PRINT.savePdf({ title: `Report Case No. #${r.reportNo}`, columns: [{ label: 'Field', width: 150 }, { label: 'Details' }], rows, filename: `case-${r.reportNo}`, landscape: false, note: 'Case record' });
         });
-        el.querySelector('[data-print]').addEventListener('click', () => {
+        el.querySelector('[data-print]')?.addEventListener('click', () => {
           document.body.classList.add('printing-case');
           window.print();
           document.body.classList.remove('printing-case');

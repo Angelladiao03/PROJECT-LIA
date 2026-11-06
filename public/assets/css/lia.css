@@ -317,6 +317,8 @@ body.nav-mini .page { padding-left: 26px; }
 .chip.pending { color: var(--st-pending); background: var(--st-pending-bg); }
 .chip.active { color: var(--st-active); background: var(--st-active-bg); }
 .chip.invest { color: var(--st-invest); background: var(--st-invest-bg); }
+.chip.interv { color: #00695c; background: #e0f2f1; }
+.chip.refer { color: #ad1457; background: #fce4ec; }
 .chip.resolved { color: var(--st-resolved); background: var(--st-resolved-bg); }
 .chip.rejected { color: var(--st-rejected); background: var(--st-rejected-bg); }
 .chip.sos { color: #fff; background: var(--sos); }
@@ -738,6 +740,40 @@ th[aria-sort="descending"] .sort-btn::after { content: "▼"; opacity: 1; }
 .print-choice { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; margin: 0 0 12px; display: grid; gap: 6px; }
 .print-choice legend { font-weight: 700; color: var(--green); padding: 0 6px; }
 #printArea { display: none; }
+
+/* ---------- alpha.5 ---------- */
+/* Sign-in: red outline when the username/password didn't work; the tab to use stands out */
+.input[aria-invalid="true"] { border-color: var(--sos); background: #fff; box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.18); }
+.seg button.hint-tab { outline: 2px solid var(--orange); outline-offset: 2px; }
+/* "Back" above the step number when creating a guest account */
+.step-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.step-top .step-label { margin: 0; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; padding: 4px 0; border: 0; background: none; color: var(--green); font: inherit; font-weight: 600; font-size: 0.92rem; cursor: pointer; text-decoration: none; }
+.back-link:hover { text-decoration: underline; }
+.back-link svg { width: 16px; height: 16px; }
+/* Student chat: the "Before you message the Guidance Office" pop-up */
+.rules-list { margin: 0 0 12px; padding-left: 22px; }
+.rules-list li { margin-bottom: 4px; }
+.rules-list.ok li::marker { content: "✓  "; color: var(--green-bright); font-weight: 700; }
+.rules-list.no li::marker { content: "✕  "; color: var(--sos); font-weight: 700; }
+/* Messages: Reports / Students / Staff buttons above the list of chats */
+.chat-tabs { display: flex; gap: 6px; padding: 4px 16px 8px; flex-wrap: wrap; }
+.chat-tabs[hidden] { display: none; }
+.chat-tabs button { display: inline-flex; align-items: center; padding: 6px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+.chat-tabs button:hover { background: var(--field); }
+.chat-tabs button[aria-selected="true"] { background: var(--green); border-color: var(--green); color: #fff; }
+.chat-tabs .count-pill { min-width: 20px; height: 20px; padding: 0 6px; font-size: 0.72rem; }
+.avatar.staff { background: #e8eaf6; color: #283593; box-shadow: none; }
+/* Time of the last message, at the right of each chat in the list */
+.convo-end { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: none; }
+.convo .when { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+/* "Today", "Yesterday", "Monday"... between the days of a chat */
+.day-divider { display: flex; align-items: center; gap: 10px; margin: 12px 0 10px; color: var(--muted); font-size: 0.78rem; font-weight: 700; }
+.day-divider::before, .day-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.day-divider span { padding: 2px 10px; border-radius: 999px; background: var(--field); border: 1px solid var(--line); }
+
+/* SOS strip: "Turn on sound" when the browser blocked the beep */
+.sos-strip .sound-off { border: 1px solid #fff; background: transparent; color: #fff; font: inherit; font-size: 0.85rem; padding: 3px 10px; border-radius: var(--radius-sm); cursor: pointer; }
 
 @media print {
   /* Printing a table of records: only #printArea is printed */

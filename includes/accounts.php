@@ -3,8 +3,8 @@
 // expiry, generating guest IDs and passwords, and blocking password guessing.
 
 const GUEST_LIFETIME_DAYS = 30;
-const OPEN_CASE_STATUSES = ['Pending', 'Active', 'Under Investigation'];
-const TERMS_VERSION = 'draft-2026-11-02';
+const OPEN_CASE_STATUSES = ['Pending', 'Active', 'Under Investigation', 'For Intervention', 'For Referral'];
+const TERMS_VERSION = 'draft-2026-11-06';
 
 // Letters and numbers that are easy to read (no 0/O, 1/I/L).
 const READABLE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';

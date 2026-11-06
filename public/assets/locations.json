@@ -1,14 +1,23 @@
 {
   "_note": "Places for the Location dropdowns (Submit Report and SOS). To add a place, type its name in quotes and put a comma between names. \"Others\" (type the place) is always added at the end by itself, so don't add it here. The website and the server both read this one file.",
   "locations": [
-    "Castelo Building",
-    "Bautista Building",
+    "Castelo Building I",
+    "Castelo Building II",
+    "Bautista Building I",
+    "Bautista Building II",
     "Vargas Building",
-    "SB Building",
     "Canteen",
-    "School gate",
-    "Covered court or field",
-    "Library",
-    "Online or group chat"
+    "Mathay Building",
+    "TVL Building",
+    "Covered Court",
+    "Blue Building",
+    "Simon Building",
+    "DPWH Building",
+    "Sonny Belmonte Building",
+    "SPED Building",
+    "Main Gate",
+    "Online or group chat",
+    "Yellow Gate",
+    "Others"
   ]
 }

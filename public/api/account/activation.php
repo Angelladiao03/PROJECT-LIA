@@ -1,7 +1,8 @@
 <?php
 // Ask the guidance office to turn a guest account into a permanent student account.
-// POST (multipart form): fullName, username, gradeLevel (7-12), section (from the list), adviser, contactNumber,
+// POST (multipart form): fullName, username, gradeLevel (7-12), section (from the list), adviser,
 //                        consent ("yes"), idPhoto (JPG, PNG or WEBP image, max 3 MB)
+// The phone number is not asked again: the guest account's number is kept.
 //
 // Privacy: the ID photo is only visible to guidance staff, and it is
 // deleted as soon as they approve or decline the request.
@@ -23,15 +24,14 @@ $username = input('username');
 $grade = grade_input('gradeLevel');
 $section = input('section');
 $adviser = input('adviser');
-$contact = input('contactNumber');
+$contact = (string) $user['contact_number']; // from the guest account (asked at sign-up)
 
 if ($fullName === '' || too_long($fullName, 150)) json_error('Enter your full name.');
 if ($error = username_error($username)) json_error($error);
 if ($grade === null) json_error('Choose your grade level.');
 if ($error = section_error($grade, $section)) json_error($error);
 if ($adviser === '' || too_long($adviser, 150)) json_error("Enter your adviser's name.");
-if ($error = contact_number_error($contact)) json_error($error);
-if (contact_in_use($contact, (int) $user['user_id'])) json_error('This phone number already belongs to another account.', 409);
+if ($contact === '') json_error('Add your phone number in Edit Profile first, then send the request.');
 if (input('consent') !== 'yes') json_error('Check the box to agree to the ID photo being reviewed.');
 
 // Username must not be used by another account or another pending request.

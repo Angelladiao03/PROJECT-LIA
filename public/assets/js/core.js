@@ -9,7 +9,7 @@
 
 const LIA = (() => {
   // The version shown on the sign-in pages. Change it here when you tag a new version.
-  const VERSION = 'v1.0.0-alpha.4';
+  const VERSION = 'v1.0.0-alpha.5';
   document.querySelectorAll('[data-version]').forEach((el) => { el.textContent = VERSION; });
 
   // ---------- Icons (simple line drawings, 24x24) ----------
@@ -163,6 +163,39 @@ const LIA = (() => {
     const d = toDate(value);
     return d ? d.toLocaleString('en-PH', { timeZone: TZ, month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
   }
+  // ---------- Times in chats (like Messenger) ----------
+  const dayKey = (d) => d.toLocaleDateString('en-CA', { timeZone: TZ }); // YYYY-MM-DD in Manila time
+  function fmtTime(value) {
+    const d = toDate(value);
+    return d ? d.toLocaleTimeString('en-PH', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }) : '';
+  }
+  // How many calendar days ago (Manila time): 0 = today, 1 = yesterday
+  function daysAgo(d) {
+    const ms = (k) => Date.parse(k + 'T00:00:00Z');
+    return Math.round((ms(dayKey(new Date())) - ms(dayKey(d))) / 86400000);
+  }
+  // The divider between days in a chat: "Today", "Yesterday", "Monday", or "Nov 2, 2026"
+  function dayLabel(value) {
+    const d = toDate(value);
+    if (!d) return '';
+    const ago = daysAgo(d);
+    if (ago === 0) return 'Today';
+    if (ago === 1) return 'Yesterday';
+    if (ago > 1 && ago < 7) return d.toLocaleDateString('en-PH', { timeZone: TZ, weekday: 'long' });
+    return d.toLocaleDateString('en-PH', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  // The small time in the list of chats: "9:41 AM", "Yesterday", "Mon", "Nov 2" or "Nov 2, 2025"
+  function shortWhen(value) {
+    const d = toDate(value);
+    if (!d) return '';
+    const ago = daysAgo(d);
+    if (ago === 0) return fmtTime(value);
+    if (ago === 1) return 'Yesterday';
+    if (ago > 1 && ago < 7) return d.toLocaleDateString('en-PH', { timeZone: TZ, weekday: 'short' });
+    const sameYear = dayKey(d).slice(0, 4) === dayKey(new Date()).slice(0, 4);
+    return d.toLocaleDateString('en-PH', { timeZone: TZ, month: 'short', day: 'numeric', ...(sameYear ? {} : { year: 'numeric' }) });
+  }
+
   function timeAgo(value) {
     const d = toDate(value);
     if (!d) return '';
@@ -186,6 +219,8 @@ const LIA = (() => {
     'Pending': { cls: 'pending', student: 'Waiting for review', staff: 'New' },
     'Active': { cls: 'active', student: 'Accepted · being handled', staff: 'Active' },
     'Under Investigation': { cls: 'invest', student: 'Under investigation', staff: 'Under investigation' },
+    'For Intervention': { cls: 'interv', student: 'Guidance is taking action', staff: 'For intervention' },
+    'For Referral': { cls: 'refer', student: 'Referred for more support', staff: 'For referral' },
     'Resolved': { cls: 'resolved', student: 'Resolved', staff: 'Resolved' },
     'Rejected': { cls: 'rejected', student: 'Not accepted', staff: 'Rejected' },
   };
@@ -407,7 +442,7 @@ const LIA = (() => {
   let locationsPromise = null;
   function locations() {
     locationsPromise ??= fetch('/assets/locations.json').then((r) => r.json())
-      .then((j) => (Array.isArray(j.locations) ? j.locations : []).map((p) => String(p).trim()).filter((p) => p && p !== 'Other'))
+      .then((j) => (Array.isArray(j.locations) ? j.locations : []).map((p) => String(p).trim()).filter((p) => p && !/^others?$/i.test(p))) // "Others" is added by itself
       .catch(() => { locationsPromise = null; return []; }); // if it can't load, "Others" still works
     return locationsPromise;
   }
@@ -418,6 +453,16 @@ const LIA = (() => {
   async function fillLocations(select) {
     select.innerHTML = locationOptions(await locations());
   }
+
+  // ---------- Crisis hotlines (from the school's Referral Services sheet) ----------
+  // Shown in the side menu, the green footer and the SOS window. [what is shown, what the phone dials]
+  const HOTLINES = [
+    { name: 'National Emergency Hotline', short: '911 National', numbers: [['911', '911']] },
+    { name: 'Quezon City Helpline', short: '122 Quezon City', numbers: [['122', '122']] },
+    { name: 'NCMH Crisis Hotline (mental health)', short: '1553 NCMH Crisis', numbers: [['1553', '1553']] },
+    { name: 'Hopeline (someone to talk to)', short: 'Hopeline', numbers: [['(02) 8804 4673', '+63288044673'], ['0917 558 4673', '09175584673'], ['0918 873 4673', '09188734673']] },
+  ];
+  const telLinks = (h) => h.numbers.map(([shown, dial]) => `<a href="tel:${dial}">${esc(shown)}</a>`).join(' / ');
 
   // ---------- SOS ----------
   async function openSos() {
@@ -443,7 +488,8 @@ const LIA = (() => {
             <textarea class="input" id="sosWhat" name="description" maxlength="1000" style="min-height:90px" placeholder="e.g. A group is blocking me and threatening me" required></textarea>
           </div>
         </form>
-        <div class="form-note warn small">If someone is hurt or in immediate danger, also call <a href="tel:911"><b>911</b></a> or the Quezon City hotline <a href="tel:122"><b>122</b></a>.</div>`,
+        <div class="form-note warn small">If someone is hurt or in immediate danger, also call <a href="tel:911"><b>911</b></a> or the Quezon City hotline <a href="tel:122"><b>122</b></a>.
+          Need someone to talk to? NCMH Crisis Hotline <a href="tel:1553"><b>1553</b></a> or Hopeline <a href="tel:+63288044673"><b>(02) 8804 4673</b></a>.</div>`,
       foot: `<button class="btn btn-quiet" data-close>Cancel</button><button class="btn btn-sos btn-big" form="sosForm" type="submit">${icon('alert')} Send SOS now</button>`,
       onOpen: (el, close) => {
         const form = el.querySelector('#sosForm');
@@ -460,7 +506,7 @@ const LIA = (() => {
             openModal({
               title: 'SOS sent',
               body: `<p><b>The guidance office has been alerted.</b> Stay where it is safest. If you can, move near a teacher or a guard.</p>
-                     <p class="muted">Emergency hotlines: <a href="tel:911">911</a> · Quezon City <a href="tel:122">122</a></p>`,
+                     <p class="muted">Emergency hotlines: <a href="tel:911">911</a> · Quezon City <a href="tel:122">122</a> · NCMH Crisis <a href="tel:1553">1553</a> · Hopeline <a href="tel:+63288044673">(02) 8804 4673</a></p>`,
               foot: `<button class="btn" data-close>OK</button>`,
             });
           } catch (err) {
@@ -485,14 +531,15 @@ const LIA = (() => {
     { id: 'terms', href: '/terms.html', icon: 'shield', label: 'Terms & privacy' },
   ];
   // Staff pages and which staff roles can open them (the server checks the same rules on every request).
-  //   counselor: everything (all grade levels)   advocate: their grade level + all SOS   principal: dashboard   all: Home + My Account
+  //   counselor: everything (all grade levels)   advocate: their grade level + all SOS   principal: dashboard
+  //   all: Home, Messages (staff chat; counselor and advocates also have student chats) and My Account
   const ADMIN_NAV = [
     { id: 'home', href: '/admin/home.html', icon: 'home', label: 'Home', roles: ['counselor', 'advocate', 'principal', 'security'] },
     { id: 'dashboard', href: '/admin/index.html', icon: 'chart', label: 'Dashboard', roles: ['counselor', 'principal'] },
     { id: 'cases', href: '/admin/cases.html', icon: 'folder', label: 'Manage Reports', count: 'cases', roles: ['counselor', 'advocate'] },
     { id: 'records', href: '/admin/records.html', icon: 'archive', label: 'Report Records', roles: ['counselor', 'advocate'] },
     { id: 'accounts', href: '/admin/accounts.html', icon: 'users', label: 'Registration Requests', count: 'accounts', roles: ['counselor', 'advocate'] },
-    { id: 'messages', href: '/admin/messages.html', icon: 'chat', label: 'Messages', count: 'messages', roles: ['counselor', 'advocate'] },
+    { id: 'messages', href: '/admin/messages.html', icon: 'chat', label: 'Messages', count: 'messages', roles: ['counselor', 'advocate', 'principal', 'security'] },
     { id: 'staff-account', href: '/admin/account.html', icon: 'user', label: 'My Account', roles: ['counselor', 'advocate', 'principal', 'security'] },
   ];
   const staffNav = (acct) => ADMIN_NAV.filter((i) => i.roles.includes(acct.role));
@@ -556,8 +603,7 @@ const LIA = (() => {
          <div class="nav-group">${USER_NAV.map((i) => navLink(i, current)).join('')}</div>
          <div class="nav-group extra"><p class="nav-heading">Learn</p>${USER_EXTRA.map((i) => navLink(i, current)).join('')}</div>
          <div class="nav-group extra"><p class="nav-heading">Emergency hotlines</p>
-           <a class="nav-link" href="tel:911">${icon('phone')}<span>911 National</span></a>
-           <a class="nav-link" href="tel:122">${icon('phone')}<span>122 Quezon City</span></a></div>
+           ${HOTLINES.map((h) => `<a class="nav-link" href="tel:${h.numbers[0][1]}" title="${esc(h.name)}">${icon('phone')}<span>${esc(h.short === 'Hopeline' ? 'Hopeline ' + h.numbers[0][0] : h.short)}</span></a>`).join('')}</div>
          <p class="sidebar-foot">LagroInAction · Lagro High School</p>`;
 
     const main = document.querySelector('main');
@@ -584,7 +630,7 @@ const LIA = (() => {
       foot.innerHTML = `
         <div><h2>Lagro High School</h2><p><b>Address:</b> Misa de Gallo St. corner Ascension Ave., Brgy. Greater Lagro, Novaliches, Quezon City.</p></div>
         <div><h2>Contact Us</h2><p><b>Email:</b> <a href="mailto:lagrohighschool@gmail.com">lagrohighschool@gmail.com</a><br><b>Facebook:</b> Ask Lagro High School</p></div>
-        <div><h2>Emergency Hotlines</h2><p><a href="tel:122">Quezon City Hotline - 122</a><br><a href="tel:911">National Emergency Hotline - 911</a></p></div>
+        <div><h2>Emergency Hotlines</h2><p>${HOTLINES.map((h) => `${esc(h.name)} - ${telLinks(h)}`).join('<br>')}</p></div>
         <p class="copy">© ${new Date().getFullYear()} Lagro High School - LagroInAction. All Rights Reserved.</p>`;
       main.append(foot);
     }
@@ -640,28 +686,64 @@ const LIA = (() => {
   }
 
   // ---------- Staff: watch for new SOS alerts (sound + red strip) ----------
-  let sosSeen = null;
-  function beep() {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      [0, 0.35, 0.7].forEach((t) => {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'square'; o.frequency.value = 880;
-        g.gain.setValueAtTime(0.0001, ctx.currentTime + t);
-        g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + t + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.25);
-        o.connect(g).connect(ctx.destination);
-        o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.3);
-      });
-    } catch (e) { /* sound not available */ }
+  // Browsers only allow a page to make sound after the person has clicked or typed on it.
+  // So we keep ONE sound player and switch it on at the first click/key press on any staff page.
+  let audio = null;
+  function soundPlayer() {
+    try { audio ??= new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; }
+    return audio;
   }
+  const soundReady = () => !!audio && audio.state === 'running';
+  function unlockSound() {
+    const ctx = soundPlayer();
+    if (ctx && ctx.state !== 'running') ctx.resume().then(() => document.querySelector('.sound-off')?.remove()).catch(() => {});
+  }
+  // "SOS" in Morse code, played twice:  ··· ——— ···
+  // Morse timing: a dot is 1 unit, a dash 3 units, 1 unit of silence inside a letter,
+  // 3 units between letters and 7 units between words. 1 unit = 0.12 seconds.
+  const UNIT = 0.12;
+  const SOS_MORSE = '... --- ...';
+  function beep() {
+    const ctx = soundPlayer();
+    if (!ctx) return false;
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
+    let t = ctx.currentTime + 0.05;
+    const tone = (units) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = 880;
+      const end = t + units * UNIT;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.5, t + 0.01);    // quick fade in/out so it doesn't click
+      g.gain.setValueAtTime(0.5, end - 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, end);
+      o.connect(g).connect(ctx.destination);
+      o.start(t); o.stop(end + 0.02);
+      t = end;
+    };
+    for (let round = 0; round < 2; round += 1) {
+      for (const letter of SOS_MORSE.split(' ')) {
+        [...letter].forEach((mark, i) => {
+          if (i > 0) t += UNIT;               // gap inside the letter
+          tone(mark === '.' ? 1 : 3);
+        });
+        t += 3 * UNIT;                         // gap between letters
+      }
+      t += 4 * UNIT;                           // (3 + 4 = 7 units) gap before the second SOS
+    }
+    return soundReady();
+  }
+  // SOS alerts this browser tab already beeped for (kept while moving between staff pages,
+  // so an alert that arrives while a page is loading still beeps, but only once)
+  const HEARD = 'lia-sos-heard';
+  const heardSos = () => { try { return new Set(JSON.parse(sessionStorage.getItem(HEARD) || '[]')); } catch (e) { return new Set(); } };
+  const saveHeard = (ids) => { try { sessionStorage.setItem(HEARD, JSON.stringify([...ids])); } catch (e) {} };
   async function watchStaffCounts() {
     try {
       const counts = await api('admin/counts.php');
       const active = counts.activeSos;
       if (active.length) setCount('cases', active.length); else setCount('cases', counts.newReports, true);
       setCount('accounts', counts.pendingAccounts, true);
-      setCount('messages', counts.waitingChats, true);
+      setCount('messages', counts.waitingChats + (counts.staffUnread || 0), true);
 
       // red strip across the top while any SOS is waiting
       let strip = document.querySelector('.sos-strip');
@@ -681,16 +763,20 @@ const LIA = (() => {
         document.body.style.removeProperty('--strip-h');
       }
 
-      const ids = new Set(active.map((a) => a.sosNo));
-      if (sosSeen) {
-        const fresh = active.filter((a) => !sosSeen.has(a.sosNo));
-        if (fresh.length) {
-          beep();
-          toast(`New SOS: ${fresh[0].name} at ${fresh[0].location}`, 'error');
-          document.dispatchEvent(new CustomEvent('lia:new-sos'));
+      const heard = heardSos();
+      const fresh = active.filter((a) => !heard.has(a.sosNo));
+      if (fresh.length) {
+        const played = beep();
+        toast(`New SOS: ${fresh[0].name} at ${fresh[0].location}`, 'error');
+        document.dispatchEvent(new CustomEvent('lia:new-sos'));
+        fresh.forEach((a) => heard.add(a.sosNo));
+        saveHeard(heard);
+        // The browser blocked the sound (nobody has clicked this page yet): say how to turn it on
+        if (!played && strip && !strip.querySelector('.sound-off')) {
+          strip.insertAdjacentHTML('beforeend', '<button type="button" class="sound-off">Turn on sound</button>');
+          strip.querySelector('.sound-off').addEventListener('click', () => { unlockSound(); beep(); });
         }
       }
-      sosSeen = ids;
     } catch (e) { /* try again next time */ }
   }
 
@@ -718,8 +804,12 @@ const LIA = (() => {
       return new Promise(() => {});
     }
     buildShell(me);
-    if (area === 'admin' && ['counselor', 'advocate'].includes(me.account.role)) {
-      watchStaffCounts();
+    if (area === 'admin') {
+      // Counselor and advocates get SOS alerts: switch the SOS sound on at the first click or key press on the page
+      if (['counselor', 'advocate'].includes(me.account.role)) {
+        ['pointerdown', 'keydown'].forEach((ev) => document.addEventListener(ev, unlockSound, { once: true, capture: true }));
+      }
+      watchStaffCounts(); // menu counters (every role: unread staff chat messages), SOS strip
       setInterval(watchStaffCounts, 20000);
       // Update counters right after any action (small delay groups several quick clicks into one check)
       let soon;
@@ -748,6 +838,6 @@ const LIA = (() => {
   return {
     VERSION, api, esc, icon, toast, openModal, confirmBox, showFormError, busy, wirePasswordToggles, copyText,
     changePasswordModal, start, initials, chip, STATUS, ROLE, staffHome, noAutofill, gradeSectionFields, fillLocations,
-    toDate, fmtDate, fmtDateTime, timeAgo, daysLeft, todayInManila,
+    toDate, fmtDate, fmtDateTime, fmtTime, dayLabel, shortWhen, timeAgo, daysLeft, todayInManila, sosSound: () => { unlockSound(); return beep(); },
   };
 })();

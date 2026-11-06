@@ -16,6 +16,14 @@ function goTo(step) {
   focusTarget?.focus();
 }
 
+// "Back" at the top of steps 1 to 3 (step 1 goes back to the sign-in page)
+document.querySelectorAll('[data-back-icon]').forEach((b) => b.insertAdjacentHTML('afterbegin', LIA.icon('arrowLeft')));
+document.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => {
+  const step = Number(b.dataset.back);
+  if (step === 2) { codeForm.reset(); LIA.showFormError(codeForm, ''); }
+  goTo(step);
+}));
+
 // ---------- Step 1: Terms (must scroll to the end before agreeing) ----------
 let termsHtml = null;
 async function loadTerms() {

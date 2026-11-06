@@ -2,13 +2,23 @@
 // Staff: the small numbers in the side menu and the red SOS strip, checked every 20 seconds.
 // One small request instead of downloading every report, alert, request and chat each time.
 //
-// GET -> { activeSos: [{ sosNo, name, location, sentAt }], newReports, pendingAccounts, waitingChats }
+// GET -> { activeSos: [{ sosNo, name, location, sentAt }], newReports, pendingAccounts, waitingChats, staffUnread }
 // Advocates: counts for their grade level (SOS alerts are for everyone).
+// Principal and security: only staffUnread (unread messages from other staff).
 
 require_once __DIR__ . '/../../../includes/bootstrap.php';
 require_method('GET');
-$admin = require_admin('counselor', 'advocate');
+$admin = require_admin();
 $grade = staff_grade($admin);
+
+// Unread messages from other staff (staff chat), for every role
+$stmt = db()->prepare('SELECT COUNT(*) FROM staff_messages WHERE to_admin_id = ? AND read_at IS NULL AND deleted_at IS NULL');
+$stmt->execute([$admin['admin_id']]);
+$staffUnread = (int) $stmt->fetchColumn();
+
+if (!in_array($admin['staff_role'], ['counselor', 'advocate'], true)) {
+    send_json(['success' => true, 'activeSos' => [], 'newReports' => 0, 'pendingAccounts' => 0, 'waitingChats' => 0, 'staffUnread' => $staffUnread]);
+}
 
 $count = function (string $sql) use ($grade): int {
     $stmt = db()->prepare($sql);
@@ -42,4 +52,5 @@ send_json([
          WHERE last.sender_type = 'Student' AND last.deleted_at IS NULL
            AND (CAST(? AS INT) IS NULL OR (CASE WHEN last.case_no IS NULL THEN last.user_grade ELSE last.case_grade END) = CAST(? AS INT))"
     ),
+    'staffUnread' => $staffUnread,
 ]);

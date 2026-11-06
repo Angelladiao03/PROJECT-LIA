@@ -19,7 +19,7 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
   Staff use `admin_profile`, one account per person.
 - Guest reports are always anonymous; students may choose "Hide my name from staff" (report stays
   linked to the account for their own tracking; staff never receive reporter details).
-- Report statuses: Pending → Active → Under Investigation → Resolved, or Rejected (reason shown to
+- Report statuses: Pending → Active → Under Investigation → For Intervention / For Referral → Resolved, or Rejected (reason shown to
   student). Resolved/Rejected can be archived (`archived_at`); nothing is hard-deleted.
 - Fixed lists (categories, reporter roles) live in `includes/validation.php` and must
   match `public/app/report.html`. Locations live in `public/assets/locations.json` (one list for
@@ -62,6 +62,18 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
   (`admin/account.html`, `api/admin/account.php`). Every staff role has Home (`admin/home.html`) and My Account. Dashboard uses `api/admin/stats.php` (totals only), menu
   counters use `api/admin/counts.php`. Sign-in fields use `LIA.noAutofill()`. Students have no guest ID
   shown. Smaller corner radius. `reset_test_data.sql` erases everything and adds test accounts.
+- alpha.5 (Nov 6 2026): staff-to-staff chat for every role (`staff_messages`, `staff_message_edits`,
+  `api/admin/staff_chat.php`; principal and security now have Messages, staff tab only); staff Messages has
+  Reports / Students / Staff buttons; chats show day dividers and times (`LIA.dayLabel/fmtTime/shortWhen`).
+  New statuses For Intervention and For Referral (`reports.referred_to`, `referral_note`; offices in
+  `public/assets/referrals.json`, read by `referral_agencies()`; student sees "Referred for more support").
+  No Print/PDF while a report is Pending. Crisis hotlines list `HOTLINES` in core.js. Activation request no
+  longer asks for a phone number (keeps the guest's). Sign-in says "use the Guest/Student tab" when the
+  password matches the other kind, and always refuses a guest ID (`LIA-XXXXXX`) on the Student tab. Back
+  buttons on guest sign-up. Chat rules pop-up (not dismissable; "I understand" once per tab, sessionStorage
+  `lia-chat-rules-ok`) when a student opens the Guidance Office chat; it also says "no report yet". SOS sound:
+  Morse "... --- ..." twice (`beep()` in core.js), one shared AudioContext unlocked on the first click,
+  "Turn on sound" button, heard alerts kept in sessionStorage.
 - Purpose note from the team: LIA is for tracking reports, updates and case management. It does not
   solve cases or replace the guidance sessions themselves.
 - Settings via `setting()` in `includes/config.php`: env vars on Render (`DATABASE_URL`,

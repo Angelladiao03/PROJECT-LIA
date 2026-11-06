@@ -29,7 +29,7 @@
 
         <!-- Step 1: Terms -->
         <section class="card" data-panel="1">
-          <p class="step-label">Step 1 of 4</p>
+          <div class="step-top"><a class="back-link" href="/index.html" data-back-icon>Back to sign in</a><p class="step-label">Step 1 of 4</p></div>
           <h2>Read the terms</h2>
           <p>Before you create an account, read how LagroInAction keeps you safe and what happens to the information you share.</p>
           <button class="btn btn-big btn-block" id="openTerms" type="button">Read the Terms &amp; Privacy Notice</button>
@@ -38,7 +38,7 @@
 
         <!-- Step 2: Email -->
         <section class="card" data-panel="2" hidden>
-          <p class="step-label">Step 2 of 4</p>
+          <div class="step-top"><button class="back-link" type="button" data-back="1" data-back-icon>Back</button><p class="step-label">Step 2 of 4</p></div>
           <h2>Your email and phone number</h2>
           <p>We'll send a 6-digit code to your email. We use your email to verify your account and send important notices. Your phone number lets the guidance office reach you if you need help.</p>
           <form id="emailForm" novalidate>
@@ -57,7 +57,7 @@
 
         <!-- Step 3: Code -->
         <section class="card" data-panel="3" hidden>
-          <p class="step-label">Step 3 of 4</p>
+          <div class="step-top"><button class="back-link" type="button" data-back="2" data-back-icon>Back</button><p class="step-label">Step 3 of 4</p></div>
           <h2>Enter the code</h2>
           <p id="codeSentTo"></p>
           <div class="form-note warn small" id="devCode" hidden></div>

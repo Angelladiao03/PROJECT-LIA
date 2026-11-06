@@ -25,7 +25,7 @@
       (t.pendingAccounts !== null ? tile(t.pendingAccounts, 'Registration Requests', 'Waiting for approval', '/admin/accounts.html') : '') +
       tile(t.total, 'Total Reports', 'All reports received', '/admin/records.html') +
       tile(t.pending, 'Pending Review', 'New, not yet reviewed', '/admin/cases.html') +
-      tile(t.investigating, 'Being Handled', 'Accepted or under investigation', '/admin/cases.html') +
+      tile(t.investigating, 'Being Handled', 'Accepted, investigating, intervention or referral', '/admin/cases.html') +
       tile(t.resolved, 'Resolved', 'Cases closed', '/admin/records.html');
 
     // Reports per month: plain bars (each bar is a real count)

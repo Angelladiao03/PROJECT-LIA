@@ -55,6 +55,49 @@
       let messages = [];
       let lastSig = '';
 
+      // ----- Pop-up before messaging the Guidance Office: what this chat is for (stops prank messages) -----
+      // Shown when the Guidance Office chat opens, until "I understand" is pressed (once per browser tab).
+      const RULES_KEY = 'lia-chat-rules-ok';
+      let rulesOk = false;
+      try { rulesOk = sessionStorage.getItem(RULES_KEY) === '1'; } catch (e) {}
+      let rulesOpen = false;
+      function showChatRules() {
+        // (on phones, only once the chat itself is on screen, not while the list of chats is showing)
+        if (rulesOk || rulesOpen || document.getElementById('chat').offsetParent === null) return;
+        rulesOpen = true;
+        const hasReport = threads.some((x) => x.reportNo);
+        LIA.openModal({
+          title: 'Before you message the Guidance Office',
+          dismissable: false,
+          body: `
+            <p>This chat goes straight to the guidance staff of Lagro High School. Please use it only for:</p>
+            <ul class="rules-list ok">
+              <li>Questions about bullying, your safety, or how to use LagroInAction</li>
+              <li>Asking for help, or asking to talk to a guidance staff member</li>
+              <li>Adding details or following up on something you reported</li>
+            </ul>
+            <p>Please do <b>not</b> send:</p>
+            <ul class="rules-list no">
+              <li>Jokes, pranks, or made-up stories</li>
+              <li>Insults, threats, or bad words</li>
+              <li>Photos or files that have nothing to do with your concern</li>
+            </ul>
+            <p class="small muted">Every message is saved with your account and the time it was sent, and guidance staff may act on messages that misuse this chat.</p>
+            ${hasReport ? '' : `<div class="form-note small"><b>You haven't sent a report yet.</b> If you or someone else is being bullied, send a report so the guidance office can act on it and you can follow its status. <a href="/app/report.html">Submit a Report</a></div>`}`,
+          foot: `<a class="btn btn-quiet" href="/app/home.html">Go back</a><button class="btn" type="button" data-ok>I understand</button>`,
+          onOpen: (el, close) => {
+            el.querySelector('[data-ok]').addEventListener('click', () => {
+              rulesOk = true; rulesOpen = false;
+              try { sessionStorage.setItem(RULES_KEY, '1'); } catch (e) {}
+              close();
+              form.text.focus();
+            });
+          },
+        });
+      }
+      // If the pop-up was skipped somehow, typing in the Guidance Office chat brings it back
+      form.text.addEventListener('focus', () => { if (current === 'general') showChatRules(); });
+
       async function loadList() {
         try {
           ({ threads } = await LIA.api('messages/thread.php'));
@@ -64,7 +107,8 @@
               <span class="who"><strong>${LIA.esc(t.title)}</strong>
                 <span class="sub">${t.reportNo ? LIA.esc(t.category + ' · ' + (LIA.STATUS[t.status]?.student || t.status)) : 'Questions for the guidance office'}</span>
                 <span>${t.lastText ? LIA.esc(t.lastText) : 'No messages yet'}</span></span>
-              ${t.unread ? `<span class="count-pill" title="Unread messages">${t.unread}</span>` : ''}
+              <span class="convo-end">${t.lastAt ? `<time class="when" title="${LIA.esc(LIA.fmtDateTime(t.lastAt))}">${LIA.esc(LIA.shortWhen(t.lastAt))}</time>` : ''}
+                ${t.unread ? `<span class="count-pill" title="Unread messages">${t.unread}</span>` : ''}</span>
             </button>`).join('');
         } catch (e) { /* try again soon */ }
       }
@@ -78,6 +122,7 @@
           document.getElementById('chatSub').textContent = !t?.reportNo
             ? (me.account.accountType === 'guest' ? `Staff see you only as Guest ${me.account.guestId}.` : 'Messages are private between you and guidance staff.')
             : `${t.category} · ${t.anonymous ? 'Your name stays hidden from staff in this chat.' : 'About this report.'}`;
+          if (current === 'general') showChatRules();
           const view = document.getElementById('viewReport');
           view.hidden = !t?.reportNo;
           if (t?.reportNo) view.href = `/app/account.html#report-${t.reportNo}`;

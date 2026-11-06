@@ -12,7 +12,13 @@
     <div class="wide">
       <div class="split" id="split">
         <section class="card convo-list-card">
-          <div class="convo-list-head"><h1>Messages</h1><p class="small muted">Chats are grouped by case. Yellow dot: waiting for a reply.</p></div>
+          <div class="convo-list-head"><h1>Messages</h1><p class="small muted" id="listHint">Yellow dot: waiting for a reply.</p></div>
+          <!-- Which chats to show. Principal and security only have Staff. -->
+          <div class="chat-tabs" id="chatTabs" role="tablist" aria-label="Kind of chat">
+            <button type="button" role="tab" data-tab="reports" aria-selected="true">Reports <span class="count-pill" data-tab-count="reports" hidden></span></button>
+            <button type="button" role="tab" data-tab="students" aria-selected="false">Students <span class="count-pill" data-tab-count="students" hidden></span></button>
+            <button type="button" role="tab" data-tab="staff" aria-selected="false">Staff <span class="count-pill" data-tab-count="staff" hidden></span></button>
+          </div>
           <div class="convo-list" id="convos"><div class="skeleton"></div></div>
         </section>
 
@@ -28,7 +34,7 @@
             </div>
           </header>
           <div class="chat-log" id="log" aria-live="polite">
-            <div class="empty"><strong>No chat open</strong><span>Pick a chat on the left. To message the reporter of a report (even an anonymous one), open the report and press Message.</span></div>
+            <div class="empty"><strong>No chat open</strong><span id="noChatHint">Pick a chat on the left. To message the reporter of a report (even an anonymous one), open the report and press Message.</span></div>
           </div>
           <form class="chat-form" id="chatForm" hidden>
             <label class="visually-hidden" for="text">Reply</label>
@@ -46,7 +52,9 @@
   <script src="/assets/js/chat.js"></script>
   <script>
     (async () => {
-      await LIA.start();
+      const me = await LIA.start();
+      // Counselor and advocates chat with students AND staff. Principal and security: staff only.
+      const withStudents = ['counselor', 'advocate'].includes(me.account.role);
       const convosEl = document.getElementById('convos');
       const log = document.getElementById('log');
       const form = document.getElementById('chatForm');
@@ -54,39 +62,101 @@
       const back = document.getElementById('back');
       back.innerHTML = LIA.icon('arrowLeft');
 
-      // The open chat: { case: 12 } or { user: 5 }, from the address (?case=12 or ?user=5)
+      // The open chat: { case: 12 }, { user: 5 } or { staff: 3 }, from the address (?case=12, ?user=5 or ?staff=3)
       const params = new URLSearchParams(location.search);
-      let current = params.get('case') ? { case: Number(params.get('case')) } : params.get('user') ? { user: Number(params.get('user')) } : null;
-      const keyOf = (c) => (c ? (c.case ? 'case-' + c.case : 'user-' + c.user) : '');
-      let thread = null;     // what the server says about the open chat
+      let current = params.get('case') ? { case: Number(params.get('case')) }
+        : params.get('user') ? { user: Number(params.get('user')) }
+        : params.get('staff') ? { staff: Number(params.get('staff')) } : null;
+      if (!withStudents && current && !current.staff) current = null;
+      const keyOf = (c) => (c ? (c.case ? 'case-' + c.case : c.user ? 'user-' + c.user : 'staff-' + c.staff) : '');
+      const tabOf = (c) => (c?.case ? 'reports' : c?.user ? 'students' : 'staff');
+      let tab = withStudents ? tabOf(current || { case: 1 }) : 'staff';
+      let thread = null;     // what the server says about the open chat (student chats)
+      let person = null;     // the staff member in the open staff chat
       let messages = [];
       let lastSig = '';
+      let threads = [];      // chats with students (reports + general)
+      let people = [];       // every other staff member
+
+      const tabsEl = document.getElementById('chatTabs');
+      if (!withStudents) {
+        tabsEl.hidden = true;
+        document.getElementById('noChatHint').textContent = 'Pick a staff member on the left to start a chat.';
+      }
+      const HINTS = {
+        reports: 'One chat per report. Yellow dot: waiting for a reply.',
+        students: 'General chats with students and guests. Yellow dot: waiting for a reply.',
+        staff: withStudents ? 'Chat with other staff members.' : 'Chat with the guidance staff and other staff members.',
+      };
 
       // ----- List of chats -----
-      async function loadList() {
-        try {
-          const { threads } = await LIA.api('admin/messages.php');
-          convosEl.innerHTML = threads.length ? threads.map((t) => `
+      const when = (at) => (at ? `<time class="when" title="${LIA.esc(LIA.fmtDateTime(at))}">${LIA.esc(LIA.shortWhen(at))}</time>` : '');
+      function drawList() {
+        tabsEl.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+        // Little numbers on the buttons: chats waiting for a reply / unread staff messages
+        const counts = {
+          reports: threads.filter((t) => t.kind === 'case' && t.waitingForReply).length,
+          students: threads.filter((t) => t.kind !== 'case' && t.waitingForReply).length,
+          staff: people.reduce((n, p) => n + p.unread, 0),
+        };
+        Object.entries(counts).forEach(([k, n]) => {
+          const el = tabsEl.querySelector(`[data-tab-count="${k}"]`);
+          el.textContent = n; el.hidden = !n;
+        });
+        document.getElementById('listHint').textContent = HINTS[tab];
+
+        if (tab === 'staff') {
+          convosEl.innerHTML = people.length ? people.map((p) => `
+            <button class="convo" data-key="staff-${p.adminId}" ${'staff-' + p.adminId === keyOf(current) ? 'aria-current="true"' : ''}>
+              <span class="avatar staff">${LIA.esc(LIA.initials(p.name))}</span>
+              <span class="who"><strong>${LIA.esc(p.name)}</strong>
+                <span class="sub">${LIA.esc(p.roleLabel)}</span>
+                <span>${p.lastText ? LIA.esc((p.lastFromMe ? 'You: ' : '') + p.lastText) : 'No messages yet'}</span></span>
+              <span class="convo-end">${when(p.lastAt)}${p.unread ? `<span class="count-pill" title="Unread messages">${p.unread}</span>` : ''}</span>
+            </button>`).join('')
+            : '<p class="small muted convo-empty">There are no other staff accounts yet.</p>';
+          return;
+        }
+        const list = threads.filter((t) => (tab === 'reports' ? t.kind === 'case' : t.kind !== 'case'));
+        convosEl.innerHTML = list.length ? list.map((t) => `
             <button class="convo" data-key="${t.key}" ${t.key === keyOf(current) ? 'aria-current="true"' : ''}>
               <span class="avatar ${t.kind === 'case' ? 'case' : t.accountType === 'guest' ? 'guest' : ''}">${t.kind === 'case' ? '#' : LIA.esc(LIA.initials(t.name))}</span>
               <span class="who"><strong>${t.kind === 'case' ? `Case #${t.reportNo}` : LIA.esc(t.name)}</strong>
                 <span class="sub">${t.kind === 'case' ? LIA.esc(t.name + ' · ' + t.category) : 'General chat'}</span>
                 <span>${LIA.esc(t.lastText)}</span></span>
-              ${t.waitingForReply ? '<span class="dot" title="Waiting for a reply"></span>' : ''}
+              <span class="convo-end">${when(t.lastAt)}${t.waitingForReply ? '<span class="dot" title="Waiting for a reply"></span>' : ''}</span>
             </button>`).join('')
-            : '<p class="small muted convo-empty">No messages yet. Students can message the guidance office from their Message page, and you can message the reporter of any report from its details window.</p>';
+          : `<p class="small muted convo-empty">${tab === 'reports'
+            ? 'No report chats yet. To message the reporter of a report (even an anonymous one), open the report and press Message.'
+            : 'No general chats yet. Students can message the guidance office from their Message page.'}</p>`;
+      }
+      async function loadList() {
+        try {
+          const [student, staff] = await Promise.all([
+            withStudents ? LIA.api('admin/messages.php') : Promise.resolve({ threads: [] }),
+            LIA.api('admin/staff_chat.php'),
+          ]);
+          threads = student.threads;
+          people = staff.people;
+          drawList();
         } catch (e) { convosEl.innerHTML = `<p class="small muted convo-empty">${LIA.esc(e.message)}</p>`; }
       }
+      tabsEl.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-tab]');
+        if (!b || b.dataset.tab === tab) return;
+        tab = b.dataset.tab;
+        drawList();
+      });
       convosEl.addEventListener('click', (e) => {
         const b = e.target.closest('[data-key]');
         if (!b) return;
         const [kind, n] = b.dataset.key.split('-');
-        open(kind === 'case' ? { case: Number(n) } : { user: Number(n) });
+        open(kind === 'case' ? { case: Number(n) } : kind === 'user' ? { user: Number(n) } : { staff: Number(n) });
       });
       function open(c) {
         current = c;
         composer.stopEditing();
-        history.replaceState(null, '', '?' + (c.case ? 'case=' + c.case : 'user=' + c.user));
+        history.replaceState(null, '', '?' + (c.case ? 'case=' + c.case : c.user ? 'user=' + c.user : 'staff=' + c.staff));
         convosEl.querySelectorAll('.convo').forEach((x) => x.toggleAttribute('aria-current', x.dataset.key === keyOf(c)));
         lastSig = '';
         loadChat();
@@ -95,10 +165,42 @@
       // ----- One chat -----
       const caseCard = (c) => `<button type="button" class="case-card" data-case-no="${c.reportNo}">${LIA.icon('folder')}<span><b>Report #${c.reportNo}</b>${LIA.esc(c.category)} · ${LIA.esc(c.status)}</span></button>`;
 
+      // A chat with another staff member: name and role at the top, no student tools
+      async function loadStaffChat() {
+        const res = await LIA.api('admin/staff_chat.php?with=' + current.staff);
+        person = res.person;
+        thread = null;
+        messages = res.messages;
+        split.classList.add('has-chat');
+        back.hidden = false;
+        form.hidden = false;
+        document.getElementById('chatTools').hidden = true;
+        const av = document.getElementById('chatAvatar');
+        av.hidden = false;
+        av.textContent = LIA.initials(person.name);
+        av.className = 'avatar staff';
+        document.getElementById('chatName').textContent = person.name;
+        document.getElementById('chatInfo').textContent = person.roleLabel + ' · Staff chat';
+        const sig = 'staff-' + person.adminId + JSON.stringify(messages.map((m) => [m.id, m.text, m.deleted, m.edited]));
+        if (sig === lastSig) return;
+        const wasUnread = people.find((p) => p.adminId === person.adminId)?.unread;
+        lastSig = sig;
+        log.innerHTML = messages.length
+          ? CHAT.render(messages, { caseCard: () => '', who: (m) => m.staffName })
+          : `<div class="empty"><strong>No messages yet</strong><span>Write the first message to ${LIA.esc(person.name)} below.</span></div>`;
+        log.scrollTop = log.scrollHeight;
+        if (wasUnread) loadList(); // opening the chat marked them read
+      }
+
       async function loadChat() {
         if (!current) return;
+        if (current.staff) {
+          try { await loadStaffChat(); } catch (e) { LIA.toast(e.message, 'error'); }
+          return;
+        }
         try {
           const res = await LIA.api('admin/messages.php?' + (current.case ? 'case=' + current.case : 'user=' + current.user));
+          person = null;
           thread = res.thread;
           messages = res.messages;
           split.classList.add('has-chat');
@@ -194,8 +296,8 @@
         });
       });
 
-      // "+" next to the message box: Attach File, and (general chats) Attach Case
-      const attach = ATTACH.setup({ form, onCase: () => attachCase(), canCase: () => thread?.kind === 'general' });
+      // "+" next to the message box: Attach File, and (general chats with students) Attach Case
+      const attach = ATTACH.setup({ form, onCase: () => attachCase(), canCase: () => !current?.staff && thread?.kind === 'general' });
       async function attachCase() {
         let linked;
         try { linked = await linkedReports(); } catch (e) { return LIA.toast(e.message, 'error'); }
@@ -228,17 +330,19 @@
       }
 
       // Send, edit and delete (the ⋮ menu next to your own messages)
-      const target = () => (current.case ? { case: current.case } : { user: current.user });
+      // Student chats go to admin/messages.php, staff chats to admin/staff_chat.php
+      const target = () => (current.case ? { case: current.case } : current.user ? { user: current.user } : { with: current.staff });
+      const endpoint = () => (current?.staff ? 'admin/staff_chat.php' : 'admin/messages.php');
       const composer = CHAT.composer({
         form, log, attach,
         messages: () => messages,
         send: (text, file) => {
           let body = { ...target(), text };
           if (file) { body = new FormData(); Object.entries(target()).forEach(([k, v]) => body.append(k, v)); body.append('text', text); body.append('file', file); }
-          return LIA.api('admin/messages.php', { body });
+          return LIA.api(endpoint(), { body });
         },
-        edit: (id, text) => LIA.api('admin/messages.php', { body: { action: 'edit', id, text } }),
-        remove: (id) => LIA.api('admin/messages.php', { body: { action: 'delete', id } }),
+        edit: (id, text) => LIA.api(endpoint(), { body: { action: 'edit', id, text } }),
+        remove: (id) => LIA.api(endpoint(), { body: { action: 'delete', id } }),
         reload: () => { lastSig = ''; return Promise.all([loadChat(), loadList()]); },
       });
 

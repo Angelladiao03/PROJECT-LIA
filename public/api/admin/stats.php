@@ -32,7 +32,7 @@ send_json([
         'pendingAccounts' => $admin['staff_role'] === 'counselor' ? $one("SELECT COUNT(*) FROM activation_requests WHERE status = 'Pending'") : null,
         'total' => $one('SELECT COUNT(*) FROM reports'),
         'pending' => $one("SELECT COUNT(*) FROM reports WHERE report_status = 'Pending' AND archived_at IS NULL"),
-        'investigating' => $one("SELECT COUNT(*) FROM reports WHERE report_status IN ('Active', 'Under Investigation') AND archived_at IS NULL"),
+        'investigating' => $one("SELECT COUNT(*) FROM reports WHERE report_status IN ('Active', 'Under Investigation', 'For Intervention', 'For Referral') AND archived_at IS NULL"),
         'resolved' => $one("SELECT COUNT(*) FROM reports WHERE report_status = 'Resolved'"),
     ],
     'monthly' => array_map(fn ($k) => ['month' => $k, 'n' => (int) ($months[$k] ?? 0)], array_map(

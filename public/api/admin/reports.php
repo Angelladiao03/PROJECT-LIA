@@ -8,6 +8,9 @@
 //
 // POST action=approve     reportNo   Pending -> Active
 // POST action=investigate reportNo   Active -> Under Investigation
+// POST action=intervene   reportNo   -> For Intervention (the school handles it: counseling, meetings, etc.)
+// POST action=refer       reportNo, agency (from public/assets/referrals.json, or "Other" + agencyOther),
+//                         note (optional)   -> For Referral (sent to an outside office)
 // POST action=resolve     reportNo   -> Resolved
 // POST action=reject      reportNo, reason   -> Rejected (the student sees the reason)
 // POST action=archive     reportNo   hides a Resolved/Rejected report from Records (never deleted)
@@ -42,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['history'])) {
     );
     $stmt->execute([$reportNo]);
     send_json(['success' => true, 'history' => array_map(fn ($h) => [
+        'action' => $h['action'],
         'what' => audit_label($h['action']),
         'details' => $h['details'],
         'by' => $h['admin_fullname'] ?? 'Unknown staff',
@@ -82,6 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'involvedDescription' => $r['involved_person_description'],
             'status' => $r['report_status'],
             'rejectReason' => $r['reject_reason'],
+            'referredTo' => $r['referred_to'],      // where a "For Referral" case was sent (staff only)
+            'referralNote' => $r['referral_note'],
             'archived' => $r['archived_at'] !== null,
             'submittedAt' => $r['report_datetime'],
             'updatedAt' => $r['updated_at'],
@@ -101,7 +107,9 @@ $status = $report['report_status'];
 $moves = [
     'approve' => [['Pending'], 'Active', 'Report approved and moved to Active.'],
     'investigate' => [['Active'], 'Under Investigation', 'Report moved to Under Investigation.'],
-    'resolve' => [['Active', 'Under Investigation'], 'Resolved', 'Report marked as Resolved.'],
+    'intervene' => [['Active', 'Under Investigation', 'For Referral'], 'For Intervention', 'Report moved to For Intervention.'],
+    'refer' => [['Active', 'Under Investigation', 'For Intervention'], 'For Referral', 'Report moved to For Referral.'],
+    'resolve' => [['Active', 'Under Investigation', 'For Intervention', 'For Referral'], 'Resolved', 'Report marked as Resolved.'],
     'reject' => [['Pending', 'Active'], 'Rejected', 'Report rejected. The student can see your reason.'],
 ];
 
@@ -115,6 +123,23 @@ if (isset($moves[$action])) {
         $reason = input('reason');
         if (mb_strlen($reason) < 5) json_error('Write a short reason the student will see.');
         if (too_long($reason, 1000)) json_error('Keep the reason under 1,000 characters.');
+    }
+    if ($action === 'refer') {
+        // Where the case is referred to: one of the offices in referrals.json, or "Other" (typed in)
+        $agency = input('agency');
+        if ($agency === 'Other') {
+            $agency = input('agencyOther');
+            if ($agency === '' || too_long($agency, 150)) json_error('Type the office the case is referred to.');
+        } elseif (!in_array($agency, referral_agencies(), true)) {
+            json_error('Choose where the case is referred to.');
+        }
+        $note = input('note');
+        if (too_long($note, 1000)) json_error('Keep the note under 1,000 characters.');
+        db()->prepare("UPDATE reports SET report_status = 'For Referral', referred_to = ?, referral_note = NULLIF(?, ''), updated_at = NOW() WHERE report_no = ?")
+            ->execute([$agency, $note, $reportNo]);
+        audit((int) $admin['admin_id'], 'report.refer', 'report', $reportNo, 'Referred to: ' . $agency . ($note !== '' ? " · Note: $note" : ''));
+        notify_report_update($reportNo, $action);
+        json_success($message);
     }
     db()->prepare('UPDATE reports SET report_status = ?, reject_reason = ?, updated_at = NOW() WHERE report_no = ?')
         ->execute([$to, $reason, $reportNo]);

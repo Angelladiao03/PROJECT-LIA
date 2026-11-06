@@ -297,6 +297,44 @@ CREATE TABLE IF NOT EXISTS password_resets (
 CREATE INDEX IF NOT EXISTS password_resets_user ON password_resets (user_id, created_at DESC);
 
 -- =====================================================================
+-- alpha.5 additions
+-- =====================================================================
+
+-- Two more case steps after the investigation: 'For Intervention' (handled by the school) and
+-- 'For Referral' (sent to an outside office from public/assets/referrals.json). report_status has
+-- no fixed list in the database, so only the place it was referred to needs new columns.
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS referred_to   VARCHAR(200); -- e.g. "National Center for Mental Health (NCMH)"
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS referral_note TEXT;         -- optional note for staff
+
+-- Staff-to-staff chat (counselor, advocates, principal, security). Separate from the
+-- student chats in "messages". Like those, "deleted" messages are hidden, never erased.
+CREATE TABLE IF NOT EXISTS staff_messages (
+    message_id    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    from_admin_id INT NOT NULL REFERENCES admin_profile(admin_id),
+    to_admin_id   INT NOT NULL REFERENCES admin_profile(admin_id),
+    message_text  TEXT NOT NULL DEFAULT '',
+    file_name     VARCHAR(160),
+    file_type     VARCHAR(100),
+    file_size     INT,
+    file_data     BYTEA,
+    sent_datetime TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    read_at       TIMESTAMPTZ,   -- when the other staff member opened the chat
+    edited_at     TIMESTAMPTZ,
+    deleted_at    TIMESTAMPTZ,
+    CHECK (from_admin_id <> to_admin_id)
+);
+CREATE INDEX IF NOT EXISTS staff_messages_pair ON staff_messages
+    (LEAST(from_admin_id, to_admin_id), GREATEST(from_admin_id, to_admin_id), sent_datetime);
+CREATE INDEX IF NOT EXISTS staff_messages_unread ON staff_messages (to_admin_id) WHERE read_at IS NULL;
+-- The text a staff message had before each edit (kept for the record; never shown on pages)
+CREATE TABLE IF NOT EXISTS staff_message_edits (
+    edit_id    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    message_id INT NOT NULL REFERENCES staff_messages(message_id),
+    old_text   TEXT NOT NULL,
+    edited_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- =====================================================================
 -- Test accounts: run reset_test_data.sql (it ERASES everything first).
 --
 -- Or add one real staff account by hand (run separately, with your own values):

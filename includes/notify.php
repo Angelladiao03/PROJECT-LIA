@@ -18,6 +18,8 @@ function notify_report_update(int $reportNo, string $action, ?string $reason = n
     $what = [
         'approve' => "was accepted. The guidance office is now handling it.",
         'investigate' => "is now under investigation by the guidance office.",
+        'intervene' => "is now with the guidance office for intervention. They will talk with you about the next steps.",
+        'refer' => "has been referred to a partner office for more support. The guidance office will tell you the next steps.",
         'resolve' => "has been marked as resolved by the guidance office.",
         'reject' => "was not accepted." . ($reason ? "\n\nReason: $reason" : ''),
     ][$action] ?? null;

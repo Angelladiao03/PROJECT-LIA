@@ -77,9 +77,12 @@
   const rows = document.getElementById('rows');
   const tabs = document.getElementById('filterTabs');
 
+  // Intervention and referral come after the investigation, so they count under "In Investigation"
+  const group = (s) => (s === 'For Intervention' || s === 'For Referral' ? 'Under Investigation' : s);
+
   function drawReports() {
     // Counter cards: the number, plus what share of all your reports it is
-    const count = (s) => reports.filter((r) => r.status === s).length;
+    const count = (s) => reports.filter((r) => group(r.status) === s).length;
     [['Pending', 'Pending'], ['Active', 'Active'], ['Under Investigation', 'Invest'], ['Resolved', 'Resolved']].forEach(([status, id]) => {
       const n = count(status);
       const pct = reports.length ? Math.round((n / reports.length) * 100) : 0;
@@ -92,7 +95,7 @@
       c.setAttribute('aria-pressed', String(c.dataset.filter === filter));
     });
 
-    const list = filter === 'all' ? reports : reports.filter((r) => r.status === filter);
+    const list = filter === 'all' ? reports : reports.filter((r) => group(r.status) === filter);
     if (!list.length) {
       rows.innerHTML = `<tr><td colspan="7"><div class="empty" style="border:0;background:none"><strong>${reports.length ? 'No reports here' : 'No reports yet'}</strong><span>${reports.length ? 'Choose another filter.' : 'Reports you submit will appear here.'}</span></div></td></tr>`;
       return;
@@ -112,8 +115,8 @@
   function openReport(no) {
     const r = reports.find((x) => x.reportNo === no);
     if (!r) return;
-    const STEPS = ['Sent', 'Accepted', 'Investigating', 'Resolved'];
-    const reached = { 'Pending': 1, 'Active': 2, 'Under Investigation': 3, 'Resolved': 4, 'Rejected': 1 };
+    const STEPS = ['Sent', 'Accepted', 'Investigating', 'Action or referral', 'Resolved'];
+    const reached = { 'Pending': 1, 'Active': 2, 'Under Investigation': 3, 'For Intervention': 4, 'For Referral': 4, 'Resolved': 5, 'Rejected': 1 };
     LIA.openModal({
       title: `Report #${r.reportNo}`,
       wide: true,
@@ -192,10 +195,7 @@ function drawActivation(req) {
         <div class="field"><label for="gradeLevel">Grade Level</label><select class="input" id="gradeLevel" name="gradeLevel"></select></div>
         <div class="field"><label for="section">Section</label><select class="input" id="section" name="section"></select></div>
       </div>
-      <div class="form-row">
-        <div class="field"><label for="adviser">Adviser</label><input class="input" id="adviser" name="adviser" maxlength="150"></div>
-        <div class="field"><label for="contactNumber">Contact Number</label><input class="input" id="contactNumber" name="contactNumber" inputmode="numeric" maxlength="11" placeholder="09XXXXXXXXX"></div>
-      </div>
+      <div class="field"><label for="adviser">Adviser</label><input class="input" id="adviser" name="adviser" maxlength="150"><p class="hint">Your phone number from your guest account is kept, so you don't need to type it again.</p></div>
       <div class="field">
         <span class="label">Photo of your school ID</span>
         <label class="choice" for="idPhoto" style="align-items:center">
@@ -220,8 +220,6 @@ function drawActivation(req) {
   const preview = document.getElementById('photoPreview');
   let photoBlob = null;
   LIA.gradeSectionFields(form.gradeLevel, form.section);
-
-  form.contactNumber.addEventListener('input', () => { form.contactNumber.value = form.contactNumber.value.replace(/\D/g, '').slice(0, 11); });
 
   // Phone photos are big: shrink in the browser first (max 1600px, JPEG) so it uploads fast.
   fileInput.addEventListener('change', async () => {
@@ -248,7 +246,6 @@ function drawActivation(req) {
     else if (!val('gradeLevel')) problem = 'Choose your grade level.';
     else if (!val('section')) problem = 'Choose your section.';
     else if (!val('adviser')) problem = "Enter your adviser's name.";
-    else if (!/^09\d{9}$/.test(val('contactNumber'))) problem = 'Contact number must be 11 digits and start with 09.';
     else if (!photoBlob) problem = 'Add a photo of your school ID.';
     else if (!document.getElementById('consent').checked) problem = 'Check the box to agree to the ID photo being reviewed.';
     if (problem) return LIA.showFormError(form, problem);

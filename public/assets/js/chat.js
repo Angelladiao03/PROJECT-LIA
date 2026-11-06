@@ -15,7 +15,8 @@ const ATTACH = (() => {
   // A file inside a message: a simple grey box with the file's name (like Messenger). Clicking downloads it.
   function fileCard(f) {
     if (!f) return '';
-    return `<a class="file-card" href="/api/messages/file.php?id=${f.id}" download="${LIA.esc(f.name)}" title="Download ${LIA.esc(f.name)}">
+    // f.url: staff chat files download from their own address; student chat files from messages/file.php
+    return `<a class="file-card" href="${LIA.esc(f.url || '/api/messages/file.php?id=' + f.id)}" download="${LIA.esc(f.name)}" title="Download ${LIA.esc(f.name)}">
       <span class="file-icon">${LIA.icon('file')}</span><span><b>${LIA.esc(f.name)}</b><small>${size(f.size)}</small></span></a>`;
   }
 
@@ -86,8 +87,14 @@ const ATTACH = (() => {
 
 const CHAT = (() => {
   // opts: caseCard(c) -> HTML for a report case card; who(m) -> name under the other person's messages
+  // A divider shows where each day starts ("Today", "Yesterday", "Monday", "Nov 2, 2026"),
+  // and each message shows its time (the full date and time shows when you point at it).
   function render(messages, { caseCard, who }) {
+    let lastDay = null;
     return messages.map((m) => {
+      const day = LIA.dayLabel(m.sentAt);
+      const divider = day !== lastDay ? `<div class="day-divider"><span>${LIA.esc(day)}</span></div>` : '';
+      lastDay = day;
       const side = m.mine ? 'mine' : 'theirs';
       // Like Messenger: a file or case card sits on its own, and the text gets its own bubble under it
       const parts = m.deleted
@@ -96,9 +103,9 @@ const CHAT = (() => {
       const more = m.mine && !m.deleted
         ? `<button type="button" class="icon-btn msg-more" data-more="${m.id}" aria-label="Options for this message" aria-haspopup="menu">${LIA.icon('dots')}</button>`
         : '';
-      return `<div class="msg ${side}" data-msg="${m.id}">
+      return `${divider}<div class="msg ${side}" data-msg="${m.id}">
           <div class="msg-row">${more}<div class="msg-parts">${parts}</div></div>
-          <div class="bubble-meta">${m.mine ? 'You' : LIA.esc(who(m))} · ${LIA.esc(LIA.fmtDateTime(m.sentAt))}${m.edited ? ' · Edited' : ''}</div>
+          <div class="bubble-meta" title="${LIA.esc(LIA.fmtDateTime(m.sentAt))}">${m.mine ? 'You' : LIA.esc(who(m))} · ${LIA.esc(LIA.fmtTime(m.sentAt))}${m.edited ? ' · Edited' : ''}</div>
         </div>`;
     }).join('');
   }

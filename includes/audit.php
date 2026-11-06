@@ -26,6 +26,8 @@ function audit_label(string $action): string
     return [
         'report.approve' => 'Accepted the report',
         'report.investigate' => 'Started the investigation',
+        'report.intervene' => 'Moved the case to For Intervention',
+        'report.refer' => 'Referred the case',
         'report.resolve' => 'Marked the report resolved',
         'report.reject' => 'Rejected the report',
         'report.archive' => 'Archived the report',
@@ -36,6 +38,8 @@ function audit_label(string $action): string
         'account.decline' => 'Declined the account request',
         'message.edit' => 'Edited a message',
         'message.delete' => 'Deleted a message',
+        'staff_message.edit' => 'Edited a staff chat message',
+        'staff_message.delete' => 'Deleted a staff chat message',
         'student.view_info' => 'Viewed the student details',
         'staff.profile' => 'Updated their profile',
         'staff.password' => 'Changed their password',

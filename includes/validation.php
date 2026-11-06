@@ -88,7 +88,8 @@ function report_locations(): array
         $list = is_array($json['locations'] ?? null) ? $json['locations'] : [];
         $places = [];
         foreach ($list as $place) {
-            if (is_string($place) && trim($place) !== '' && mb_strlen($place) <= 100 && trim($place) !== 'Other') {
+            // "Other(s)" in the file is skipped: it is always added at the end, with a box to type the place
+            if (is_string($place) && trim($place) !== '' && mb_strlen($place) <= 100 && !preg_match('/^others?$/i', trim($place))) {
                 $places[] = trim($place);
             }
         }
@@ -96,6 +97,23 @@ function report_locations(): array
         $places[] = 'Other';
     }
     return $places;
+}
+
+// Offices a case can be referred to, from public/assets/referrals.json (the Manage Reports
+// page reads the same file). "Other" is always allowed, with the office typed in.
+function referral_agencies(): array
+{
+    static $names = null;
+    if ($names === null) {
+        $json = json_decode((string) @file_get_contents(__DIR__ . '/../public/assets/referrals.json'), true);
+        $names = [];
+        foreach ((is_array($json['agencies'] ?? null) ? $json['agencies'] : []) as $a) {
+            $name = is_array($a) ? trim((string) ($a['name'] ?? '')) : '';
+            if ($name !== '' && mb_strlen($name) <= 150 && $name !== 'Other') $names[] = $name;
+        }
+        $names = array_values(array_unique($names));
+    }
+    return $names;
 }
 
 // Reads a grade level (7 to 12) from a POST field. Returns null if it isn't one.

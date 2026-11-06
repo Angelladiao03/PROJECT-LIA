@@ -21,11 +21,16 @@ alerts, approve student accounts, and see where bullying happens.
 
 | Role | Can open |
 |---|---|
-| Every staff role | Home (Anti-Bullying Act, posters, articles, videos) and My Account |
+| Every staff role | Home (Anti-Bullying Act, posters, articles, videos), Messages (staff chat with every other staff member) and My Account |
 | Guidance Counselor (`counselor`) | Everything, every grade level |
-| Guidance Advocate (`advocate` + `grade_level`) | Manage Reports, Report Records, Registration Requests and chats of **their grade level only**, plus every SOS alert |
-| Principal (`principal`) | Dashboard (totals, no names or case details) |
-| Security (`security`) | Nothing else yet (to be decided) |
+| Guidance Advocate (`advocate` + `grade_level`) | Manage Reports, Report Records, Registration Requests and student chats of **their grade level only**, plus every SOS alert |
+| Principal (`principal`) | Dashboard (totals, no names or case details) and staff chat |
+| Security (`security`) | Staff chat (the rest is still to be decided) |
+
+**Case steps:** New (Pending) → Active → Under Investigation → **For Intervention** (handled by the school)
+or **For Referral** (sent to an outside office chosen from `public/assets/referrals.json`, with an optional
+note; only staff see where) → Resolved, or Rejected with a reason. Print / Save as PDF only show once a
+report is accepted.
 
 Every report has a grade level (students: from their account; guests: chosen on the report form),
 which decides which advocate gets it. A student's personal details (grade & section, adviser, email,
@@ -68,7 +73,8 @@ PROJECT-LIA/
 │   │   ├── index.html          dashboard (counts, monthly bars, hotspots)
 │   │   ├── cases.html          Manage Reports: new reports, active cases, SOS alerts (with sound)
 │   │   ├── records.html        resolved / rejected / archived
-│   │   ├── messages.html       chats by case (anonymous reports too) + general chats
+│   │   ├── messages.html       Reports / Students / Staff buttons: chats by case (anonymous reports too),
+│   │   │                       general chats with students, and staff-to-staff chats
 │   │   ├── accounts.html       permanent-account requests (ID photo review)
 │   │   └── account.html        staff My Account (Edit Profile, Change Password)
 │   ├── assets/
@@ -80,6 +86,7 @@ PROJECT-LIA/
 │   │   ├── js/pages/*.js       code for individual pages (admin-case.js = the case details window)
 │   │   ├── school-sections.json  the Section dropdown lists per grade (PLACEHOLDERS: put the real sections here)
 │   │   ├── locations.json        the Location dropdown places (Submit Report + SOS); add places here
+│   │   ├── referrals.json        offices a case can be referred to, with their contact details (staff only)
 │   │   └── img/                seal, posters, favicon
 │   └── api/                    PHP endpoints the pages call
 │       ├── auth/               me, login, staff_login, logout, reset_send, reset_confirm
@@ -89,7 +96,8 @@ PROJECT-LIA/
 │       ├── sos/                create
 │       ├── messages/           thread, file (download a file sent in a message)
 │       ├── admin/              reports, sos, messages, activations, student (details behind a password),
-│       │                       stats (dashboard), counts (menu numbers), account (staff My Account)
+│       │                       stats (dashboard), counts (menu numbers), account (staff My Account),
+│       │                       staff_chat (staff-to-staff messages and their files)
 │       └── system/             reminders (optional: for a free scheduler like cron-job.org)
 ├── includes/                   ← private PHP code (not reachable from the browser)
 │   ├── bootstrap.php           loads everything below
@@ -230,7 +238,14 @@ didn't get a code. The email text itself is not stored.
 - **Student details behind a password:** staff lists show only names; grade & section, adviser, email and
   phone need the staff member's password (unlocked for 10 minutes, every view logged).
 - **Messages** can be edited or deleted by their sender, but nothing is erased: deleted messages are hidden,
-  earlier versions are kept in `message_edits`, and staff edits/deletes are in the audit log.
+  earlier versions are kept in `message_edits` (staff chat: `staff_message_edits`), and staff edits/deletes
+  are in the audit log. Staff chat files can only be downloaded by the two people in that chat.
+- **Sign-in hint:** a guest ID (`LIA-7K3P9Q`) typed on the Student tab is refused with "sign in on the Guest
+  tab" (student usernames can't have a "-", so it can't be a student). A guest username or a student account
+  on the wrong tab is only told to switch tabs when the password is right, so it never reveals which accounts exist.
+- **Chat rules pop-up:** before a student messages the Guidance Office, a pop-up says what the chat is for and
+  what not to send (pranks, insults, unrelated files), and that messages are saved. "I understand" is needed
+  once per browser tab.
 - **Files in messages** (PDF, Word, JPG, PNG, up to 5 MB) are checked by their real contents, stored in
   the database, always downloaded (never opened inside the site), and only the student's own conversation
   or staff can download them.
@@ -247,10 +262,15 @@ didn't get a code. The email text itself is not stored.
   nosniff, no framing by other sites.
 - **Fail-safe SOS:** if an SOS can't reach the server, the student is told it
   was NOT sent and is shown 911 / 122 and the guidance office.
+- **SOS sound:** "SOS" in Morse code (··· ——— ···), played twice. Browsers only allow sound after the person clicks or types on the page, so the sound
+  switches on at the first click on any staff page. If an SOS arrives before that, the red strip shows a
+  "Turn on sound" button. Each alert beeps once per browser tab, even when staff move between pages.
+- **Crisis hotlines** (side menu, footer, SOS window): 911, Quezon City 122, NCMH Crisis Hotline 1553 and
+  Hopeline, from the school's Referral Services sheet.
 - Use **made-up test data only** while developing.
 
 ## Still to do
 
 See `CLAUDE.md` for the full list. Biggest items: severity levels and
-assigned staff (revised RA 10627 IRR), what Security staff can do, the real section list,
+assigned staff (revised RA 10627 IRR), what Security staff can do besides staff chat, the real section list,
 printable invitation letters, and final approval of the Terms by the adviser and the Guidance Office.
