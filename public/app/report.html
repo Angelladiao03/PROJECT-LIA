@@ -21,7 +21,7 @@
             <label><input type="radio" name="submitAs" value="anonymous" checked> Submit Anonymously</label>
             <label><input type="radio" name="submitAs" value="identity"> Include My Identity</label>
           </div>
-          <p class="small muted" id="prefNote">Reminder: guidance staff will not see your name. They will only see your phone number, so they can contact you if needed. The report still appears in your My Report History so you can follow it.</p>
+          <p class="small muted" id="prefNote">Note: Guidance staff will not see your name, only your mobile number, so that they may contact you if necessary. The report will still appear in your My Report History so that you can monitor it.</p>
           <div class="form-row" id="identityFields" hidden>
             <div class="field"><label for="idName">Full Name</label><input class="input" id="idName" readonly></div>
             <div class="field"><label for="idGrade">Grade &amp; Section</label><input class="input" id="idGrade" readonly></div>
@@ -29,7 +29,7 @@
         </fieldset>
         <div class="pref-box" id="anonGuest" hidden>
           <p class="pref-title">Submission Preference: Anonymous</p>
-          <p class="small muted" style="margin:0">You're using a guest account, so staff won't see your name. They will only see your phone number, so they can contact you if needed.</p>
+          <p class="small muted" style="margin:0">You are using a guest account; therefore, staff will not see your name. They will see only your mobile number so that they may contact you if necessary.</p>
         </div>
 
         <!-- Asked only when the account has no grade level (guests): it decides which grade's advocate gets the report -->
@@ -40,15 +40,15 @@
             <option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option>
             <option value="10">Grade 10</option><option value="11">Grade 11</option><option value="12">Grade 12</option>
           </select>
-          <p class="hint">So your report goes to your grade level's guidance advocate. Your name and section are not asked.</p>
+          <p class="hint">This sends your report to the guidance advocate of your grade level. Your name and section are not required.</p>
         </div>
 
         <div class="field">
           <span class="label" id="roleLabel">Who are you in this incident? <span class="req">*</span></span>
           <div class="choice-grid" role="radiogroup" aria-labelledby="roleLabel">
-            <label class="choice"><input type="radio" name="reporterRole" value="victim"><span><strong>I was bullied</strong><span>It happened to me</span></span></label>
-            <label class="choice"><input type="radio" name="reporterRole" value="witness"><span><strong>I saw it happen</strong><span>It happened to someone else</span></span></label>
-            <label class="choice"><input type="radio" name="reporterRole" value="other"><span><strong>Other</strong><span>I heard about it, or I'm not sure</span></span></label>
+            <label class="choice"><input type="radio" name="reporterRole" value="victim"><span><strong>Victim</strong><span>The incident happened to me</span></span></label>
+            <label class="choice"><input type="radio" name="reporterRole" value="witness"><span><strong>Witness</strong><span>I witnessed the incident happen to someone else</span></span></label>
+            <label class="choice"><input type="radio" name="reporterRole" value="other"><span><strong>Other</strong><span>I learned about the incident from someone else, or I am unsure</span></span></label>
           </div>
         </div>
 
@@ -63,7 +63,7 @@
             <option>Threats or intimidation</option>
             <option value="Other">Others</option>
           </select>
-          <p class="hint">Not sure? <a href="/app/guide.html" target="_blank">See what each one means</a>.</p>
+          <p class="hint">Unsure? <a href="/app/guide.html" target="_blank">Read the description of each category</a>.</p>
         </div>
         <div class="field" id="categoryOtherField" hidden>
           <label for="categoryOther">Please Specify Category <span class="req">*</span></label>
@@ -117,11 +117,11 @@
       <section class="card" id="sentCard" hidden style="text-align:center">
         <img src="/assets/img/lagro-seal.png" alt="" style="width:80px;margin:0 auto 10px">
         <h2 id="sentTitle">Report submitted</h2>
-        <p>The guidance office will review it. You can follow its status in My Report History.</p>
-        <p class="small muted">If you're in danger right now, press the red SOS button.</p>
+        <p>The Guidance Office will review your report. You may monitor its status in My Report History.</p>
+        <p class="small muted">If you are in immediate danger, press the red SOS button.</p>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-          <a class="btn" href="/app/account.html#history">See my report history</a>
-          <a class="btn btn-quiet" href="/app/messages.html">Message the guidance office</a>
+          <a class="btn" href="/app/account.html#history">View My Report History</a>
+          <a class="btn btn-quiet" href="/app/messages.html">Message the Guidance Office</a>
         </div>
       </section>
     </div>

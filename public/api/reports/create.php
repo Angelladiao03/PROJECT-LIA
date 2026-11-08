@@ -42,7 +42,7 @@ if ($location === 'Other') {
 $day = DateTime::createFromFormat('!Y-m-d', $date, new DateTimeZone('Asia/Manila'));
 $today = new DateTime('today', new DateTimeZone('Asia/Manila'));
 if (!$day || $day->format('Y-m-d') !== $date) json_error('Choose the date it happened.');
-if ($day > $today) json_error("The date can't be in the future.");
+if ($day > $today) json_error('The date cannot be in the future.');
 
 if (mb_strlen($description) < 10) json_error('Describe what happened (at least a sentence).');
 if (too_long($description, 5000)) json_error('The description is too long. Keep it under 5,000 characters.');

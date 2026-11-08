@@ -46,15 +46,15 @@ sign_in_user((int) $user['user_id']); // also clears guestSignup
 // Welcome email with the guest ID (never the password)
 send_email(
     $email,
-    'You are now registered in LagroInAction!',
-    "You are now Registered!\n\n"
-    . "Your LagroInAction guest account is ready.\n\nGuest ID: $guestId\n\n"
-    . "Sign in on the Guest tab with this guest ID and your password. "
-    . "For your safety, your password is NOT included in this email. "
-    . "If you forget it, use \"Forgot password?\" on the sign-in page.\n\n"
-    . "Your guest account lasts " . GUEST_LIFETIME_DAYS . " days. Reports you send are kept even after it expires. "
-    . "You can ask for a permanent student account on the My Account page.\n\n"
-    . "- Lagro High School Guidance Office"
+    '[LagroInAction] Guest Account Registration Successful',
+    [
+        'lines' => ['Your LagroInAction guest account has been successfully created. Your Guest ID is:'],
+        'code' => $guestId,
+        'after' => [
+            'Please sign in on the Guest tab using this Guest ID and your password. For your security, your password is not included in this email. If you forget it, select "Forgot password?" on the sign-in page.',
+            'Your guest account is valid for ' . GUEST_LIFETIME_DAYS . ' days. All reports you submit are kept by the Guidance Office even after the account expires. You may request a permanent student account on the My Account page.',
+        ],
+    ]
 );
 
 json_success('Your guest account is ready.', [

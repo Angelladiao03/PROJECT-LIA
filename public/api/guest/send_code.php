@@ -32,11 +32,12 @@ $_SESSION['guestSignup'] = [
 
 $sent = send_email(
     $email,
-    'Your LagroInAction verification code', // the code is only in the email body, never in the subject (subjects are saved in email_outbox)
-    "Your verification code is: $code\n\n"
-    . "Enter it on the LagroInAction page to finish creating your guest account. "
-    . "The code works for " . CODE_VALID_MINUTES . " minutes.\n\n"
-    . "If you didn't ask for this, you can ignore this email."
+    '[LagroInAction] Verification Code', // the code is only in the email body, never in the subject (subjects are saved in email_outbox)
+    [
+        'lines' => ['Please use the verification code below to proceed with the creation of your LagroInAction guest account.'],
+        'code' => $code,
+        'after' => ['This code is valid for ' . CODE_VALID_MINUTES . ' minutes. If you did not request this code, you may disregard this email.'],
+    ]
 );
 
 if (!$sent) {

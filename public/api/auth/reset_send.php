@@ -49,11 +49,12 @@ db()->prepare(
 $link = site_url() . '/reset.html?token=' . $token;
 $sent = send_email(
     $user['email'],
-    'Reset your LagroInAction password',
-    "Someone (hopefully you) asked to reset the password of your LagroInAction account.\n\n"
-    . "Open this link to choose a new password:\n$link\n\n"
-    . "The link works once, for " . RESET_LINK_MINUTES . " minutes.\n\n"
-    . "If you didn't ask for this, ignore this email. Your password stays the same."
+    '[LagroInAction] Password Reset Request',
+    [
+        'lines' => ['We received a request to reset the password of your LagroInAction account. Please select the button below to set a new password.'],
+        'button' => ['label' => 'Reset Password', 'url' => $link],
+        'after' => ['This link may be used only once and is valid for ' . RESET_LINK_MINUTES . ' minutes. If you did not request a password reset, you may disregard this email; your password will remain unchanged.'],
+    ]
 );
 $masked = mask_email($user['email']);
 if (!$sent) {

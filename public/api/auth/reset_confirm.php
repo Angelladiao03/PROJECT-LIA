@@ -30,7 +30,7 @@ $new = $_POST['newPassword'] ?? '';
 $confirm = $_POST['confirmPassword'] ?? '';
 if (!is_string($new) || !is_string($confirm)) json_error('Fill in every field.');
 if ($error = password_error($new)) json_error($error);
-if ($new !== $confirm) json_error("The new passwords don't match.");
+if ($new !== $confirm) json_error('The new passwords do not match.');
 
 $pdo = db();
 $pdo->beginTransaction();
@@ -43,7 +43,9 @@ clear_failed_logins('guest:' . $row['guest_id']);
 if ($row['username']) clear_failed_logins('student:' . strtolower($row['username']));
 if ($row['email']) clear_failed_logins('student:' . strtolower($row['email']));
 
-send_email($row['email'], 'Your LagroInAction password was changed',
-    "Your password was just changed using a reset link.\n\nIf this wasn't you, tell the guidance office right away.");
+send_email($row['email'], '[LagroInAction] Password Changed', [
+    'lines' => ['The password of your LagroInAction account was changed through a password reset link.'],
+    'after' => ['If you did not make this change, please inform the Lagro High School Guidance Office immediately.'],
+]);
 
 json_success('Password changed. You can sign in now.', ['signInAs' => $row['account_type']]);

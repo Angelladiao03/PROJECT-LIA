@@ -43,7 +43,7 @@ if (token) {
 
 resetForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (resetForm.newPassword.value !== resetForm.confirmPassword.value) return LIA.showFormError(resetForm, "The new passwords don't match.");
+  if (resetForm.newPassword.value !== resetForm.confirmPassword.value) return LIA.showFormError(resetForm, 'The new passwords do not match.');
   try {
     const body = new FormData(resetForm);
     body.append('token', token);

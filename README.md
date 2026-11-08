@@ -1,276 +1,139 @@
-# LagroInAction (PROJECT LIA)
+<p align="center">
+  <img src="public/assets/img/lagro-seal.png" alt="Lagro High School seal" width="96">
+</p>
 
-LagroInAction is a web-based bullying incident reporting and case management
-system for Lagro High School. Students report bullying (as guests or with a
-permanent student account), follow their reports, send SOS alerts, and
-message the guidance office. Guidance staff review cases, respond to SOS
-alerts, approve student accounts, and see where bullying happens.
+<h1 align="center">LagroInAction (LIA)</h1>
 
-> **Version:** PHP alpha. The original Java prototype is saved in Git under
-> the tag `prototype-v1.2.1`.
+<p align="center">
+  <b>A Web-Based Bullying Incident Reporting and Case Management System for Lagro High School</b><br>
+  Lagro High School · Schools Division Office of Quezon City · National Capital Region
+</p>
 
-## How accounts work
+<p align="center"><i>Version 1.0.0-alpha.6</i></p>
 
-| Account | How you get it | Signs in with | Lasts |
-|---|---|---|---|
-| **Guest** | Accept the Terms → verify email with a 6-digit code | Guest ID (e.g. `LIA-7K3P9Q`) + password | 30 days, longer while a report or request is open. Reports are always kept. |
-| **Student** | A guest asks for it (details + school ID photo); staff approve | Username or email + same password | Permanent |
-| **Staff** | Created in the database (see below) | Staff username + password | Permanent |
+---
 
-**Staff roles** (column `admin_profile.staff_role`; the server checks them on every request):
+## About
 
-| Role | Can open |
+**LagroInAction (LIA)** is a web-based system through which students of Lagro High School can report
+bullying incidents to the Guidance Office, monitor the status of their reports, send emergency SOS alerts,
+and communicate privately with guidance personnel. For the Guidance Office, LIA provides one place to
+receive, review, track, and document bullying cases from submission to resolution.
+
+LIA was developed as a capstone study for the Design and Innovation subject:
+
+> **"Development and Evaluation of LagroInAction (LIA): A Web-Based Bullying Incident Reporting and
+> Case Management System for Lagro High School"**
+
+LIA is a tool for reporting, tracking, and case management. It **complements, and does not replace,** the
+work of the Guidance Office, including counseling sessions and the school's established procedures for
+resolving cases.
+
+## Background
+
+At Lagro High School, bullying incidents are reported and recorded manually: a student goes to the
+Guidance Office, waits for an available staff member, and fills out a paper form. Many students are
+hesitant to report in person, and paper records are difficult to organize and monitor.
+
+National studies continue to show bullying as a serious and persistent problem in Philippine schools. The
+Anti-Bullying Act of 2013 (Republic Act No. 10627), its revised Implementing Rules and Regulations, and
+the DepEd Child Protection Policy require schools to receive, act on, and document reports of bullying.
+LIA was designed to make reporting more accessible and confidential for students, and to make case
+handling more organized for the Guidance Office.
+
+## Features
+
+### For students and guests
+
+- **Two kinds of accounts.** A *guest account* requires only an email address and a mobile number and is
+  valid for 30 days. A guest may request a *permanent student account*, which the Guidance Office approves
+  after verifying the student's school ID.
+- **Incident reporting.** Students report an incident by category, location, date, and description, and
+  state whether they were the victim, a witness, or another party.
+- **Anonymity.** Guest reports are always anonymous. Students may choose to hide their name from staff;
+  the report remains in their own report history so that they can monitor it.
+- **SOS alerts** for urgent situations, with the student's current location.
+- **Report history and status tracking** from submission to resolution, with the reason shown if a report
+  is not accepted.
+- **Private messaging** with the Guidance Office: one conversation per report and a general conversation,
+  with file attachments. Usage guidelines are shown before a student messages the Guidance Office.
+- **Learning resources:** the definition of bullying under RA 10627, the kinds of bullying, what to do as
+  a victim, witness, or person who has bullied someone, anti-bullying posters, articles, and videos.
+- **Crisis hotlines:** 911, the Quezon City Helpline (122), the NCMH Crisis Hotline (1553), and Hopeline.
+- **Email notifications** for verification codes, account decisions, report status updates, and unread
+  messages. Emails never contain report details or message contents.
+
+### For school personnel
+
+Each staff member has an individual account, so every action is recorded under the person who performed it.
+
+| Role | Access |
 |---|---|
-| Every staff role | Home (Anti-Bullying Act, posters, articles, videos), Messages (staff chat with every other staff member) and My Account |
-| Guidance Counselor (`counselor`) | Everything, every grade level |
-| Guidance Advocate (`advocate` + `grade_level`) | Manage Reports, Report Records, Registration Requests and student chats of **their grade level only**, plus every SOS alert |
-| Principal (`principal`) | Dashboard (totals, no names or case details) and staff chat |
-| Security (`security`) | Staff chat (the rest is still to be decided) |
+| **Guidance Counselor** | All reports, case records, registration requests, SOS alerts, and student conversations of every grade level, plus the dashboard |
+| **Guidance Advocates** | Reports, case records, registration requests, and student conversations of their assigned grade level, plus every SOS alert |
+| **Principal** | Dashboard of totals and trends (no names or case details) |
+| **Security Personnel** | To be finalized |
+| **All personnel** | Home page, staff-to-staff messaging, and account settings |
 
-**Case steps:** New (Pending) → Active → Under Investigation → **For Intervention** (handled by the school)
-or **For Referral** (sent to an outside office chosen from `public/assets/referrals.json`, with an optional
-note; only staff see where) → Resolved, or Rejected with a reason. Print / Save as PDF only show once a
-report is accepted.
+- **Case management.** Reports move through clear steps:
 
-Every report has a grade level (students: from their account; guests: chosen on the report form),
-which decides which advocate gets it. A student's personal details (grade & section, adviser, email,
-phone) only show to staff after they type their own password again (10 minutes, logged).
+  ```
+  Submitted  →  Accepted  →  Under Investigation  →  For Intervention  →  Resolved
+                    │                                 or For Referral
+                    └→  Not accepted (with a reason shown to the student)
+  ```
 
-- Guest reports are always anonymous. Student accounts can turn on
-  **"Hide my name from staff"** (the report stays linked to the account so the
-  student can track it; staff can't see who sent it).
-- The ID photo is only visible to staff and is **deleted as soon as they
-  approve or decline**. The student is emailed the result.
+  *For Referral* records the partner office the case was referred to (for example, the National Center
+  for Mental Health or the Quezon City Social Services Development Department). Resolved and rejected
+  reports are archived, never deleted.
+- **SOS monitoring** with an audible alert (SOS in Morse code) on every staff page, and dispatch and
+  response tracking.
+- **Case history** of every action taken on a report, and printable case records (Print / Save as PDF).
+- **Dashboard** of reports by month, by category, by location, and by grade level.
+- **Registration review** of permanent student account requests.
 
-## Tech stack
+## Privacy and security
 
-- **Backend:** PHP 8.5 (plain PHP, no framework) with PDO
-- **Database:** PostgreSQL on [Neon](https://neon.tech)
-- **Frontend:** HTML, CSS, vanilla JavaScript (one stylesheet, one shared script)
-- **Email:** [Brevo](https://www.brevo.com) (free plan, 300 emails a day)
-- **Hosting:** [Render](https://render.com), using the `Dockerfile`
+LIA handles sensitive information about minors and was built in line with the **Data Privacy Act of 2012
+(RA 10173)**:
 
-## Project structure
+- A Terms of Use and Privacy Notice must be accepted before an account is created.
+- Students' personal details are shown to staff only after the staff member re-enters their password,
+  and every such access is recorded.
+- School ID photos are visible only to the Guidance Office and are deleted as soon as a request is approved
+  or declined.
+- Passwords are stored as secure hashes; repeated wrong passwords temporarily lock the account.
+- Every staff action is recorded in an audit log, and reports and messages are never permanently deleted.
+- Access is checked on the server for every request, according to each staff member's role and grade level.
+- The site uses HTTPS and browser security protections against common web attacks.
 
-```
-PROJECT-LIA/
-├── public/                     ← everything the browser can open
-│   ├── index.html              sign in (Student / Guest). The version number in the corner opens staff log in
-│   ├── guest.html              create a guest account (Terms → email + phone → code → done)
-│   ├── reset.html              forgot password (username → link by email → new password)
-│   ├── staff.html              guidance staff sign in
-│   ├── terms.html              Terms of Use & Privacy Notice (EXAMPLE DRAFT)
-│   ├── app/                    student & guest pages
-│   │   ├── home.html           feed: report box, posters, articles, videos, hotlines
-│   │   ├── report.html         report an incident
-│   │   ├── reports.html        old link, now opens My Account → My Report History
-│   │   ├── messages.html       chats with the guidance office: one per report + a general chat
-│   │   ├── account.html        profile (Edit Profile, password, log out), report history,
-│   │   │                       request a permanent account
-│   │   └── guide.html          what counts as bullying, what to do
-│   ├── admin/                  guidance staff pages
-│   │   ├── home.html           staff home page (same layout as the student home)
-│   │   ├── index.html          dashboard (counts, monthly bars, hotspots)
-│   │   ├── cases.html          Manage Reports: new reports, active cases, SOS alerts (with sound)
-│   │   ├── records.html        resolved / rejected / archived
-│   │   ├── messages.html       Reports / Students / Staff buttons: chats by case (anonymous reports too),
-│   │   │                       general chats with students, and staff-to-staff chats
-│   │   ├── accounts.html       permanent-account requests (ID photo review)
-│   │   └── account.html        staff My Account (Edit Profile, Change Password)
-│   ├── assets/
-│   │   ├── css/lia.css         all styles (colours and sizes are at the top)
-│   │   ├── js/core.js          shared code: top bar, side menu, SOS, API calls, loading line, VERSION
-│   │   ├── js/pdf.js           makes PDF files in the browser (tables, page numbers), no library needed
-│   │   ├── js/print.js         "Print or save as PDF" window used by Records, Messages and the case window
-│   │   ├── js/chat.js          Messages: the "+" (Attach File / Attach Case), message bubbles, ⋮ Edit / Delete
-│   │   ├── js/pages/*.js       code for individual pages (admin-case.js = the case details window)
-│   │   ├── school-sections.json  the Section dropdown lists per grade (PLACEHOLDERS: put the real sections here)
-│   │   ├── locations.json        the Location dropdown places (Submit Report + SOS); add places here
-│   │   ├── referrals.json        offices a case can be referred to, with their contact details (staff only)
-│   │   └── img/                seal, posters, favicon
-│   └── api/                    PHP endpoints the pages call
-│       ├── auth/               me, login, staff_login, logout, reset_send, reset_confirm
-│       ├── guest/              send_code, verify
-│       ├── account/            password, activation, profile
-│       ├── reports/            create, mine
-│       ├── sos/                create
-│       ├── messages/           thread, file (download a file sent in a message)
-│       ├── admin/              reports, sos, messages, activations, student (details behind a password),
-│       │                       stats (dashboard), counts (menu numbers), account (staff My Account),
-│       │                       staff_chat (staff-to-staff messages and their files)
-│       └── system/             reminders (optional: for a free scheduler like cron-job.org)
-├── includes/                   ← private PHP code (not reachable from the browser)
-│   ├── bootstrap.php           loads everything below
-│   ├── config.php              reads settings (DATABASE_URL, email keys)
-│   ├── db.php                  connects to PostgreSQL
-│   ├── session.php             sign-in sessions (saved in the database)
-│   ├── accounts.php            who is signed in, guest expiry, login lockout
-│   ├── mailer.php              sends email through Brevo
-│   ├── notify.php              report-update emails + "you have unread messages" reminders
-│   ├── attachments.php         files in messages: allowed types, 5 MB limit, checks the real file type
-│   ├── messages.php            chats by case, sending, editing and deleting messages
-│   ├── audit.php               audit log of staff actions
-│   ├── passwords.php           password hashing
-│   ├── validation.php          form checks + the category/location lists
-│   └── json.php                JSON responses
-├── docker/apache-lia.conf      caching + security headers
-├── schema.sql                  creates/updates the database tables
-├── reset_test_data.sql         ERASES everything and adds the test accounts (development only)
-└── Dockerfile                  how Render builds and runs the site
-```
+## Technology
 
-## Setting up the database (do this after every schema change)
-
-1. Open Neon → **SQL Editor** → choose the branch (`dev` for testing,
-   your main branch for the live site).
-2. Paste the whole `schema.sql` and click **Run**.
-
-It's safe to run more than once. On the old (v1) database it also **converts
-the old LRN-based student accounts** into the new accounts table, keeping their
-usernames, emails and passwords, and links their old reports, SOS alerts and
-messages. Nothing is deleted.
-
-### Test accounts (development only)
-
-`reset_test_data.sql` **erases everything** and creates made-up accounts: `studentaccount`, `guestaccount`,
-`guidancecounselor`, `principal`, and `grade7advocate` … `grade12advocate`, each with the password
-"username + 123" (e.g. `principal123`). Run `schema.sql` first. Never run it once real students use the system.
-
-### Staff accounts
-
-Each staff member gets their own account (so every action shows who did it).
-Run this in the SQL Editor, once per person:
-
-```sql
-INSERT INTO admin_profile (admin_username, admin_password, admin_fullname, staff_role, grade_level)
-VALUES ('reyes.guidance', 'TemporaryPass123', 'Ms. Reyes', 'advocate', 10);
-```
-
-`staff_role` is `counselor`, `advocate` (with its `grade_level`, 7 to 12) or `principal`.
-
-The password becomes a secure hash the first time they sign in.
-
-## Running it on your computer (Windows)
-
-1. Install PHP 8.5 (see the steps in the team chat or windows.php.net, VS17 x64
-   Thread Safe zip, unzip to `C:\php`, enable `pdo_pgsql`, `mbstring`, `openssl`
-   in `php.ini`, add `C:\php` to PATH).
-2. Copy `includes/config.local.example.php` to `includes/config.local.php` and
-   fill in your Neon **dev** branch connection string. Keep
-   `'APP_ENV' => 'development'`: without an email service, the verification
-   code is shown on screen so you can still test sign-up.
-3. Run `schema.sql` on the dev branch (see above) and create a staff account.
-4. In VS Code's terminal, in the project folder:
-   ```
-   php -S localhost:8000 -t public
-   ```
-5. Open <http://localhost:8000>. Press `Ctrl+C` in the terminal to stop.
-
-## Deploying to Render
-
-1. In Neon, run `schema.sql` on your **main** branch.
-2. In Render → your service → **Environment**, set:
-
-   | Key | Value |
-   |---|---|
-   | `DATABASE_URL` | Neon main branch connection string |
-   | `BREVO_API_KEY` | your Brevo API key (see below) |
-   | `MAIL_FROM_EMAIL` | the sender email you verified in Brevo |
-   | `MAIL_FROM_NAME` | `LagroInAction` |
-   | `PORT` | `10000` |
-   | `CRON_KEY` | *(optional)* a long random word, only if you use cron-job.org for reminders (see below) |
-   | `APP_URL` | *(optional)* the site address, e.g. `https://lagroinaction.onrender.com`, used in password reset links |
-
-   Do **not** set `APP_ENV` on Render (it must stay "production").
-3. Push to GitHub. Render rebuilds automatically.
-
-### Sending emails (Brevo)
-
-Guest sign-up needs email codes, and staff decisions send emails.
-
-1. Create a free account at <https://www.brevo.com>.
-2. Add and verify a **sender** email address (Brevo emails it a confirmation
-   link). A school email is best; Gmail addresses work but more often land in
-   spam.
-3. Go to **SMTP & API → API keys**, create a key, and copy it.
-4. Put the key and sender email in Render's Environment (above).
-
-Emails the system sends:
-
-| When | Email |
+| Part | Technology |
 |---|---|
-| Guest sign-up | 6-digit code, then "You are now Registered!" with the guest ID (never the password) |
-| Forgot password | 6-digit reset code, then "your password was changed" |
-| Student account approved / declined | "Congratulations! You are now registered as a student…" / the reason |
-| Staff change a report's status | "Update on your report #N" (no report details in the email) |
-| Guidance messages unread for 1 hour | "You have N unread messages…" (once per message) |
+| Front end | HTML, CSS, and JavaScript |
+| Back end | PHP 8.5 |
+| Database | PostgreSQL (Neon) |
+| Email | Brevo |
+| Hosting | Render |
 
-**Unread-message reminders.** Render's free plan has no scheduled jobs, so the reminder check runs
-after normal website requests (at most every 10 minutes). If nobody uses the site for a while, a
-reminder can be late. For exact timing, set `CRON_KEY` in Render and create a free job at
-<https://cron-job.org> that opens `https://YOUR-SITE.onrender.com/api/system/reminders.php?key=YOUR_CRON_KEY`
-every 10 minutes.
+The system is evaluated according to the **ISO/IEC 25010** software quality model: functional suitability,
+reliability, usability, and security.
 
-Every email the system tries to send is listed in the `email_outbox` table
-(address, subject, sent time, or the error), which helps if someone says they
-didn't get a code. The email text itself is not stored.
+## The team
 
-## Security and privacy (what to tell the panel)
+**Team Innovators**, Grade 12 students of Lagro High School:
 
-- **Passwords** are hashed (`password_hash`). Old plain-text passwords from the
-  prototype are upgraded when that person signs in.
-- **Wrong-password lockout:** 5 wrong tries in 15 minutes locks that account
-  for 15 minutes.
-- **Email codes** expire after 10 minutes, allow 5 tries, and are limited to
-  one per minute per email.
-- **Forgot password** emails a one-time link (30 minutes, single use, only its hash is saved). The page
-  shows the email partly hidden (`an**********01@gmail.com`).
-- **Sign-in boxes** never fill in a saved username and password by themselves (shared school computers).
-- **Every query uses prepared statements** (no SQL injection).
-- **Role checks on every endpoint:** students only see their own data; staff
-  pages need a staff account, and each staff role only gets what it needs (advocates: their grade level;
-  principal: totals only).
-- **Requests from other websites are blocked** (`X-LIA` header + `SameSite`
-  cookies), sessions are `HttpOnly`, and the session ID changes at sign-in.
-- **Anonymous reports** never send the reporter's name to staff browsers. Staff can message the reporter in
-  the report's own chat, and can see only their phone number (after typing their password). The report form
-  and the Terms say so.
-- **Student details behind a password:** staff lists show only names; grade & section, adviser, email and
-  phone need the staff member's password (unlocked for 10 minutes, every view logged).
-- **Messages** can be edited or deleted by their sender, but nothing is erased: deleted messages are hidden,
-  earlier versions are kept in `message_edits` (staff chat: `staff_message_edits`), and staff edits/deletes
-  are in the audit log. Staff chat files can only be downloaded by the two people in that chat.
-- **Sign-in hint:** a guest ID (`LIA-7K3P9Q`) typed on the Student tab is refused with "sign in on the Guest
-  tab" (student usernames can't have a "-", so it can't be a student). A guest username or a student account
-  on the wrong tab is only told to switch tabs when the password is right, so it never reveals which accounts exist.
-- **Chat rules pop-up:** before a student messages the Guidance Office, a pop-up says what the chat is for and
-  what not to send (pranks, insults, unrelated files), and that messages are saved. "I understand" is needed
-  once per browser tab.
-- **Files in messages** (PDF, Word, JPG, PNG, up to 5 MB) are checked by their real contents, stored in
-  the database, always downloaded (never opened inside the site), and only the student's own conversation
-  or staff can download them.
-- **One account per email and per phone number.** A used email or phone gets "already has an account"
-  with links to sign in or reset the password.
-- **ID photos** are checked to be real images, only shown to staff, never
-  cached, and deleted after review.
-- **Nothing is deleted:** reports are archived, accounts expire.
-- **Audit log:** every staff action (accept, reject, resolve, archive, SOS
-  dispatch, account approval, sign-in/out) is saved in `audit_log` with the
-  staff member's name and the time. The case window shows it as "Case History".
-- **Browser protection headers** (in `docker/apache-lia.conf`): a
-  Content-Security-Policy (only our own scripts run), HSTS (always HTTPS),
-  nosniff, no framing by other sites.
-- **Fail-safe SOS:** if an SOS can't reach the server, the student is told it
-  was NOT sent and is shown 911 / 122 and the guidance office.
-- **SOS sound:** "SOS" in Morse code (··· ——— ···), played twice. Browsers only allow sound after the person clicks or types on the page, so the sound
-  switches on at the first click on any staff page. If an SOS arrives before that, the red strip shows a
-  "Turn on sound" button. Each alert beeps once per browser tab, even when staff move between pages.
-- **Crisis hotlines** (side menu, footer, SOS window): 911, Quezon City 122, NCMH Crisis Hotline 1553 and
-  Hopeline, from the school's Referral Services sheet.
-- Use **made-up test data only** while developing.
+- Culajara, Kurt Vinz D.
+- Francisco, Precious Rhian Brien R.
+- Ladiao III, Angel O.
+- Ocampo, Sheldrick John E.
 
-## Still to do
+Developed in consultation with the Lagro High School Guidance Office.
 
-See `CLAUDE.md` for the full list. Biggest items: severity levels and
-assigned staff (revised RA 10627 IRR), what Security staff can do besides staff chat, the real section list,
-printable invitation letters, and final approval of the Terms by the adviser and the Guidance Office.
+---
+
+<p align="center">
+  Lagro High School · Misa de Gallo St. corner Ascension Ave., Brgy. Greater Lagro, Novaliches, Quezon City<br>
+  <sub>For the development team: technical documentation is in <a href="docs/SETUP.md">docs/SETUP.md</a>.</sub>
+</p>

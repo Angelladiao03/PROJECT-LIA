@@ -18,8 +18,8 @@
       const identity = form.submitAs.value === 'identity';
       document.getElementById('identityFields').hidden = !identity;
       document.getElementById('prefNote').textContent = identity
-        ? 'Guidance staff will see your name and details, so they can message you about this report.'
-        : "Reminder: guidance staff will not see your name. They will only see your phone number, so they can contact you if needed. The report still appears in your My Report History so you can follow it.";
+        ? 'Guidance staff will see your name and details so that they may contact you regarding this report.'
+        : 'Note: Guidance staff will not see your name, only your mobile number, so that they may contact you if necessary. The report will still appear in your My Report History so that you can monitor it.';
     };
     form.querySelectorAll('[name=submitAs]').forEach((r) => r.addEventListener('change', updatePref));
     updatePref();
@@ -79,7 +79,7 @@
     if (!form.location.value) return 'Select where it happened.';
     if (form.location.value === 'Other' && !form.locationOther.value.trim()) return 'Please specify the location.';
     if (!form.incidentDate.value) return 'Choose the date it happened.';
-    if (form.incidentDate.value > today) return "The date can't be in the future.";
+    if (form.incidentDate.value > today) return 'The date cannot be in the future.';
     if (!form.involvedKnown.value) return 'Answer: do you know the person(s) involved?';
     if (form.involvedKnown.value === 'yes' && !form.involvedDescription.value.trim()) return 'Describe the person(s) involved.';
     if (form.description.value.trim().length < 10) return 'Describe what happened (at least a sentence).';

@@ -116,7 +116,7 @@ $moves = [
 if (isset($moves[$action])) {
     [$from, $to, $message] = $moves[$action];
     if (!in_array($status, $from, true)) {
-        json_error("This report is already \"$status\", so it can't be changed that way. Reload the page.", 409);
+        json_error("This report is already \"$status\" and cannot be changed in this way. Please reload the page.", 409);
     }
     $reason = null;
     if ($action === 'reject') {

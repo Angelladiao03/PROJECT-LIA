@@ -21,7 +21,7 @@
           <header class="chat-head">
             <button class="icon-btn" id="back" aria-label="Back to chats" hidden></button>
             <img src="/assets/img/lagro-seal.png" alt="" class="chat-seal">
-            <div class="chat-title"><strong id="chatName">Guidance Office</strong><span class="small muted" id="chatSub">Messages are private between you and guidance staff.</span></div>
+            <div class="chat-title"><strong id="chatName">Guidance Office</strong><span class="small muted" id="chatSub">Messages are confidential between you and the guidance staff.</span></div>
             <a class="btn btn-quiet btn-sm" id="viewReport" hidden>View Report</a>
           </header>
           <div class="chat-log" id="log" aria-live="polite"></div>
@@ -70,7 +70,7 @@
           title: 'Before you message the Guidance Office',
           dismissable: false,
           body: `
-            <p>This chat goes straight to the guidance staff of Lagro High School. Please use it only for:</p>
+            <p>Messages in this chat are sent directly to the guidance staff of Lagro High School. Please use it only for:</p>
             <ul class="rules-list ok">
               <li>Questions about bullying, your safety, or how to use LagroInAction</li>
               <li>Asking for help, or asking to talk to a guidance staff member</li>
@@ -78,12 +78,12 @@
             </ul>
             <p>Please do <b>not</b> send:</p>
             <ul class="rules-list no">
-              <li>Jokes, pranks, or made-up stories</li>
-              <li>Insults, threats, or bad words</li>
-              <li>Photos or files that have nothing to do with your concern</li>
+              <li>Jokes, pranks, or false information</li>
+              <li>Insults, threats, or offensive language</li>
+              <li>Photos or files unrelated to your concern</li>
             </ul>
-            <p class="small muted">Every message is saved with your account and the time it was sent, and guidance staff may act on messages that misuse this chat.</p>
-            ${hasReport ? '' : `<div class="form-note small"><b>You haven't sent a report yet.</b> If you or someone else is being bullied, send a report so the guidance office can act on it and you can follow its status. <a href="/app/report.html">Submit a Report</a></div>`}`,
+            <p class="small muted">All messages are recorded with your account and the time they were sent. Misuse of this chat may be acted upon by the Guidance Office in accordance with school policies.</p>
+            ${hasReport ? '' : `<div class="form-note small"><b>You have not submitted a report yet.</b> If you or another student is being bullied, please submit a report so that the Guidance Office can act on it and you can monitor its status. <a href="/app/report.html">Submit a Report</a></div>`}`,
           foot: `<a class="btn btn-quiet" href="/app/home.html">Go back</a><button class="btn" type="button" data-ok>I understand</button>`,
           onOpen: (el, close) => {
             el.querySelector('[data-ok]').addEventListener('click', () => {
@@ -120,7 +120,7 @@
           const t = threads.find((x) => x.case === current);
           document.getElementById('chatName').textContent = t ? t.title : 'Guidance Office';
           document.getElementById('chatSub').textContent = !t?.reportNo
-            ? (me.account.accountType === 'guest' ? `Staff see you only as Guest ${me.account.guestId}.` : 'Messages are private between you and guidance staff.')
+            ? (me.account.accountType === 'guest' ? `Staff see you only as Guest ${me.account.guestId}.` : 'Messages are confidential between you and the guidance staff.')
             : `${t.category} · ${t.anonymous ? 'Your name stays hidden from staff in this chat.' : 'About this report.'}`;
           if (current === 'general') showChatRules();
           const view = document.getElementById('viewReport');
@@ -135,7 +135,7 @@
                 who: (m) => m.staffName || 'Guidance office',
                 caseCard: (c) => `<a class="case-card" href="/app/account.html#report-${c.reportNo}">${LIA.icon('folder')}<span><b>Your report #${c.reportNo}</b>${LIA.esc(c.category)} · ${LIA.esc(LIA.STATUS[c.status]?.student || c.status)}</span></a>`,
               })
-            : `<div class="empty"><strong>Start a conversation</strong><span>${current === 'general' ? "Ask a question or tell the guidance office what's going on." : 'Ask about this report or add more details.'} A staff member will reply here.</span></div>`;
+            : `<div class="empty"><strong>No messages yet</strong><span>${current === 'general' ? 'Send your question or concern to the Guidance Office.' : 'Send a question about this report or provide additional details.'} A staff member will respond here.</span></div>`;
           log.scrollTop = log.scrollHeight;
           if (threads.find((x) => x.case === current)?.unread) loadList(); // opening the chat marked them read
         } catch (e) { LIA.toast(e.message, 'error'); }

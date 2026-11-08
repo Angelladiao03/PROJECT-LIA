@@ -11,7 +11,8 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
 ## Current state of the code
 - **PHP alpha.** Plain PHP 8.5 + PDO (`pdo_pgsql`), PostgreSQL on **Neon**, plain HTML/CSS/vanilla JS,
   deployed to **Render** via `Dockerfile` (php:8.5-apache, document root `public/`). Java prototype
-  preserved under Git tag `prototype-v1.2.1`. README.md documents setup, structure and security.
+  preserved under Git tag `prototype-v1.2.1`. README.md is the public introduction (no setup steps);
+  docs/SETUP.md documents structure, setup, deployment and security details.
 - **Accounts** (table `users`): `guest` (email-verified, 30-day expiry, guest ID like `LIA-7K3P9Q`,
   stays open while a case/request is open, reports always kept) and `student` (permanent; a guest
   submits details + school ID photo in `activation_requests`, staff approve/decline, photo is set
@@ -74,6 +75,11 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
   `lia-chat-rules-ok`) when a student opens the Guidance Office chat; it also says "no report yet". SOS sound:
   Morse "... --- ..." twice (`beep()` in core.js), one shared AudioContext unlocked on the first click,
   "Turn on sound" button, heard alerts kept in sessionStorage.
+- alpha.6 (Nov 8 2026): phone layouts (one-per-line SMART list and reporter-role choices, normal-size date
+  box, profile without the big picture and with even buttons, aligned status cards, 2-column report filters,
+  equal-width table action buttons); sign-in pages fit one screen on laptops/desktops (height media queries);
+  all emails use one layout (`email_html()` in includes/mailer.php, `send_email($to, $subject, [...])`,
+  subjects start with "[LagroInAction]"); formal wording across the site; README rewritten as an introduction.
 - Purpose note from the team: LIA is for tracking reports, updates and case management. It does not
   solve cases or replace the guidance sessions themselves.
 - Settings via `setting()` in `includes/config.php`: env vars on Render (`DATABASE_URL`,

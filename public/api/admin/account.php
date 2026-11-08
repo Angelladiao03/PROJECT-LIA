@@ -38,7 +38,7 @@ if ($action === 'password') {
     if ($current === '') json_error('Enter your current password.');
     if (!check_password($current, $admin['admin_password'])) json_error('Your current password is wrong.');
     if ($error = password_error($new)) json_error($error);
-    if ($new !== $confirm) json_error("The new passwords don't match.");
+    if ($new !== $confirm) json_error('The new passwords do not match.');
     if ($new === $current) json_error('Choose a password different from your current one.');
     db()->prepare('UPDATE admin_profile SET admin_password = ? WHERE admin_id = ?')->execute([hash_password($new), $adminId]);
     session_regenerate_id(true);

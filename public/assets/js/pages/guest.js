@@ -76,7 +76,7 @@ let resendTimer = null;
 
 async function sendCode(button, form) {
   const data = await LIA.busy(button, () => LIA.api('guest/send_code.php', { body: { email, contactNumber, agree: 'yes' } }));
-  document.getElementById('codeSentTo').innerHTML = `We sent a code to <b>${LIA.esc(email)}</b>. Check your inbox and spam folder. It works for 10 minutes.`;
+  document.getElementById('codeSentTo').innerHTML = `A verification code was sent to <b>${LIA.esc(email)}</b>. Please check your inbox and spam folder. The code is valid for 10 minutes.`;
   const dev = document.getElementById('devCode');
   dev.hidden = !data.devCode;
   if (data.devCode) dev.innerHTML = `Testing mode (no email service set up): your code is <b>${data.devCode}</b>`;
@@ -139,7 +139,7 @@ codeForm.addEventListener('submit', async (e) => {
     document.getElementById('newGuestId').textContent = data.guestId;
     document.getElementById('newPassword').textContent = data.password;
     document.getElementById('expiresNote').textContent =
-      `Your guest account lasts until ${LIA.fmtDate(data.expiresAt)}. Your reports are kept even after that.`;
+      `Your guest account is valid until ${LIA.fmtDate(data.expiresAt)}. Your reports are retained by the Guidance Office after that date.`;
     goTo(4);
   } catch (err) {
     if (err.data?.restart) { LIA.toast(err.message, 'error'); return goTo(1); }

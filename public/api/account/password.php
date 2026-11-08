@@ -14,7 +14,7 @@ if (!is_string($current) || !is_string($new) || !is_string($confirm)) json_error
 if ($current === '') json_error('Enter your current password.');
 if (!check_password($current, $user['password_hash'])) json_error('Your current password is wrong.');
 if ($error = password_error($new)) json_error($error);
-if ($new !== $confirm) json_error("The new passwords don't match.");
+if ($new !== $confirm) json_error('The new passwords do not match.');
 if ($new === $current) json_error('Choose a password different from your current one.');
 
 db()->prepare('UPDATE users SET password_hash = ? WHERE user_id = ?')

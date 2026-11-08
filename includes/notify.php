@@ -1,7 +1,7 @@
 <?php
 // Notification emails to students and guests:
 //   - when one of their reports changes status (accepted, under investigation, resolved, not accepted)
-//   - when guidance messages stay unread for 1 hour ("You have 3 unread messages...")
+//   - when guidance messages stay unread for 1 hour ("3 unread messages")
 // Emails never contain report details or message text, only that something changed,
 // because emails can be seen by other people (shared phones, family computers).
 
@@ -15,22 +15,28 @@ function notify_report_update(int $reportNo, string $action, ?string $reason = n
     $to = $stmt->fetch();
     if (!$to || !$to['email'] || $to['status'] !== 'Active') return;
 
+    // [new status shown in the box, sentence about it]
     $what = [
-        'approve' => "was accepted. The guidance office is now handling it.",
-        'investigate' => "is now under investigation by the guidance office.",
-        'intervene' => "is now with the guidance office for intervention. They will talk with you about the next steps.",
-        'refer' => "has been referred to a partner office for more support. The guidance office will tell you the next steps.",
-        'resolve' => "has been marked as resolved by the guidance office.",
-        'reject' => "was not accepted." . ($reason ? "\n\nReason: $reason" : ''),
+        'approve' => ['Accepted', 'Your report has been accepted, and the Guidance Office is now handling it.'],
+        'investigate' => ['Under Investigation', 'Your report is now under investigation by the Guidance Office.'],
+        'intervene' => ['For Intervention', 'Your report is now for intervention by the Guidance Office. A guidance staff member will discuss the next steps with you.'],
+        'refer' => ['Referred for Additional Support', 'Your report has been referred to a partner office for additional support. The Guidance Office will inform you of the next steps.'],
+        'resolve' => ['Resolved', 'Your report has been marked as resolved by the Guidance Office.'],
+        'reject' => ['Not Accepted', 'Your report was not accepted by the Guidance Office.' . ($reason ? " Reason: $reason" : '')],
     ][$action] ?? null;
     if ($what === null) return;
 
     send_email(
         $to['email'],
-        "Update on your LagroInAction report #$reportNo",
-        "Your report #$reportNo $what\n\n"
-        . "Sign in to LagroInAction and open My Account > My Report History to see the details. "
-        . "You can also message the guidance office about it on the Message page.\n\n- Lagro High School Guidance Office"
+        "[LagroInAction] Update on Report #$reportNo",
+        [
+            'lines' => ["There is an update on your report #$reportNo. Its status is now:"],
+            'note' => $what[0],
+            'after' => [
+                $what[1],
+                'For the details, please sign in to LagroInAction and open My Account > My Report History. You may also contact the Guidance Office through the Message page.',
+            ],
+        ]
     );
 }
 
@@ -62,9 +68,12 @@ function send_unread_message_reminders(): int
             ->execute([$row['user_id']]);
         send_email(
             $row['email'],
-            "You have $n unread " . ($n === 1 ? 'message' : 'messages') . ' in LagroInAction',
-            "You have $n unread " . ($n === 1 ? 'message' : 'messages') . " from the guidance office in your inbox. "
-            . "Please sign in to LagroInAction and open Message to read " . ($n === 1 ? 'it' : 'them') . ".\n\n- Lagro High School Guidance Office"
+            '[LagroInAction] Unread ' . ($n === 1 ? 'Message' : 'Messages') . ' from the Guidance Office',
+            [
+                'lines' => ['You have unread messages from the Guidance Office:'],
+                'note' => "$n unread " . ($n === 1 ? 'message' : 'messages'),
+                'after' => ['Please sign in to LagroInAction and open the Message page to read ' . ($n === 1 ? 'it' : 'them') . '. For your privacy, message contents are never included in emails.'],
+            ]
         );
         $sent++;
     }

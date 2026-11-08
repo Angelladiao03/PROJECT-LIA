@@ -133,7 +133,7 @@ function require_admin(string ...$roles): array
         $admin = $stmt->fetch();
         if ($admin) {
             if ($roles && !in_array($admin['staff_role'], $roles, true)) {
-                json_error('Your staff account (' . staff_role_label($admin) . ") can't open this.", 403);
+                json_error('Your staff account (' . staff_role_label($admin) . ') does not have access to this page.', 403);
             }
             return $admin;
         }
@@ -329,7 +329,7 @@ function check_email_code(string $email, string $code, string $purpose): array
     if (!password_verify($code, $row['code_hash'])) {
         db()->prepare('UPDATE email_codes SET attempts = attempts + 1 WHERE code_id = ?')->execute([$row['code_id']]);
         $left = MAX_CODE_ATTEMPTS - $row['attempts'] - 1;
-        json_error("That code isn't right. $left " . ($left === 1 ? 'try' : 'tries') . ' left.');
+        json_error("The code is incorrect. $left " . ($left === 1 ? 'attempt' : 'attempts') . ' remaining.');
     }
     return $row;
 }

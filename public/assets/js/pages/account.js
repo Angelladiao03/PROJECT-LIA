@@ -15,10 +15,10 @@
     document.getElementById('whoType').textContent = isGuest ? 'Guest account' : 'Student account';
     const fact = (k, v) => v ? `<dt>${LIA.esc(k)}:</dt><dd>${LIA.esc(v)}</dd>` : '';
     document.getElementById('facts').innerHTML = isGuest
-      ? fact('Guest ID', a.guestId) + fact('Gmail', a.email) + fact('Created', LIA.fmtDate(a.createdAt))
-        + fact('Expires', a.expiresAt ? `${LIA.fmtDate(a.expiresAt)} (kept open while a report or request is being handled)` : '')
+      ? fact('Guest ID', a.guestId) + fact('Email', a.email) + fact('Created', LIA.fmtDate(a.createdAt))
+        + fact('Expires', a.expiresAt ? `${LIA.fmtDate(a.expiresAt)} (extended while a report or request is in progress)` : '')
       : fact('Username', a.username) + fact('Grade & Section', a.gradeSection) + fact('Adviser', a.adviser)
-        + fact('Gmail', a.email) + fact('Contact Number', a.contactNumber); // students sign in with their username (no guest ID)
+        + fact('Email', a.email) + fact('Contact Number', a.contactNumber); // students sign in with their username (no guest ID)
   }
   drawProfile();
 
@@ -123,7 +123,7 @@
       body: `
         <p style="margin:0 0 12px">${LIA.chip(r.status)}</p>
         ${r.status === 'Rejected'
-          ? `<div class="reason" style="margin-bottom:16px"><b>Why it wasn't accepted:</b> ${LIA.esc(r.rejectReason || 'No reason given.')}<br><span class="small muted">You can submit a new report or message the guidance office.</span></div>`
+          ? `<div class="reason" style="margin-bottom:16px"><b>Reason for not accepting the report:</b> ${LIA.esc(r.rejectReason || 'No reason given.')}<br><span class="small muted">You may submit a new report or contact the Guidance Office through the Message page.</span></div>`
           : `<ol class="steps" style="margin-bottom:20px">${STEPS.map((s, i) => `<li class="${i < reached[r.status] ? 'done' : ''}">${s}</li>`).join('')}</ol>`}
         <dl class="facts">
           <dt>Category</dt><dd>${LIA.esc(r.category)}</dd>
@@ -183,9 +183,9 @@ function drawActivation(req) {
 
   const declined = req && req.status === 'Declined';
   box.innerHTML = `
-    <h2>Make your account permanent</h2>
-    <p>A permanent student account doesn't expire, and you can choose to include your identity on reports so staff can follow up with you. The guidance office checks your school ID before approving.</p>
-    ${declined ? `<div class="reason" style="margin-bottom:16px"><b>Your last request wasn't approved:</b> ${LIA.esc(req.declineReason)}<br><span class="small muted">Fix the issue and send a new request.</span></div>` : ''}
+    <h2>Request a Permanent Student Account</h2>
+    <p>A permanent student account does not expire, and you may choose to include your identity in reports so that staff can follow up with you. The Guidance Office verifies your school ID before approval.</p>
+    ${declined ? `<div class="reason" style="margin-bottom:16px"><b>Your previous request was not approved:</b> ${LIA.esc(req.declineReason)}<br><span class="small muted">Please address the concern above and submit a new request.</span></div>` : ''}
     <form id="actForm" novalidate>
       <div class="form-row">
         <div class="field"><label for="fullName">Full Name</label><input class="input" id="fullName" name="fullName" maxlength="150" autocomplete="name"></div>
@@ -195,12 +195,12 @@ function drawActivation(req) {
         <div class="field"><label for="gradeLevel">Grade Level</label><select class="input" id="gradeLevel" name="gradeLevel"></select></div>
         <div class="field"><label for="section">Section</label><select class="input" id="section" name="section"></select></div>
       </div>
-      <div class="field"><label for="adviser">Adviser</label><input class="input" id="adviser" name="adviser" maxlength="150"><p class="hint">Your phone number from your guest account is kept, so you don't need to type it again.</p></div>
+      <div class="field"><label for="adviser">Adviser</label><input class="input" id="adviser" name="adviser" maxlength="150"><p class="hint">The mobile number of your guest account will be used.</p></div>
       <div class="field">
         <span class="label">Photo of your school ID</span>
         <label class="choice" for="idPhoto" style="align-items:center">
           ${LIA.icon('image')}
-          <span><strong id="photoName">Choose a photo</strong><span>JPG or PNG. Take a clear photo of the front of your ID.</span></span>
+          <span><strong id="photoName">Choose a photo</strong><span>JPG or PNG. Upload a clear photo of the front of your school ID.</span></span>
         </label>
         <input class="visually-hidden" id="idPhoto" name="idPhoto" type="file" accept="image/jpeg,image/png,image/webp">
         <img id="photoPreview" alt="Preview of your ID photo" hidden style="max-height:180px;border-radius:10px;border:1px solid var(--line);width:auto">

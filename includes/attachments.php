@@ -35,7 +35,7 @@ function read_attachment(): ?array
     $data = file_get_contents($f['tmp_name']);
     [$mime, $signature] = ATTACH_TYPES[$ext];
     if (strncmp($data, $signature, strlen($signature)) !== 0) {
-        json_error("This file isn't a real .$ext file. Save it again and send that copy.");
+        json_error("This file is not a valid .$ext file. Please save it again and send the new copy.");
     }
     return ['name' => $name, 'type' => $mime, 'size' => strlen($data), 'data' => $data];
 }

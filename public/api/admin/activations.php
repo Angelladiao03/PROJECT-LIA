@@ -124,19 +124,30 @@ $name = $request['full_name'];
 if ($action === 'approve') {
     $sent = send_email(
         $request['email'],
-        'Congratulations! You are now a registered student in LagroInAction',
-        "Hi $name,\n\nCongratulations! You are now registered as a student in Lagro High School's LagroInAction. "
-        . "The guidance office approved your request, and your account is now a permanent student account.\n\n"
-        . "Sign in on the Student tab with your username ({$request['username']}) or this email, "
-        . "using the same password you use now. Your username is now your ID (you no longer need your guest ID).\n\nYour ID photo has been deleted from our system."
+        '[LagroInAction] Student Account Request Approved',
+        [
+            'greeting' => "Dear $name,",
+            'lines' => ['The Guidance Office has approved your request. Your LagroInAction account is now a permanent student account. Your username is:'],
+            'code' => $request['username'],
+            'after' => [
+                'Please sign in on the Student tab using this username or this email address, with your current password. Your guest ID is no longer needed.',
+                'In accordance with the Data Privacy Act of 2012 (RA 10173), the photo of your school ID has been deleted from the system.',
+            ],
+        ]
     );
 } else {
     $sent = send_email(
         $request['email'],
-        'Your LagroInAction account request was not approved',
-        "Hi $name,\n\nThe guidance office could not approve your request for a permanent student account.\n\n"
-        . "Reason: $reason\n\nYou can still use your guest account, and you can send a new request after fixing the issue. "
-        . "Your ID photo has been deleted from our system."
+        '[LagroInAction] Student Account Request Not Approved',
+        [
+            'greeting' => "Dear $name,",
+            'lines' => ['The Guidance Office was unable to approve your request for a permanent student account for the following reason:'],
+            'note' => $reason,
+            'after' => [
+                'You may continue to use your guest account, and you may submit a new request once the concern above has been addressed.',
+                'In accordance with the Data Privacy Act of 2012 (RA 10173), the photo of your school ID has been deleted from the system.',
+            ],
+        ]
     );
 }
 

@@ -9,7 +9,7 @@
 
 const LIA = (() => {
   // The version shown on the sign-in pages. Change it here when you tag a new version.
-  const VERSION = 'v1.0.0-alpha.5';
+  const VERSION = 'v1.0.0-alpha.6';
   document.querySelectorAll('[data-version]').forEach((el) => { el.textContent = VERSION; });
 
   // ---------- Icons (simple line drawings, 24x24) ----------
@@ -118,7 +118,7 @@ const LIA = (() => {
     } catch (e) {
       const msg = e.name === 'AbortError'
         ? 'LagroInAction is taking too long to answer. Please try again.'
-        : "Can't reach LagroInAction. Check your internet connection and try again.";
+        : 'Unable to connect to LagroInAction. Please check your internet connection and try again.';
       throw Object.assign(new Error(msg), { network: true });
     } finally {
       clearTimeout(stop);
@@ -217,10 +217,10 @@ const LIA = (() => {
   // ---------- Report status, in words students understand ----------
   const STATUS = {
     'Pending': { cls: 'pending', student: 'Waiting for review', staff: 'New' },
-    'Active': { cls: 'active', student: 'Accepted · being handled', staff: 'Active' },
+    'Active': { cls: 'active', student: 'Accepted · in progress', staff: 'Active' },
     'Under Investigation': { cls: 'invest', student: 'Under investigation', staff: 'Under investigation' },
-    'For Intervention': { cls: 'interv', student: 'Guidance is taking action', staff: 'For intervention' },
-    'For Referral': { cls: 'refer', student: 'Referred for more support', staff: 'For referral' },
+    'For Intervention': { cls: 'interv', student: 'For intervention', staff: 'For intervention' },
+    'For Referral': { cls: 'refer', student: 'Referred for additional support', staff: 'For referral' },
     'Resolved': { cls: 'resolved', student: 'Resolved', staff: 'Resolved' },
     'Rejected': { cls: 'rejected', student: 'Not accepted', staff: 'Rejected' },
   };
@@ -381,7 +381,7 @@ const LIA = (() => {
           const fd = new FormData(form);
           if (!askCurrent) fd.set('currentPassword', knownCurrentPassword);
           if (staff) fd.set('action', 'password');
-          if (fd.get('newPassword') !== fd.get('confirmPassword')) return showFormError(form, "The new passwords don't match.");
+          if (fd.get('newPassword') !== fd.get('confirmPassword')) return showFormError(form, 'The new passwords do not match.');
           try {
             await busy(el.querySelector('button[type=submit]'), () => api(staff ? 'admin/account.php' : 'account/password.php', { body: fd }));
             close();
@@ -460,7 +460,7 @@ const LIA = (() => {
     { name: 'National Emergency Hotline', short: '911 National', numbers: [['911', '911']] },
     { name: 'Quezon City Helpline', short: '122 Quezon City', numbers: [['122', '122']] },
     { name: 'NCMH Crisis Hotline (mental health)', short: '1553 NCMH Crisis', numbers: [['1553', '1553']] },
-    { name: 'Hopeline (someone to talk to)', short: 'Hopeline', numbers: [['(02) 8804 4673', '+63288044673'], ['0917 558 4673', '09175584673'], ['0918 873 4673', '09188734673']] },
+    { name: 'Hopeline (emotional support)', short: 'Hopeline', numbers: [['(02) 8804 4673', '+63288044673'], ['0917 558 4673', '09175584673'], ['0918 873 4673', '09188734673']] },
   ];
   const telLinks = (h) => h.numbers.map(([shown, dial]) => `<a href="tel:${dial}">${esc(shown)}</a>`).join(' / ');
 
@@ -471,25 +471,25 @@ const LIA = (() => {
       title: 'Send an SOS',
       className: 'sos-modal',
       body: `
-        <p>This alerts the guidance office right away. Use it when you are in danger or need help now.</p>
+        <p>This immediately alerts the Guidance Office. Use it only when you are in danger or need urgent assistance.</p>
         <form id="sosForm" novalidate>
           <div class="field">
-            <label for="sosWhere">Where are you right now?</label>
+            <label for="sosWhere">What is your current location?</label>
             <select class="input" id="sosWhere" name="location" required>
               ${locationOptions(places)}
             </select>
           </div>
           <div class="field" id="sosOtherField" hidden>
-            <label for="sosOther">Type the place</label>
+            <label for="sosOther">Specify the location</label>
             <input class="input" id="sosOther" name="locationOther" maxlength="200" placeholder="e.g. Room 204, Building B">
           </div>
           <div class="field">
-            <label for="sosWhat">What is happening?</label>
+            <label for="sosWhat">Briefly describe the situation</label>
             <textarea class="input" id="sosWhat" name="description" maxlength="1000" style="min-height:90px" placeholder="e.g. A group is blocking me and threatening me" required></textarea>
           </div>
         </form>
         <div class="form-note warn small">If someone is hurt or in immediate danger, also call <a href="tel:911"><b>911</b></a> or the Quezon City hotline <a href="tel:122"><b>122</b></a>.
-          Need someone to talk to? NCMH Crisis Hotline <a href="tel:1553"><b>1553</b></a> or Hopeline <a href="tel:+63288044673"><b>(02) 8804 4673</b></a>.</div>`,
+          For emotional support, contact the NCMH Crisis Hotline <a href="tel:1553"><b>1553</b></a> or Hopeline <a href="tel:+63288044673"><b>(02) 8804 4673</b></a>.</div>`,
       foot: `<button class="btn btn-quiet" data-close>Cancel</button><button class="btn btn-sos btn-big" form="sosForm" type="submit">${icon('alert')} Send SOS now</button>`,
       onOpen: (el, close) => {
         const form = el.querySelector('#sosForm');
@@ -505,7 +505,7 @@ const LIA = (() => {
             close();
             openModal({
               title: 'SOS sent',
-              body: `<p><b>The guidance office has been alerted.</b> Stay where it is safest. If you can, move near a teacher or a guard.</p>
+              body: `<p><b>The Guidance Office has been alerted.</b> Stay in the safest place available and, if possible, move near a teacher or a security guard.</p>
                      <p class="muted">Emergency hotlines: <a href="tel:911">911</a> · Quezon City <a href="tel:122">122</a> · NCMH Crisis <a href="tel:1553">1553</a> · Hopeline <a href="tel:+63288044673">(02) 8804 4673</a></p>`,
               foot: `<button class="btn" data-close>OK</button>`,
             });
@@ -599,7 +599,7 @@ const LIA = (() => {
     side.innerHTML = isAdmin
       ? `<div class="nav-group">${staffNav(acct).map((i) => navLink(i, current)).join('')}</div>
          <p class="sidebar-foot">LagroInAction · Lagro High School Guidance Office</p>`
-      : `<button class="sidebar-sos" id="sosSide" type="button">SOS<small>Tap if you need help now</small></button>
+      : `<button class="sidebar-sos" id="sosSide" type="button">SOS<small>For urgent assistance</small></button>
          <div class="nav-group">${USER_NAV.map((i) => navLink(i, current)).join('')}</div>
          <div class="nav-group extra"><p class="nav-heading">Learn</p>${USER_EXTRA.map((i) => navLink(i, current)).join('')}</div>
          <div class="nav-group extra"><p class="nav-heading">Emergency hotlines</p>
@@ -785,8 +785,8 @@ const LIA = (() => {
   async function start() {
     const area = document.body.dataset.area; // "user" or "admin"
     // Tell the user when their internet drops and comes back (nothing is lost: report drafts are saved on this device)
-    window.addEventListener('offline', () => toast("You're offline. Your report draft is kept on this device.", 'error'));
-    window.addEventListener('online', () => toast("You're back online."));
+    window.addEventListener('offline', () => toast('You are offline. Your report draft is saved on this device.', 'error'));
+    window.addEventListener('online', () => toast('You are back online.'));
     let me;
     try {
       me = await api('auth/me.php', { allow401: true });
