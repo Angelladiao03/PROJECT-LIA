@@ -175,10 +175,16 @@ const CASE = (() => {
   }
 
   // Opens the details window. onChange() runs after an action so the page can reload.
-  function open(r, onChange) {
+  // fromMessages: opened from the Messages page. The status buttons (For referral, Mark resolved, ...)
+  // are replaced by one button that opens the same case in Manage Reports (or Report Records once it
+  // is Resolved or Rejected), where the case is handled. Fewer buttons next to the chat.
+  function open(r, onChange, { fromMessages = false } = {}) {
     const p = r.reporter || {};
     let shown = null; // the student details, once the password was typed
-    const buttons = actionsFor(r).map(([a, label, cls]) => `<button class="btn ${cls}" data-act="${a}">${label}</button>`).join('');
+    const finished = r.status === 'Resolved' || r.status === 'Rejected';
+    const buttons = fromMessages
+      ? `<a class="btn" href="${finished ? '/admin/records.html' : '/admin/cases.html'}#report-${r.reportNo}">${finished ? 'View in Report Records' : 'View in Manage Reports'}</a>`
+      : actionsFor(r).map(([a, label, cls]) => `<button class="btn ${cls}" data-act="${a}">${label}</button>`).join('');
 
     LIA.openModal({
       title: `Report Case No. ${LIA.caseNo(r)}`,
@@ -216,7 +222,7 @@ const CASE = (() => {
         <h3 style="margin-top:16px">Case History</h3>
         <ol class="case-history" data-history><li class="muted">Loading...</li></ol>`,
       foot: `${buttons}
-        ${r.canMessage ? `<a class="btn btn-quiet" href="/admin/messages.html?case=${r.reportNo}">Message</a>` : ''}
+        ${r.canMessage && !fromMessages ? `<a class="btn btn-quiet" href="/admin/messages.html?case=${r.reportNo}">Message</a>` : ''}
         ${r.status !== 'Pending' ? `<button class="btn btn-ghost" data-print>Print</button>
         <button class="btn btn-ghost" data-pdf>Save as PDF</button>` : ''}
         <button class="btn btn-gray" data-close>Close</button>`,
@@ -226,7 +232,7 @@ const CASE = (() => {
           try {
             const { reports } = await LIA.api('admin/reports.php');
             const earlier = reports.find((x) => x.reportNo === r.relatedReportNo);
-            if (earlier) open(earlier, onChange); else LIA.toast('That report is handled by another grade level.', 'error');
+            if (earlier) open(earlier, onChange, { fromMessages }); else LIA.toast('That report is handled by another grade level.', 'error');
           } catch (err) { LIA.toast(err.message, 'error'); }
         });
         el.querySelector('[data-reveal]')?.addEventListener('click', async () => {

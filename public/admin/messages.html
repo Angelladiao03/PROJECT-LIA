@@ -261,7 +261,7 @@
         try {
           const { reports } = await LIA.api('admin/reports.php');
           const r = reports.find((x) => x.reportNo === no);
-          if (r) CASE.open(r, () => { lastSig = ''; loadChat(); }); else LIA.toast('That report was not found.', 'error');
+          if (r) CASE.open(r, () => { lastSig = ''; loadChat(); }, { fromMessages: true }); else LIA.toast('That report was not found.', 'error');
         } catch (err) { LIA.toast(err.message, 'error'); }
       }
 
@@ -296,7 +296,7 @@
           onOpen: (el, close) => {
             el.addEventListener('click', (e) => {
               const b = e.target.closest('[data-case]');
-              if (b) { close(); CASE.open(linked.find((r) => r.reportNo === Number(b.dataset.case))); }
+              if (b) { close(); CASE.open(linked.find((r) => r.reportNo === Number(b.dataset.case)), undefined, { fromMessages: true }); }
             });
           },
         });

@@ -118,5 +118,12 @@
   document.addEventListener('lia:new-sos', load);
   await load();
   if (location.hash === '#sos') document.getElementById('sos').scrollIntoView({ behavior: 'smooth' });
+  // "View in Manage Reports" (from Messages) opens /admin/cases.html#report-12: show that case's window
+  const linked = location.hash.match(/^#report-(\d+)$/);
+  if (linked) {
+    const r = reports.find((x) => x.reportNo === Number(linked[1]));
+    if (r) CASE.open(r, load); else LIA.toast('That report was not found.', 'error');
+    history.replaceState(null, '', location.pathname); // so reloading the page doesn't open it again
+  }
   setInterval(load, 20000);
 })();

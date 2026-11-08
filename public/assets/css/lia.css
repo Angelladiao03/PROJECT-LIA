@@ -1008,6 +1008,7 @@ input[type="date"].input::-webkit-datetime-edit { padding: 0; }
 /* ---------- Dashboard: period, filters and comparison ---------- */
 /* Chart colors: this period = green #2e7d32, previous period = orange #e0a030 (checked for color-blind readers;
    every bar also has its number, and Print Summary gives the same numbers as a table) */
+.dash-filters { margin-bottom: 24px; } /* same space as under the tiles above it */
 .dash-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .dash-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
 .dash-row .field { margin: 0; flex: 1 1 160px; }
