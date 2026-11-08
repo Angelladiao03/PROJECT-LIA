@@ -34,7 +34,7 @@ PROJECT-LIA/
 │   │   └── guide.html          what counts as bullying, what to do
 │   ├── admin/                  guidance staff pages
 │   │   ├── home.html           staff home page (same layout as the student home)
-│   │   ├── index.html          dashboard (counts, monthly bars, hotspots)
+│   │   ├── index.html          dashboard (period, filters, compare, charts, Print Summary)
 │   │   ├── cases.html          Manage Reports: new reports, active cases, SOS alerts (with sound)
 │   │   ├── records.html        resolved / rejected / archived
 │   │   ├── messages.html       Reports / Students / Staff buttons: chats by case (anonymous reports too),
@@ -167,7 +167,7 @@ Emails the system sends:
 | Guest sign-up | `[LagroInAction] Verification Code`, then `[LagroInAction] Guest Account Registration Successful` (with the guest ID, never the password) |
 | Forgot password | `[LagroInAction] Password Reset Request` (button + link), then `[LagroInAction] Password Changed` |
 | Student account approved / declined | `[LagroInAction] Student Account Request Approved` / `... Not Approved` (with the reason) |
-| Staff change a report's status | `[LagroInAction] Update on Report #N` (new status only; no report details) |
+| Staff change a report's status | `[LagroInAction] Update on Report #2026-0001` (new status only; no report details) |
 | Guidance messages unread for 1 hour | `[LagroInAction] Unread Messages from the Guidance Office` (count only; once per message) |
 
 All emails use one layout (`email_html()` in `includes/mailer.php`): school seal and name, title, a box with
@@ -206,6 +206,21 @@ didn't get a code. The email text itself is not stored.
   and the Terms say so.
 - **Student details behind a password:** staff lists show only names; grade & section, adviser, email and
   phone need the staff member's password (unlocked for 10 minutes, every view logged).
+- **Closing conversations:** when a report is Resolved or Rejected (`reports.finished_at`), its chat stays open
+  until 3 days pass with no messages (counted from the status change or the last message, whichever is later).
+  Then `close_quiet_chats()` (includes/messages.php) sets `reports.chat_closed_at` and adds an automatic notice
+  (`messages.sender_type = 'System'`); the chat is read-only for everyone (checked on the server). It runs with the
+  background jobs and whenever a report chat or report list is opened. Staff can print a conversation from Report
+  Records ("Print Conversation").
+- **Follow-up reports:** only a report that includes the student's identity can be linked, and only to the
+  student's own earlier Resolved report that also included it (checked in `api/reports/create.php`). Guests'
+  reports are always anonymous, so they cannot link. This way a link never reveals who sent an anonymous report.
+- **Dashboard** (`api/admin/stats.php`, counselor and principal): `from`, `to`, `group=day|month|year`, filters
+  `grade`, `category`, `location`, `status`, `role`, and `compare=1` (the same number of days/months/years just
+  before). Reports are counted by the date submitted (Philippine time); "Day of the Week" uses the incident date.
+  Only totals are returned. The page keeps the choices in the address bar and has "Print Summary".
+- **Report IDs** (`#2026-0001`) are made by the database from the year and a number that restarts each year.
+  The internal `report_no` is still used in links.
 - **Messages** can be edited or deleted by their sender, but nothing is erased: deleted messages are hidden,
   earlier versions are kept in `message_edits` (staff chat: `staff_message_edits`), and staff edits/deletes
   are in the audit log. Staff chat files can only be downloaded by the two people in that chat.
@@ -231,7 +246,7 @@ didn't get a code. The email text itself is not stored.
   nosniff, no framing by other sites.
 - **Fail-safe SOS:** if an SOS can't reach the server, the student is told it
   was NOT sent and is shown 911 / 122 and the guidance office.
-- **SOS sound:** "SOS" in Morse code (··· ——— ···), played twice. Browsers only allow sound after the person clicks or types on the page, so the sound
+- **SOS sound:** "beep - beep - beep", played twice (change `BEEP_LENGTH`, `BEEP_GAP`, `ROUND_GAP` in core.js). Browsers only allow sound after the person clicks or types on the page, so the sound
   switches on at the first click on any staff page. If an SOS arrives before that, the red strip shows a
   "Turn on sound" button. Each alert beeps once per browser tab, even when staff move between pages.
 - **Crisis hotlines** (side menu, footer, SOS window): 911, Quezon City 122, NCMH Crisis Hotline 1553 and

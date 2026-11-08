@@ -36,6 +36,10 @@
           <div class="chat-log" id="log" aria-live="polite">
             <div class="empty"><strong>No chat open</strong><span id="noChatHint">Select a chat on the left. To message the reporter of a report (including anonymous reports), open the report and select Message.</span></div>
           </div>
+          <!-- A Resolved or Rejected report's chat closes after 3 days with no messages:
+               closingNote shows until then, closedNote replaces the message box afterwards -->
+          <div class="chat-closing" id="closingNote" hidden></div>
+          <div class="chat-closed" id="closedNote" hidden></div>
           <form class="chat-form" id="chatForm" hidden>
             <label class="visually-hidden" for="text">Reply</label>
             <textarea class="input" id="text" name="text" rows="1" maxlength="2000" placeholder="Write a reply"></textarea>
@@ -121,8 +125,8 @@
         convosEl.innerHTML = list.length ? list.map((t) => `
             <button class="convo" data-key="${t.key}" ${t.key === keyOf(current) ? 'aria-current="true"' : ''}>
               <span class="avatar ${t.kind === 'case' ? 'case' : t.accountType === 'guest' ? 'guest' : ''}">${t.kind === 'case' ? '#' : LIA.esc(LIA.initials(t.name))}</span>
-              <span class="who"><strong>${t.kind === 'case' ? `Case #${t.reportNo}` : LIA.esc(t.name)}</strong>
-                <span class="sub">${t.kind === 'case' ? LIA.esc(t.name + ' · ' + t.category) : 'General chat'}</span>
+              <span class="who"><strong>${t.kind === 'case' ? `Case ${LIA.esc(LIA.caseNo(t))}` : LIA.esc(t.name)}</strong>
+                <span class="sub">${t.kind === 'case' ? LIA.esc(t.name + ' · ' + t.category + (t.closed ? ' · Closed' : '')) : 'General chat'}</span>
                 <span>${LIA.esc(t.lastText)}</span></span>
               <span class="convo-end">${when(t.lastAt)}${t.waitingForReply ? '<span class="dot" title="Waiting for a reply"></span>' : ''}</span>
             </button>`).join('')
@@ -163,7 +167,7 @@
       }
 
       // ----- One chat -----
-      const caseCard = (c) => `<button type="button" class="case-card" data-case-no="${c.reportNo}">${LIA.icon('folder')}<span><b>Report #${c.reportNo}</b>${LIA.esc(c.category)} · ${LIA.esc(c.status)}</span></button>`;
+      const caseCard = (c) => `<button type="button" class="case-card" data-case-no="${c.reportNo}">${LIA.icon('folder')}<span><b>Report ${LIA.esc(LIA.caseNo(c))}</b>${LIA.esc(c.category)} · ${LIA.esc(c.status)}</span></button>`;
 
       // A chat with another staff member: name and role at the top, no student tools
       async function loadStaffChat() {
@@ -174,6 +178,8 @@
         split.classList.add('has-chat');
         back.hidden = false;
         form.hidden = false;
+        document.getElementById('closedNote').hidden = true;
+        document.getElementById('closingNote').hidden = true;
         document.getElementById('chatTools').hidden = true;
         const av = document.getElementById('chatAvatar');
         av.hidden = false;
@@ -205,7 +211,23 @@
           messages = res.messages;
           split.classList.add('has-chat');
           back.hidden = false;
-          form.hidden = false;
+          // A Resolved or Rejected report's chat closes after 3 days with no messages:
+          // then it is read-only, and can be printed from Report Records
+          const listed = threads.find((x) => x.key === thread.key);
+          if (listed && !!listed.closed !== !!thread.closed) loadList(); // the chat just closed: update the list
+          form.hidden = !!thread.closed;
+          const closedNote = document.getElementById('closedNote');
+          const closingNote = document.getElementById('closingNote');
+          const statusWord = thread.status === 'Rejected' ? 'rejected' : 'resolved';
+          closedNote.hidden = !thread.closed;
+          closingNote.hidden = !thread.closing;
+          if (thread.closing) {
+            closingNote.textContent = `Report ${LIA.caseNo(thread)} has been ${statusWord}. This conversation will close automatically after 3 days with no messages.`;
+          }
+          if (thread.closed) {
+            closedNote.innerHTML = `<span>${LIA.icon('archive')}<b>This conversation is closed.</b> Report ${LIA.esc(LIA.caseNo(thread))} was ${statusWord} and no messages were sent for 3 days. The conversation can be printed from Report Records.</span>
+              <a class="btn btn-sm btn-quiet" href="/admin/records.html">Open Report Records</a>`;
+          }
           document.getElementById('chatTools').hidden = false;
           const isCase = thread.kind === 'case';
           document.getElementById('viewCase').textContent = isCase ? 'View Case' : 'View Linked Cases';
@@ -214,17 +236,17 @@
           av.hidden = false;
           av.textContent = isCase ? '#' : LIA.initials(thread.name);
           av.className = 'avatar ' + (isCase ? 'case' : thread.accountType === 'guest' ? 'guest' : '');
-          document.getElementById('chatName').textContent = isCase ? `Case #${thread.reportNo} · ${thread.name}` : thread.name;
+          document.getElementById('chatName').textContent = isCase ? `Case ${LIA.caseNo(thread)} · ${thread.name}` : thread.name;
           document.getElementById('chatInfo').textContent = [
             isCase ? `${thread.category} · ${LIA.STATUS[thread.status]?.staff || thread.status}` : 'General chat',
             thread.anonymous ? 'Identity hidden: your replies reach the reporter' : '',
             thread.expired ? 'Account expired: they can no longer read replies' : '',
           ].filter(Boolean).join(' · ');
-          const sig = thread.key + JSON.stringify(messages.map((m) => [m.id, m.text, m.deleted, m.edited]));
+          const sig = thread.key + (thread.closed ? ':closed' : '') + JSON.stringify(messages.map((m) => [m.id, m.text, m.deleted, m.edited]));
           if (sig === lastSig) return;
           lastSig = sig;
           log.innerHTML = messages.length
-            ? CHAT.render(messages, { caseCard, who: () => (thread.anonymous ? 'Reporter' : thread.name) })
+            ? CHAT.render(messages, { caseCard, closed: !!thread.closed, who: () => (thread.anonymous ? 'Reporter' : thread.name) })
             : '<div class="empty"><strong>No messages yet</strong><span>Write the first message below.</span></div>';
           log.scrollTop = log.scrollHeight;
         } catch (e) { LIA.toast(e.message, 'error'); }
@@ -267,7 +289,7 @@
           body: linked.length
             ? `<p class="small muted">Reports sent by ${LIA.esc(thread.name)} with their name shown.</p>
                <div class="table-scroll"><table class="data-table"><thead><tr><th>Report</th><th>Category</th><th>Filed</th><th>Status</th><th></th></tr></thead><tbody>
-               ${linked.map((r) => `<tr><td><b>#${r.reportNo}</b></td><td>${LIA.esc(r.category)}</td><td>${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</td><td>${LIA.chip(r.status, 'staff')}</td><td><button class="btn btn-quiet btn-sm" data-case="${r.reportNo}">View Details</button></td></tr>`).join('')}
+               ${linked.map((r) => `<tr><td><b>${LIA.esc(LIA.caseNo(r))}</b></td><td>${LIA.esc(r.category)}</td><td>${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</td><td>${LIA.chip(r.status, 'staff')}</td><td><button class="btn btn-quiet btn-sm" data-case="${r.reportNo}">View Details</button></td></tr>`).join('')}
                </tbody></table></div>`
             : `<p class="form-note" style="margin:0">${noLinkedText()}</p>`,
           foot: '<button class="btn btn-gray" data-close>Close</button>',
@@ -290,7 +312,7 @@
           columns: [{ label: 'Case ID', width: 50 }, { label: 'Incident Category', width: 110 }, { label: 'Location', width: 110 },
             { label: 'Date Filed', width: 105 }, { label: 'Status', width: 95 }, { label: 'Last Update', width: 105 }, { label: 'Reason (if not accepted)' }],
           sets: [{ label: `All reports with ${thread.name}'s name shown (${linked.length})`, rows: linked.map((r) => [
-            `#${r.reportNo}`, r.category, r.location, LIA.fmtDateTime(r.submittedAt), r.status + (r.archived ? ' (archived)' : ''),
+            LIA.caseNo(r), r.category, r.location, LIA.fmtDateTime(r.submittedAt), r.status + (r.archived ? ' (archived)' : ''),
             LIA.fmtDateTime(r.updatedAt || r.submittedAt), r.status === 'Rejected' ? (r.rejectReason || '') : '']) }],
           filename: `reports-${(thread.name || 'student').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
         });
@@ -308,7 +330,7 @@
           body: `<form id="attachForm" novalidate>
               <fieldset class="print-choice"><legend>Choose the case to follow up</legend>
                 ${linked.map((r, i) => `<label class="check-row"><input type="radio" name="reportNo" value="${r.reportNo}" ${i === 0 ? 'checked' : ''}>
-                  <span><b>#${r.reportNo}</b> · ${LIA.esc(r.category)} · ${LIA.esc(LIA.fmtDate(r.submittedAt))} · ${LIA.esc(r.status)}</span></label>`).join('')}
+                  <span><b>${LIA.esc(LIA.caseNo(r))}</b> · ${LIA.esc(r.category)} · ${LIA.esc(LIA.fmtDate(r.submittedAt))} · ${LIA.esc(r.status)}</span></label>`).join('')}
               </fieldset>
               <div class="field"><label for="attachText">Message (optional)</label>
                 <textarea class="input" id="attachText" name="text" maxlength="2000" placeholder="e.g. Hi, we would like to follow up on this report. Can you come to the guidance office on Monday?"></textarea></div>

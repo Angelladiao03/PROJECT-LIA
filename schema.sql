@@ -335,6 +335,47 @@ CREATE TABLE IF NOT EXISTS staff_message_edits (
 );
 
 -- =====================================================================
+-- alpha.6 additions (report IDs, follow-up reports, closing report chats)
+-- =====================================================================
+
+-- Report IDs like 2026-0001: the year the report was sent (Philippine time) and a number
+-- that starts again at 0001 every year. report_no stays the internal number used by links.
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS case_year INT;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS case_seq  INT;
+-- Number the reports that don't have one yet, in the order they were sent (runs once; safe to repeat)
+WITH todo AS (
+    SELECT report_no, report_datetime,
+           EXTRACT(YEAR FROM (report_datetime AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Manila')::INT AS y
+    FROM reports WHERE case_seq IS NULL
+), numbered AS (
+    SELECT report_no, y,
+           ROW_NUMBER() OVER (PARTITION BY y ORDER BY report_datetime, report_no)
+             + COALESCE((SELECT MAX(r2.case_seq) FROM reports r2 WHERE r2.case_year = todo.y), 0) AS n
+    FROM todo
+)
+UPDATE reports r SET case_year = numbered.y, case_seq = numbered.n
+FROM numbered WHERE r.report_no = numbered.report_no;
+CREATE UNIQUE INDEX IF NOT EXISTS reports_case_number ON reports (case_year, case_seq);
+-- "2026-0001", made by the database from the two columns above
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS case_id VARCHAR(20)
+    GENERATED ALWAYS AS (case_year::TEXT || '-' || LPAD(case_seq::TEXT, 4, '0')) STORED;
+
+-- A new report can be linked to one of the student's earlier reports (a follow-up,
+-- e.g. the same bullying happened again after the first case was resolved).
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS related_report_no INT REFERENCES reports(report_no);
+
+-- A Resolved or Rejected report's chat stays open until 3 days pass with no messages
+-- (counted from the status change or the last message, whichever is later). Then it closes:
+-- it can still be read, but no one can send, edit or delete messages, and an automatic
+-- notice (sender_type 'System') is added at the end. See close_quiet_chats() in includes/messages.php.
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS finished_at    TIMESTAMPTZ; -- when it became Resolved or Rejected
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS chat_closed_at TIMESTAMPTZ; -- when its chat closed
+UPDATE reports SET finished_at = COALESCE(updated_at, report_datetime)
+ WHERE finished_at IS NULL AND report_status IN ('Resolved', 'Rejected');
+ALTER TABLE messages DROP CONSTRAINT IF EXISTS messages_sender_type_check;
+ALTER TABLE messages ADD CONSTRAINT messages_sender_type_check CHECK (sender_type IN ('Student', 'Admin', 'System'));
+
+-- =====================================================================
 -- Test accounts: run reset_test_data.sql (it ERASES everything first).
 --
 -- Or add one real staff account by hand (run separately, with your own values):

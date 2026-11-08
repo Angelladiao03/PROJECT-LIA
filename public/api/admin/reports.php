@@ -55,9 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['history'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $grade = staff_grade($admin); // null = all grade levels
+    close_quiet_chats(); // so "chatClosed" below is up to date
     $stmt = db()->prepare(
-        'SELECT r.*, u.account_type, u.guest_id, u.full_name
+        'SELECT r.*, u.account_type, u.guest_id, u.full_name, rel.case_id AS related_case_id
          FROM reports r LEFT JOIN users u ON u.user_id = r.user_id
+         LEFT JOIN reports rel ON rel.report_no = r.related_report_no
          WHERE CAST(? AS INT) IS NULL OR r.grade_level = CAST(? AS INT)
          ORDER BY r.report_datetime DESC'
     );
@@ -68,6 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $anonymous = (bool) $r['is_anonymous'];
         return [
             'reportNo' => (int) $r['report_no'],
+            'caseId' => $r['case_id'],                // shown as #2026-0001
+            // a follow-up of an earlier report by the same student
+            'relatedReportNo' => $r['related_report_no'] !== null ? (int) $r['related_report_no'] : null,
+            'relatedCaseId' => $r['related_case_id'],
             'anonymous' => $anonymous,
             'reporter' => $anonymous ? null : [
                 'userId' => $r['user_id'] !== null ? (int) $r['user_id'] : null,
@@ -91,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'archived' => $r['archived_at'] !== null,
             'submittedAt' => $r['report_datetime'],
             'updatedAt' => $r['updated_at'],
+            'chatClosed' => $r['chat_closed_at'] !== null, // its chat closed 3 days after the last message
         ];
     }, $rows);
 
@@ -141,7 +148,9 @@ if (isset($moves[$action])) {
         notify_report_update($reportNo, $action);
         json_success($message);
     }
-    db()->prepare('UPDATE reports SET report_status = ?, reject_reason = ?, updated_at = NOW() WHERE report_no = ?')
+    // finished_at = when the report became Resolved or Rejected (its chat closes 3 days after the last message)
+    $finished = in_array($to, ['Resolved', 'Rejected'], true) ? 'NOW()' : 'finished_at';
+    db()->prepare("UPDATE reports SET report_status = ?, reject_reason = ?, updated_at = NOW(), finished_at = $finished WHERE report_no = ?")
         ->execute([$to, $reason, $reportNo]);
     audit((int) $admin['admin_id'], 'report.' . $action, 'report', $reportNo, $reason ?? '');
     notify_report_update($reportNo, $action, $reason); // email the student that their report changed

@@ -453,12 +453,12 @@ body.has-sos-strip .sidebar { top: calc(var(--topbar-h) + var(--strip-h, 40px));
 .bars { display: grid; gap: 10px; }
 .bar-row { display: grid; grid-template-columns: 150px 1fr 36px; gap: 10px; align-items: center; font-size: 0.9rem; }
 .bar-row .track { height: 12px; border-radius: var(--radius-sm); background: #edf3ef; overflow: hidden; }
-.bar-row .fill { display: block; height: 100%; background: #43a047; }
+.bar-row .fill { display: block; height: 100%; background: #2e7d32; }
 .bar-row b { text-align: right; color: var(--green); }
 .cols { display: flex; align-items: flex-end; gap: 10px; height: 190px; padding-top: 10px; }
 .col { flex: 1; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; height: 100%; gap: 4px; }
 .col .v { font-size: 0.85rem; font-weight: 700; color: var(--green); }
-.col .stick { align-self: end; width: 100%; max-width: 46px; background: #43a047; border-radius: var(--radius-sm) var(--radius-sm) 0 0; min-height: 2px; }
+.col .stick { align-self: end; width: 100%; max-width: 46px; background: #2e7d32; border-radius: var(--radius-sm) var(--radius-sm) 0 0; min-height: 2px; }
 .col .m { font-size: 0.8rem; color: var(--muted); }
 table.plain { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
 table.plain th { text-align: left; color: var(--green); font-weight: 700; padding: 10px; background: #f8fafc; }
@@ -772,13 +772,32 @@ th[aria-sort="descending"] .sort-btn::after { content: "▼"; opacity: 1; }
 .day-divider::before, .day-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .day-divider span { padding: 2px 10px; border-radius: 999px; background: var(--field); border: 1px solid var(--line); }
 
+/* Case window: "This is a follow-up to report #2026-0001" */
+.related-note { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; }
+.related-note > span { flex: 1; min-width: 200px; }
+.related-note svg { width: 16px; height: 16px; vertical-align: -3px; margin-right: 6px; }
+
+/* Closed conversation (resolved report): shown where the message box was */
+.chat-closed { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); background: var(--field); font-size: 0.9rem; color: var(--ink); }
+.chat-closed > span { flex: 1; }
+.chat-closed svg { width: 16px; height: 16px; vertical-align: -3px; margin-right: 6px; color: var(--muted); }
+.chat-closed .btn { flex: none; }
+@media (max-width: 700px) { .chat-closed { flex-wrap: wrap; } .chat-closed .btn { width: 100%; justify-content: center; } }
+/* "This conversation will close automatically after 3 days with no messages." */
+.chat-closing { padding: 8px 16px; border-top: 1px solid var(--line); background: var(--field); font-size: 0.85rem; color: var(--muted); }
+/* Automatic notice inside a chat (e.g. the chat was closed): centred, no bubble */
+.msg-system { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 14px auto; max-width: 560px; padding: 10px 14px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--field); text-align: center; font-size: 0.85rem; color: var(--ink); }
+.msg-system time { font-size: 0.75rem; color: var(--muted); }
+
 /* SOS strip: "Turn on sound" when the browser blocked the beep */
 .sos-strip .sound-off { border: 1px solid #fff; background: transparent; color: #fff; font: inherit; font-size: 0.85rem; padding: 3px 10px; border-radius: var(--radius-sm); cursor: pointer; }
 
 /* ---------- alpha.6: sign-in pages fit one screen on laptops and desktops (no scrollbar) ---------- */
 @media (min-width: 861px) and (max-height: 860px) {
   body.auth-body { padding: 16px; }
-  .auth-page { min-height: 0; }
+  /* every sign-in card (also the short staff one) stays as tall as the screen allows, up to the normal 640px */
+  .auth-page { min-height: min(640px, calc(100vh - 32px)); }
   .auth-side { padding: 28px 34px; gap: 16px; }
   .auth-headline { font-size: 1.75rem; }
   .auth-points { margin-top: 16px; gap: 9px; }
@@ -807,6 +826,7 @@ th[aria-sort="descending"] .sort-btn::after { content: "▼"; opacity: 1; }
 }
 @media (min-width: 861px) and (max-height: 700px) {
   body.auth-body { padding: 10px 16px; }
+  .auth-page { min-height: min(640px, calc(100vh - 20px)); }
   .auth-side { padding: 22px 30px; gap: 12px; }
   .auth-side .brand img { width: 38px; height: 38px; }
   .auth-side .brand-word { font-size: 1.6rem; }
@@ -836,6 +856,19 @@ th[aria-sort="descending"] .sort-btn::after { content: "▼"; opacity: 1; }
   .congrats p { margin-bottom: 6px; }
 }
 
+/* Staff log in has a short form, so it keeps the normal (bigger) sizes on every laptop/desktop screen */
+@media (min-width: 861px) and (max-height: 860px) {
+  body.auth-short .auth-seal { display: block; width: 78px; height: 78px; margin-bottom: 10px; }
+  body.auth-short .auth-title { font-size: 1.55rem; margin-bottom: 18px; }
+  body.auth-short .auth-main .field { margin-bottom: 18px; gap: 6px; }
+  body.auth-short .auth-main .field > label { font-size: 0.95rem; }
+  body.auth-short .auth-main .input { min-height: 46px; padding-top: 10px; padding-bottom: 10px; }
+  body.auth-short .auth-main .btn-big { min-height: 50px; }
+  body.auth-short .auth-side { padding: 38px 40px; }
+  body.auth-short .auth-headline { font-size: 2rem; }
+  body.auth-short .auth-side p { font-size: 1rem; }
+}
+
 /* ---------- alpha.6: phone layouts ---------- */
 /* Date box: same size as the other boxes (iPhones otherwise make it tall, centered and too wide) */
 input[type="date"].input { -webkit-appearance: none; appearance: none; display: block; min-width: 0; max-width: 100%; height: 44px; line-height: 22px; text-align: left; }
@@ -860,8 +893,8 @@ input[type="date"].input::-webkit-datetime-edit { padding: 0; }
   .profile-actions .btn { flex: 1 1 calc(50% - 4px); justify-content: center; padding: 0 10px; white-space: nowrap; }
   /* Report history: numbers line up in every status card; filter buttons two per row, same width */
   .stat-top { min-height: 2.9em; }
-  .table-card > .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .table-card > .tabs .tab { justify-content: center; text-align: center; padding: 0 8px; }
+  .table-card > .tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .table-card > .tabs .tab { justify-content: center; text-align: center; padding: 4px 4px; font-size: 0.8rem; line-height: 1.2; min-height: 44px; }
   /* Manage Reports (and other tables): the buttons of a row share the width equally */
   .data-table td.actions { display: flex; flex-wrap: wrap; gap: 8px; }
   .data-table td.actions::before { flex-basis: 100%; max-width: none; margin: 0; }
@@ -970,4 +1003,45 @@ input[type="date"].input::-webkit-datetime-edit { padding: 0; }
   body.auth-body { padding: 0; display: block; }
   .auth-page { border-radius: 0; box-shadow: none; min-height: 100vh; animation: none; }
   .auth-main { align-items: start; padding: 26px 20px 40px; }
+}
+
+/* ---------- Dashboard: period, filters and comparison ---------- */
+/* Chart colors: this period = green #2e7d32, previous period = orange #e0a030 (checked for color-blind readers;
+   every bar also has its number, and Print Summary gives the same numbers as a table) */
+.dash-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.dash-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.dash-row .field { margin: 0; flex: 1 1 160px; }
+.dash-seg { display: inline-grid; grid-template-columns: repeat(3, minmax(84px, auto)); margin: 0; flex: none; }
+.dash-seg button[aria-pressed="true"] { background: #00803f; color: #fff; box-shadow: 0 3px 10px rgba(0, 168, 89, 0.3); }
+.dash-compare { align-items: center; align-self: center; flex: none; font-weight: 600; cursor: pointer; padding-bottom: 2px; }
+.dash-compare input { margin-top: 0; }
+.dash-selects { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 14px; }
+.dash-period { margin: 14px 0 0; }
+.tile.period .n { font-size: 1.8rem; }
+.tile .delta { font-size: 0.8rem; font-weight: 700; color: var(--ink); }
+.chart-legend { display: flex; gap: 18px; flex-wrap: wrap; margin: -4px 0 6px; font-size: 0.85rem; color: var(--muted); }
+.chart-legend .key { display: inline-block; width: 12px; height: 12px; margin-right: 6px; border-radius: 3px; vertical-align: -1px; }
+.key.now { background: #2e7d32; }
+.key.prev { background: #e0a030; }
+.cols-scroll { overflow-x: auto; }
+.col .sticks { display: flex; align-items: flex-end; justify-content: center; gap: 2px; width: 100%; height: 100%; min-height: 0; }
+.col.pair .stick { max-width: 22px; }
+.col .stick.prev { background: #e0a030; }
+.col .m, .col .v { white-space: nowrap; min-height: 1.3em; line-height: 1.3; } /* same height with or without text, so bars line up */
+.cols.dense { gap: 3px; }
+.cols.dense .m { font-size: 0.7rem; }
+.bar-row.with-prev { grid-template-columns: 150px 1fr 56px; }
+.bar-row.with-prev .track { display: grid; gap: 2px; height: auto; background: none; }
+.bar-row.with-prev .fill { height: 8px; border-radius: var(--radius-sm); background-color: #2e7d32; min-width: 2px; }
+.bar-row.with-prev .fill.prev { background-color: #e0a030; }
+.bar-row b small { display: block; font-size: 0.72rem; font-weight: 400; color: var(--muted); }
+@media (max-width: 900px) {
+  .dash-selects { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .dash-seg { width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dash-row .field { flex-basis: 100%; }
+  .dash-actions { width: 100%; }
+  .dash-actions .btn { flex: 1; justify-content: center; }
+  .bar-row.with-prev { grid-template-columns: 110px 1fr 48px; }
 }

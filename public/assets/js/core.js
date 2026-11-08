@@ -163,6 +163,10 @@ const LIA = (() => {
     const d = toDate(value);
     return d ? d.toLocaleString('en-PH', { timeZone: TZ, month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
   }
+  // A report's ID as people see it: #2026-0001 (the year it was sent + its number that year).
+  // reportNo is only the internal number used in links and buttons.
+  const caseNo = (r) => '#' + (r?.caseId || r?.reportNo || '');
+
   // ---------- Times in chats (like Messenger) ----------
   const dayKey = (d) => d.toLocaleDateString('en-CA', { timeZone: TZ }); // YYYY-MM-DD in Manila time
   function fmtTime(value) {
@@ -228,7 +232,7 @@ const LIA = (() => {
     const s = STATUS[status] || { cls: 'rejected', student: status, staff: status };
     return `<span class="chip ${s.cls}">${esc(s[who])}</span>`;
   }
-  const ROLE = { victim: 'I was bullied', witness: 'I saw it happen', other: 'Other' };
+  const ROLE = { victim: 'Victim', witness: 'Witness', other: 'Other' };
 
   // ---------- Toasts ----------
   function toast(message, type = 'ok') {
@@ -698,20 +702,20 @@ const LIA = (() => {
     const ctx = soundPlayer();
     if (ctx && ctx.state !== 'running') ctx.resume().then(() => document.querySelector('.sound-off')?.remove()).catch(() => {});
   }
-  // "SOS" in Morse code, played twice:  ··· ——— ···
-  // Morse timing: a dot is 1 unit, a dash 3 units, 1 unit of silence inside a letter,
-  // 3 units between letters and 7 units between words. 1 unit = 0.12 seconds.
-  const UNIT = 0.12;
-  const SOS_MORSE = '... --- ...';
+  // SOS alert sound: "beep - beep - beep", played twice.
+  // Change these numbers to adjust it (all in seconds).
+  const BEEP_LENGTH = 0.35;     // how long each beep lasts
+  const BEEP_GAP = 0.25;        // silence between the three beeps
+  const ROUND_GAP = 0.9;        // silence before the second "beep - beep - beep"
   function beep() {
     const ctx = soundPlayer();
     if (!ctx) return false;
     if (ctx.state !== 'running') ctx.resume().catch(() => {});
     let t = ctx.currentTime + 0.05;
-    const tone = (units) => {
+    const tone = (seconds) => {
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.type = 'sine'; o.frequency.value = 880;
-      const end = t + units * UNIT;
+      const end = t + seconds;
       g.gain.setValueAtTime(0.0001, t);
       g.gain.exponentialRampToValueAtTime(0.5, t + 0.01);    // quick fade in/out so it doesn't click
       g.gain.setValueAtTime(0.5, end - 0.01);
@@ -721,14 +725,11 @@ const LIA = (() => {
       t = end;
     };
     for (let round = 0; round < 2; round += 1) {
-      for (const letter of SOS_MORSE.split(' ')) {
-        [...letter].forEach((mark, i) => {
-          if (i > 0) t += UNIT;               // gap inside the letter
-          tone(mark === '.' ? 1 : 3);
-        });
-        t += 3 * UNIT;                         // gap between letters
+      for (let i = 0; i < 3; i += 1) {
+        if (i > 0) t += BEEP_GAP;
+        tone(BEEP_LENGTH);
       }
-      t += 4 * UNIT;                           // (3 + 4 = 7 units) gap before the second SOS
+      t += ROUND_GAP;
     }
     return soundReady();
   }
@@ -838,6 +839,6 @@ const LIA = (() => {
   return {
     VERSION, api, esc, icon, toast, openModal, confirmBox, showFormError, busy, wirePasswordToggles, copyText,
     changePasswordModal, start, initials, chip, STATUS, ROLE, staffHome, noAutofill, gradeSectionFields, fillLocations,
-    toDate, fmtDate, fmtDateTime, fmtTime, dayLabel, shortWhen, timeAgo, daysLeft, todayInManila, sosSound: () => { unlockSound(); return beep(); },
+    caseNo, toDate, fmtDate, fmtDateTime, fmtTime, dayLabel, shortWhen, timeAgo, daysLeft, todayInManila, sosSound: () => { unlockSound(); return beep(); },
   };
 })();

@@ -54,9 +54,13 @@ handling more organized for the Guidance Office.
   the report remains in their own report history so that they can monitor it.
 - **SOS alerts** for urgent situations, with the student's current location.
 - **Report history and status tracking** from submission to resolution, with the reason shown if a report
-  is not accepted.
+  is not accepted. Every report has an ID such as **#2026-0001** (the year and its number within that year).
+- **Follow-up reports.** If an incident happens again, a student may link a new report that includes their
+  identity to an earlier resolved report that also included it, so that the Guidance Office can connect the cases.
 - **Private messaging** with the Guidance Office: one conversation per report and a general conversation,
-  with file attachments. Usage guidelines are shown before a student messages the Guidance Office.
+  with file attachments. Usage guidelines are shown before a student messages the Guidance Office. When a report
+  is resolved or rejected, its conversation closes automatically after three days without messages, with an
+  automatic notice; it remains available to read.
 - **Learning resources:** the definition of bullying under RA 10627, the kinds of bullying, what to do as
   a victim, witness, or person who has bullied someone, anti-bullying posters, articles, and videos.
 - **Crisis hotlines:** 911, the Quezon City Helpline (122), the NCMH Crisis Hotline (1553), and Hopeline.
@@ -88,8 +92,11 @@ Each staff member has an individual account, so every action is recorded under t
   reports are archived, never deleted.
 - **SOS monitoring** with an audible alert (SOS in Morse code) on every staff page, and dispatch and
   response tracking.
-- **Case history** of every action taken on a report, and printable case records (Print / Save as PDF).
-- **Dashboard** of reports by month, by category, by location, and by grade level.
+- **Case history** of every action taken on a report, and printable case records and conversations
+  (Print / Save as PDF).
+- **Dashboard** of reports by day, month, or year for any period, with filters (grade level, category,
+  location, status, reporter type), comparison with the previous period, charts by location, category,
+  grade level, reporter type, status, and day of the week, and a printable summary (totals only).
 - **Registration review** of permanent student account requests.
 
 ## Privacy and security

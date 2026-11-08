@@ -52,6 +52,16 @@
           </div>
         </div>
 
+        <!-- Only shown when "Include My Identity" is chosen and the student has earlier resolved reports
+             that include their identity: link a follow-up to an earlier case -->
+        <div class="field" id="relatedField" hidden>
+          <label for="relatedReport">Is this related to one of your earlier resolved reports?</label>
+          <select class="input" id="relatedReport" name="relatedReport">
+            <option value="">No, this is a new incident</option>
+          </select>
+          <p class="hint">If the same incident happened again, choose the earlier report so that the Guidance Office can connect the cases.</p>
+        </div>
+
         <div class="field">
           <label for="category">Category of Bullying <span class="req">*</span></label>
           <select class="input" id="category" name="category">

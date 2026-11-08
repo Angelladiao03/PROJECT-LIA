@@ -89,18 +89,25 @@ const CHAT = (() => {
   // opts: caseCard(c) -> HTML for a report case card; who(m) -> name under the other person's messages
   // A divider shows where each day starts ("Today", "Yesterday", "Monday", "Nov 2, 2026"),
   // and each message shows its time (the full date and time shows when you point at it).
-  function render(messages, { caseCard, who }) {
+  // closed = a closed report chat: read-only, so no ⋮ Edit / Delete
+  // Automatic notices from the system (from = 'system', e.g. "This conversation was closed...")
+  // show in the middle of the chat instead of in a bubble.
+  function render(messages, { caseCard, who, closed = false }) {
     let lastDay = null;
     return messages.map((m) => {
       const day = LIA.dayLabel(m.sentAt);
       const divider = day !== lastDay ? `<div class="day-divider"><span>${LIA.esc(day)}</span></div>` : '';
       lastDay = day;
+      if (m.from === 'system') {
+        return `${divider}<div class="msg-system" data-msg="${m.id}"><span>${LIA.esc(m.text)}</span>
+          <time title="${LIA.esc(LIA.fmtDateTime(m.sentAt))}">Automatic message · ${LIA.esc(LIA.fmtTime(m.sentAt))}</time></div>`;
+      }
       const side = m.mine ? 'mine' : 'theirs';
       // Like Messenger: a file or case card sits on its own, and the text gets its own bubble under it
       const parts = m.deleted
         ? `<div class="bubble deleted"><span class="deleted-text">${m.mine ? 'You deleted this message' : 'This message was deleted'}</span></div>`
         : (m.case ? caseCard(m.case) : '') + ATTACH.fileCard(m.file) + (m.text ? `<div class="bubble ${side}">${LIA.esc(m.text)}</div>` : '');
-      const more = m.mine && !m.deleted
+      const more = m.mine && !m.deleted && !closed
         ? `<button type="button" class="icon-btn msg-more" data-more="${m.id}" aria-label="Options for this message" aria-haspopup="menu">${LIA.icon('dots')}</button>`
         : '';
       return `${divider}<div class="msg ${side}" data-msg="${m.id}">

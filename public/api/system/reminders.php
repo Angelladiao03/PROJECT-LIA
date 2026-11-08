@@ -11,4 +11,5 @@ $key = setting('CRON_KEY');
 if ($key === null || !hash_equals($key, (string) ($_GET['key'] ?? ''))) json_error('Not allowed.', 403);
 
 $sent = send_unread_message_reminders();
+close_quiet_chats(); // also close report chats that have been quiet for 3 days
 json_success("Reminder check done. Emails sent: $sent.");

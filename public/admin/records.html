@@ -110,7 +110,7 @@
           if ((status === 'Resolved' || status === 'Rejected') && (r.status !== status || r.archived)) return false;
           if (cat && baseCategory(r.category) !== cat) return false;
           if (year && schoolYear(r.updatedAt || r.submittedAt) !== year) return false;
-          if (q && !['#' + r.reportNo, String(r.reportNo), r.category, r.location, studentName(r)].some((v) => String(v || '').toLowerCase().includes(q))) return false;
+          if (q && ![LIA.caseNo(r), String(r.caseId || ''), r.category, r.location, studentName(r)].some((v) => String(v || '').toLowerCase().includes(q))) return false;
           return true;
         });
         const get = SORTERS[sortKey];
@@ -130,14 +130,15 @@
 
         rows.innerHTML = shown.length ? shown.map((r) => `
           <tr>
-            <td><b>#${r.reportNo}</b></td>
+            <td><b>${LIA.esc(LIA.caseNo(r))}</b></td>
             <td>${CASE.reporterLabel(r)}</td>
             <td>${LIA.esc(r.category)}</td>
             <td>${LIA.esc(LIA.fmtDateTime(r.updatedAt || r.submittedAt))}</td>
             <td>${LIA.chip(r.status, 'staff')} ${r.archived ? '<span class="chip rejected">Archived</span>' : ''}</td>
             <td class="actions">
               <button class="btn btn-quiet btn-sm" data-view="${r.reportNo}">View Details</button>
-              ${r.canMessage ? `<a class="btn btn-ghost btn-sm" href="/admin/messages.html?case=${r.reportNo}">Message</a>` : ''}
+              ${r.canMessage ? `<a class="btn btn-ghost btn-sm" href="/admin/messages.html?case=${r.reportNo}">${r.chatClosed ? 'Conversation' : 'Message'}</a>
+              <button class="btn btn-ghost btn-sm" data-print-chat="${r.reportNo}">Print Conversation</button>` : ''}
               <button class="btn btn-ghost btn-sm" data-act="${r.archived ? 'unarchive' : 'archive'}" data-no="${r.reportNo}">${r.archived ? 'Restore' : 'Archive'}</button>
             </td>
           </tr>`).join('') : `<tr><td colspan="6" class="empty-cell">No records match these filters.</td></tr>`;
@@ -181,7 +182,7 @@
       // ---------- Print / Save as PDF (this page, or every matching record) ----------
       $('printBtn').addEventListener('click', () => {
         const list = filtered();
-        const toRow = (r) => [`#${r.reportNo}`, (r.anonymous ? 'Anonymous' : r.reporter?.name || '') + (r.gradeLevel ? ' · Grade ' + r.gradeLevel : ''),
+        const toRow = (r) => [LIA.caseNo(r), (r.anonymous ? 'Anonymous' : r.reporter?.name || '') + (r.gradeLevel ? ' · Grade ' + r.gradeLevel : ''),
           r.category, r.location, LIA.fmtDateTime(r.updatedAt || r.submittedAt), r.status + (r.archived ? ' (archived)' : ''), r.status === 'Rejected' ? (r.rejectReason || '') : ''];
         const thisPage = list.slice((page - 1) * PER_PAGE, page * PER_PAGE);
         PRINT.choose({
@@ -202,7 +203,32 @@
       }
 
       ['search', 'fCategory', 'fYear', 'fStatus'].forEach((id) => $(id).addEventListener(id === 'search' ? 'input' : 'change', () => { page = 1; draw(); }));
+      // "Print Conversation": the report's chat with the reporter, printed or saved as PDF
+      async function printConversation(r) {
+        let res;
+        try { res = await LIA.api('admin/messages.php?case=' + r.reportNo); } catch (err) { return LIA.toast(err.message, 'error'); }
+        const t = res.thread;
+        if (!res.messages.length) return LIA.toast(`There are no messages in the conversation of report ${LIA.caseNo(r)}.`, 'error');
+        const who = t.anonymous ? 'Reporter (anonymous)' : t.name;
+        const rowsOut = res.messages.map((m) => [
+          LIA.fmtDateTime(m.sentAt),
+          m.from === 'guidance' ? `${m.staffName || 'Guidance staff'} (staff)` : m.from === 'system' ? 'LagroInAction (automatic)' : who,
+          m.deleted ? '(This message was deleted.)'
+            : [m.text, m.file ? `[File: ${m.file.name}]` : '', m.case ? `[Attached report ${LIA.caseNo(m.case)}]` : '', m.edited ? '(edited)' : '']
+              .filter(Boolean).join(' '),
+        ]);
+        PRINT.choose({
+          title: `Conversation · Report ${LIA.caseNo(r)}`,
+          subtitle: `${r.category} · ${LIA.STATUS[r.status]?.staff || r.status}${t.closed ? ' · Conversation closed' : ''} · Lagro High School Guidance Office · LagroInAction`,
+          columns: [{ label: 'Date & Time', width: 110 }, { label: 'From', width: 120 }, { label: 'Message' }],
+          sets: [{ label: `All messages (${rowsOut.length})`, rows: rowsOut }],
+          filename: `conversation-${r.caseId || r.reportNo}`,
+        });
+      }
+
       rows.addEventListener('click', async (e) => {
+        const printChat = e.target.closest('[data-print-chat]');
+        if (printChat) return printConversation(reports.find((r) => r.reportNo === Number(printChat.dataset.printChat)));
         const view = e.target.closest('[data-view]');
         if (view) return CASE.open(reports.find((r) => r.reportNo === Number(view.dataset.view)), load);
         const act = e.target.closest('[data-act]');

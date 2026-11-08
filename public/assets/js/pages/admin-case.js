@@ -113,7 +113,7 @@ const CASE = (() => {
     return new Promise((resolve) => {
       let done = false;
       LIA.openModal({
-        title: `Refer case #${r.reportNo}`,
+        title: `Refer case ${LIA.caseNo(r)}`,
         body: `<form id="refForm" novalidate>
             <div class="field"><label for="agency">Referred to</label>
               <select class="input" id="agency" name="agency">
@@ -181,11 +181,13 @@ const CASE = (() => {
     const buttons = actionsFor(r).map(([a, label, cls]) => `<button class="btn ${cls}" data-act="${a}">${label}</button>`).join('');
 
     LIA.openModal({
-      title: `Report Case No. #${r.reportNo}`,
+      title: `Report Case No. ${LIA.caseNo(r)}`,
       wide: true,
       className: 'case-modal',
       body: `
         <p style="margin:0 0 14px">${LIA.chip(r.status, 'staff')} ${r.archived ? '<span class="chip rejected">Archived</span>' : ''}</p>
+        ${r.relatedReportNo ? `<div class="form-note related-note">${LIA.icon('folder')}<span>This is a follow-up to the reporter's earlier report <b>${LIA.esc(LIA.caseNo({ caseId: r.relatedCaseId, reportNo: r.relatedReportNo }))}</b>.</span>
+          <button class="btn btn-quiet btn-sm" type="button" data-related>View Earlier Report</button></div>` : ''}
         <div class="case-grid">
           <section class="case-section">
             <h3>Student Account Details</h3>
@@ -219,6 +221,14 @@ const CASE = (() => {
         <button class="btn btn-ghost" data-pdf>Save as PDF</button>` : ''}
         <button class="btn btn-gray" data-close>Close</button>`,
       onOpen: (el, close) => {
+        // Follow-up: open the earlier report it is linked to
+        el.querySelector('[data-related]')?.addEventListener('click', async () => {
+          try {
+            const { reports } = await LIA.api('admin/reports.php');
+            const earlier = reports.find((x) => x.reportNo === r.relatedReportNo);
+            if (earlier) open(earlier, onChange); else LIA.toast('That report is handled by another grade level.', 'error');
+          } catch (err) { LIA.toast(err.message, 'error'); }
+        });
         el.querySelector('[data-reveal]')?.addEventListener('click', async () => {
           const s = await studentDetails({ report: r.reportNo });
           if (s) { shown = s; el.querySelector('[data-student]').innerHTML = studentFacts(s); }
@@ -234,7 +244,8 @@ const CASE = (() => {
         // Save this case record as a PDF (two columns: field and details)
         el.querySelector('[data-pdf]')?.addEventListener('click', () => {
           const rows = [
-            ['Case No.', `#${r.reportNo}`],
+            ['Case No.', LIA.caseNo(r)],
+            ...(r.relatedReportNo ? [['Follow-up to', LIA.caseNo({ caseId: r.relatedCaseId, reportNo: r.relatedReportNo })]] : []),
             ['Status', r.status + (r.archived ? ' (archived)' : '')],
             // Student details are only in the PDF if they were shown with the password first
             ['Reporter', r.anonymous ? `Anonymous${shown?.contactNumber ? ' · Contact number: ' + shown.contactNumber : ''}`
@@ -253,7 +264,7 @@ const CASE = (() => {
             ['Case history · ' + LIA.fmtDateTime(r.submittedAt), 'Report submitted'],
             ...historyRows,
           ];
-          PRINT.savePdf({ title: `Report Case No. #${r.reportNo}`, columns: [{ label: 'Field', width: 150 }, { label: 'Details' }], rows, filename: `case-${r.reportNo}`, landscape: false, note: 'Case record' });
+          PRINT.savePdf({ title: `Report Case No. ${LIA.caseNo(r)}`, columns: [{ label: 'Field', width: 150 }, { label: 'Details' }], rows, filename: `case-${r.caseId || r.reportNo}`, landscape: false, note: 'Case record' });
         });
         el.querySelector('[data-print]')?.addEventListener('click', () => {
           document.body.classList.add('printing-case');

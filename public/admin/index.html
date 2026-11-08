@@ -17,31 +17,75 @@
         </div>
       </div>
 
+      <!-- Right now: live counts of every report (not affected by the filters below) -->
       <div class="tiles" id="tiles">
         <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
       </div>
 
+      <!-- Period and filters: every chart below follows these -->
+      <section class="card dash-filters" aria-labelledby="filtersTitle">
+        <div class="card-title"><h2 id="filtersTitle">Incident Analytics</h2>
+          <div class="dash-actions">
+            <button class="btn btn-quiet btn-sm" type="button" id="resetFilters">Reset Filters</button>
+            <button class="btn btn-sm" type="button" id="printSummary">Print Summary</button>
+          </div>
+        </div>
+        <div class="dash-row">
+          <div class="seg dash-seg" role="group" aria-label="Show reports per">
+            <button type="button" data-group="day">Days</button>
+            <button type="button" data-group="month">Months</button>
+            <button type="button" data-group="year">Years</button>
+          </div>
+          <div class="field"><label for="fRange">Period</label><select class="input" id="fRange"></select></div>
+          <div class="field" id="customFrom" hidden><label for="fFrom">From</label><input class="input" type="date" id="fFrom"></div>
+          <div class="field" id="customTo" hidden><label for="fTo">To</label><input class="input" type="date" id="fTo"></div>
+          <label class="check-row dash-compare"><input type="checkbox" id="fCompare"> <span>Compare with the previous period</span></label>
+        </div>
+        <div class="dash-row dash-selects">
+          <div class="field"><label for="fGrade">Grade Level</label><select class="input" id="fGrade"><option value="">All Grade Levels</option></select></div>
+          <div class="field"><label for="fCategory">Category</label><select class="input" id="fCategory"><option value="">All Categories</option></select></div>
+          <div class="field"><label for="fLocation">Location</label><select class="input" id="fLocation"><option value="">All Locations</option></select></div>
+          <div class="field"><label for="fStatus">Status</label><select class="input" id="fStatus"><option value="">All Statuses</option></select></div>
+          <div class="field"><label for="fRole">Reporter Type</label><select class="input" id="fRole"><option value="">All Reporter Types</option></select></div>
+        </div>
+        <p class="small muted dash-period" id="periodText" aria-live="polite"></p>
+      </section>
+
+      <!-- Totals of the chosen period (with the change from the previous period when comparing) -->
+      <div class="tiles" id="periodTiles"></div>
+
       <section class="card">
-        <div class="card-title"><h2>Monthly Incident Trends</h2><span class="small muted">Reports per month, last 6 months</span></div>
-        <div class="cols" id="monthly"></div>
+        <div class="card-title"><h2 id="trendTitle">Incident Trends</h2><span class="small muted" id="trendSub"></span></div>
+        <div class="chart-legend" id="trendLegend" hidden>
+          <span><i class="key now"></i>This period</span><span><i class="key prev"></i>Previous period</span>
+        </div>
+        <div class="cols-scroll"><div class="cols" id="trend"></div></div>
       </section>
 
       <div class="dash-grid">
         <section class="card">
-          <div class="card-title"><h2>Reports by Location</h2><span class="small muted">All reports</span></div>
+          <div class="card-title"><h2>Reports by Location</h2><span class="small muted">Where it happened</span></div>
           <div class="bars" id="byLocation"></div>
         </section>
         <section class="card">
-          <div class="card-title"><h2>Reports by Bullying Category</h2><span class="small muted">All reports</span></div>
+          <div class="card-title"><h2>Reports by Bullying Category</h2><span class="small muted">Type of bullying</span></div>
           <div class="bars" id="byCategory"></div>
         </section>
         <section class="card">
-          <div class="card-title"><h2>Reports by Grade Level</h2><span class="small muted">All reports</span></div>
+          <div class="card-title"><h2>Reports by Grade Level</h2><span class="small muted">Grade of the report</span></div>
           <div class="bars" id="byGrade"></div>
         </section>
         <section class="card">
-          <div class="card-title"><h2>Reporter Type</h2><span class="small muted">All reports</span></div>
+          <div class="card-title"><h2>Reporter Type</h2><span class="small muted">Victim, witness or other</span></div>
           <div class="bars" id="byRole"></div>
+        </section>
+        <section class="card">
+          <div class="card-title"><h2>Reports by Status</h2><span class="small muted">Where the cases are now</span></div>
+          <div class="bars" id="byStatus"></div>
+        </section>
+        <section class="card">
+          <div class="card-title"><h2>Day of the Week</h2><span class="small muted">Day the incident happened</span></div>
+          <div class="bars" id="byWeekday"></div>
         </section>
       </div>
 
@@ -52,6 +96,8 @@
     </div>
   </main>
   <script src="/assets/js/core.js"></script>
+  <script src="/assets/js/pdf.js"></script>
+  <script src="/assets/js/print.js"></script>
   <script src="/assets/js/pages/admin-dashboard.js"></script>
 </body>
 </html>

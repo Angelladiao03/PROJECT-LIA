@@ -25,7 +25,7 @@ function open_thread(array $admin, ?int $caseNo, ?int $userId): array
 {
     if ($caseNo !== null) {
         $stmt = db()->prepare(
-            'SELECT r.report_no, r.user_id, r.is_anonymous, r.category, r.report_status, r.grade_level,
+            'SELECT r.report_no, r.case_id, r.user_id, r.is_anonymous, r.category, r.report_status, r.grade_level,
                     u.account_type, u.guest_id, u.full_name, u.status AS account_status
              FROM reports r LEFT JOIN users u ON u.user_id = r.user_id WHERE r.report_no = ?'
         );
@@ -38,6 +38,8 @@ function open_thread(array $admin, ?int $caseNo, ?int $userId): array
             'key' => "case-$caseNo",
             'kind' => 'case',
             'reportNo' => $caseNo,
+            'caseId' => $r['case_id'],
+            ...chat_state($caseNo), // closed = read-only; closing = Resolved/Rejected, closes after 3 quiet days
             'anonymous' => $anonymous,
             // never send the account of an anonymous reporter to the browser
             'userId' => $anonymous ? null : (int) $r['user_id'],
@@ -56,6 +58,9 @@ function open_thread(array $admin, ?int $caseNo, ?int $userId): array
         'key' => "user-$userId",
         'kind' => 'general',
         'reportNo' => null,
+        'caseId' => null,
+        'closed' => false,
+        'closing' => false,
         'anonymous' => false,
         'userId' => $userId,
         'name' => display_name($user),
@@ -79,19 +84,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($reportNo !== null) {
         // Case cards only in the general chat, and only reports that show the student's name
         // (attaching an anonymous report would reveal who sent it).
-        $stmt = db()->prepare('SELECT grade_level FROM reports WHERE report_no = ? AND user_id = ? AND is_anonymous = FALSE');
+        $stmt = db()->prepare('SELECT grade_level, case_id FROM reports WHERE report_no = ? AND user_id = ? AND is_anonymous = FALSE');
         $stmt->execute([$reportNo, $t['userId']]);
         $card = $stmt->fetch();
         if ($t['caseNo'] !== null || !$card || !staff_sees_grade($admin, $card['grade_level'])) {
-            json_error('That report can\'t be attached to this chat.', 403);
+            json_error('That report cannot be attached to this chat.', 403);
         }
     }
     $file = read_attachment(); // optional (multipart field "file")
     $text = message_text_input(!$file && $reportNo === null);
-    if ($text === '' && $reportNo !== null) $text = "Follow-up on your report #$reportNo.";
+    if ($text === '' && $reportNo !== null) $text = "Follow-up on your report #{$card['case_id']}.";
 
     save_message($t['userId'], $myId, 'Admin', $text, $file, $t['caseNo'], $reportNo);
-    json_success($reportNo ? "Report #$reportNo sent." : ($file ? 'File sent.' : 'Sent.'));
+    json_success($reportNo ? "Report #{$card['case_id']} sent." : ($file ? 'File sent.' : 'Sent.'));
 }
 
 // ----- GET one chat -----
@@ -106,10 +111,11 @@ if ($caseParam !== '' || $userParam !== '') {
 
 // ----- GET the list of chats -----
 // The newest message of each chat (a chat = one account + one case, or the account's general chat)
+close_quiet_chats(); // so the "Closed" labels are up to date
 $grade = staff_grade($admin);
 $stmt = db()->prepare(
     "SELECT last.*, u.account_type, u.guest_id, u.full_name, u.grade_level AS user_grade,
-            r.is_anonymous, r.grade_level AS case_grade, r.category
+            r.is_anonymous, r.grade_level AS case_grade, r.category, r.case_id, r.report_status, r.chat_closed_at
      FROM (
          SELECT DISTINCT ON (m.user_id, m.case_no) m.user_id, m.case_no, m.message_text, m.file_name,
                 m.deleted_at, m.sent_datetime, m.sender_type
@@ -132,6 +138,8 @@ send_json(['success' => true, 'threads' => array_map(function ($r) {
         'key' => $isCase ? 'case-' . $r['case_no'] : 'user-' . $r['user_id'],
         'kind' => $isCase ? 'case' : 'general',
         'reportNo' => $isCase ? (int) $r['case_no'] : null,
+        'caseId' => $isCase ? $r['case_id'] : null,
+        'closed' => $isCase && $r['chat_closed_at'] !== null,
         'userId' => $anonymous ? null : (int) $r['user_id'],
         'anonymous' => $anonymous,
         'name' => $anonymous ? 'Anonymous reporter' : display_name($r),

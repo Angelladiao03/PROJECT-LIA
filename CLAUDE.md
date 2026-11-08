@@ -80,6 +80,20 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
   equal-width table action buttons); sign-in pages fit one screen on laptops/desktops (height media queries);
   all emails use one layout (`email_html()` in includes/mailer.php, `send_email($to, $subject, [...])`,
   subjects start with "[LagroInAction]"); formal wording across the site; README rewritten as an introduction.
+- alpha.6 additions (Nov 8 2026, same version): report IDs `#YYYY-0001` (`reports.case_year`, `case_seq`, generated
+  `case_id`; numbered in create.php under `pg_advisory_xact_lock(7310001)`; shown with `LIA.caseNo(r)`; reportNo stays the
+  internal id in links/actions). Resolved/Rejected reports get `finished_at`; their chat closes after 3 days with no messages
+  (`close_quiet_chats()` / `chat_state()` / `stop_if_chat_closed()` in includes/messages.php set `chat_closed_at` and add a
+  `sender_type='System'` notice; runs with background jobs and when chats/report lists open); pages show a "will close" note,
+  then a read-only note; Report Records has "Print Conversation". Follow-up reports: `reports.related_report_no`, only from a
+  report that includes the student's identity to their own earlier Resolved report that also included it (never guests or
+  anonymous); student form shows "related to an earlier resolved report?" only with "Include My Identity" (`?related=N`
+  preselects it); case window shows "follow-up to #...". Dashboard: `api/admin/stats.php` takes from/to, group
+  day|month|year, filters grade/category/location/status/role, compare=1 (previous period of the same length); page has
+  Days/Months/Years, period presets + custom dates, filters, comparison (green = this period, orange #e0a030 = previous),
+  6 breakdown charts and Print Summary; choices kept in the URL. Staff log in keeps normal sizes (`body.auth-short`);
+  sign-in cards keep `min(640px, 100vh - padding)` height. SOS sound: beep-beep-beep twice (BEEP_LENGTH/BEEP_GAP/ROUND_GAP
+  in core.js). Student report filters: 3 per row on phones. Reporter roles shown as Victim / Witness / Other.
 - Purpose note from the team: LIA is for tracking reports, updates and case management. It does not
   solve cases or replace the guidance sessions themselves.
 - Settings via `setting()` in `includes/config.php`: env vars on Render (`DATABASE_URL`,

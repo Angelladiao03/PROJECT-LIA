@@ -102,7 +102,7 @@
     }
     rows.innerHTML = list.map((r) => `
       <tr class="clickable" data-open="${r.reportNo}" tabindex="0">
-        <td><b>#${r.reportNo}</b></td>
+        <td><b>${LIA.esc(LIA.caseNo(r))}</b></td>
         <td>${LIA.esc(r.category)}</td>
         <td>${LIA.esc(r.location)}</td>
         <td>${r.anonymous ? '<span class="muted">Anonymous</span>' : LIA.esc(a.fullName || 'You')}</td>
@@ -118,7 +118,7 @@
     const STEPS = ['Sent', 'Accepted', 'Investigating', 'Action or referral', 'Resolved'];
     const reached = { 'Pending': 1, 'Active': 2, 'Under Investigation': 3, 'For Intervention': 4, 'For Referral': 4, 'Resolved': 5, 'Rejected': 1 };
     LIA.openModal({
-      title: `Report #${r.reportNo}`,
+      title: `Report ${LIA.caseNo(r)}`,
       wide: true,
       body: `
         <p style="margin:0 0 12px">${LIA.chip(r.status)}</p>
@@ -131,10 +131,14 @@
           <dt>Date of incident</dt><dd>${LIA.esc(LIA.fmtDate(r.incidentDate))}</dd>
           <dt>Filed</dt><dd>${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</dd>
           <dt>You are</dt><dd>${LIA.esc(LIA.ROLE[r.reporterRole] || '')}</dd>
-          <dt>Name shown to staff</dt><dd>${r.anonymous ? 'No (anonymous: staff see your phone number only)' : 'Yes'}</dd>
+          <dt>Name shown to staff</dt><dd>${r.anonymous ? 'No (anonymous: staff see your mobile number only)' : 'Yes'}</dd>
+          ${r.relatedReportNo ? `<dt>Follow-up to</dt><dd>Report ${LIA.esc(LIA.caseNo({ caseId: r.relatedCaseId, reportNo: r.relatedReportNo }))}</dd>` : ''}
         </dl>
         <div class="quote-box">${LIA.esc(r.description)}</div>`,
-      foot: `<a class="btn btn-quiet" href="/app/messages.html?case=${r.reportNo}">Message about this report</a><button class="btn" data-close>Close</button>`,
+      // The chat closes 3 days after the last message once the report is Resolved or Rejected.
+      // A follow-up report can be linked only to a Resolved report that included the student's identity.
+      foot: `<a class="btn btn-quiet" href="/app/messages.html?case=${r.reportNo}">${r.chatClosed ? 'View Conversation' : 'Message about this report'}</a>${
+        r.status === 'Resolved' && !r.anonymous ? `<a class="btn btn-quiet" href="/app/report.html?related=${r.reportNo}">Submit a Related Report</a>` : ''}<button class="btn" data-close>Close</button>`,
     });
   }
 

@@ -18,7 +18,7 @@
     document.getElementById('nNew').textContent = fresh.length;
     document.getElementById('newRows').innerHTML = fresh.length ? fresh.map((r) => `
       <tr>
-        <td><b>#${r.reportNo}</b></td>
+        <td><b>${LIA.esc(LIA.caseNo(r))}</b></td>
         <td>${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</td>
         <td>${LIA.esc(CASE.reporterType(r))}</td>
         <td>${LIA.esc(r.category)}</td>
@@ -35,12 +35,12 @@
     document.getElementById('nActive').textContent = active.length;
     document.getElementById('activeRows').innerHTML = active.length ? active.map((r) => `
       <tr>
-        <td><b>#${r.reportNo}</b></td>
+        <td><b>${LIA.esc(LIA.caseNo(r))}</b></td>
         <td>${CASE.reporterLabel(r)}</td>
         <td>${LIA.esc(r.category)}</td>
         <td>${LIA.chip(r.status, 'staff')}</td>
         <td class="actions"><div class="row-actions">
-          <select class="input input-sm" data-update="${r.reportNo}" aria-label="New status for report ${r.reportNo}">
+          <select class="input input-sm" data-update="${r.reportNo}" aria-label="New status for report ${LIA.esc(LIA.caseNo(r))}">
             <option value="">Update status...</option>
             ${r.status === 'Active' ? '<option value="investigate">Under investigation</option>' : ''}
             ${r.status !== 'For Intervention' ? '<option value="intervene">For intervention</option>' : ''}
@@ -112,7 +112,7 @@
   // Plays the same beeps as a real SOS alert (and switches the sound on for this page)
   document.getElementById('testSound').addEventListener('click', () => {
     LIA.sosSound();
-    LIA.toast('If you heard SOS in Morse code (3 short, 3 long, 3 short), alerts will make a sound on this device. Check that the volume is up.');
+    LIA.toast('If you heard three beeps (played twice), SOS alerts will make a sound on this device. Please check that the volume is turned up.');
   });
 
   document.addEventListener('lia:new-sos', load);

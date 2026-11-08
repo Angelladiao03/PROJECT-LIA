@@ -25,6 +25,10 @@
             <a class="btn btn-quiet btn-sm" id="viewReport" hidden>View Report</a>
           </header>
           <div class="chat-log" id="log" aria-live="polite"></div>
+          <!-- A Resolved or Rejected report's chat closes after 3 days with no messages:
+               closingNote shows until then, closedNote replaces the message box afterwards -->
+          <div class="chat-closing" id="closingNote" hidden></div>
+          <div class="chat-closed" id="closedNote" hidden></div>
           <form class="chat-form" id="chatForm">
             <label class="visually-hidden" for="text">Message</label>
             <textarea class="input" id="text" name="text" rows="1" maxlength="2000" placeholder="Write a message"></textarea>
@@ -105,7 +109,7 @@
             <button class="convo" data-case="${t.case}" ${t.case === current ? 'aria-current="true"' : ''}>
               ${t.reportNo ? '<span class="avatar case">#</span>' : '<img src="/assets/img/lagro-seal.png" alt="" class="avatar-img">'}
               <span class="who"><strong>${LIA.esc(t.title)}</strong>
-                <span class="sub">${t.reportNo ? LIA.esc(t.category + ' · ' + (LIA.STATUS[t.status]?.student || t.status)) : 'Questions for the guidance office'}</span>
+                <span class="sub">${t.reportNo ? LIA.esc(t.category + ' · ' + (LIA.STATUS[t.status]?.student || t.status) + (t.closed ? ' · Closed' : '')) : 'Questions for the Guidance Office'}</span>
                 <span>${t.lastText ? LIA.esc(t.lastText) : 'No messages yet'}</span></span>
               <span class="convo-end">${t.lastAt ? `<time class="when" title="${LIA.esc(LIA.fmtDateTime(t.lastAt))}">${LIA.esc(LIA.shortWhen(t.lastAt))}</time>` : ''}
                 ${t.unread ? `<span class="count-pill" title="Unread messages">${t.unread}</span>` : ''}</span>
@@ -127,13 +131,34 @@
           view.hidden = !t?.reportNo;
           if (t?.reportNo) view.href = `/app/account.html#report-${t.reportNo}`;
           back.hidden = false;
-          const sig = current + JSON.stringify(messages.map((m) => [m.id, m.text, m.deleted, m.edited]));
+          // A Resolved or Rejected report's chat closes after 3 days with no messages.
+          // Closed: it can be read, but no new messages. If the incident happens again, a student
+          // may submit a new report linked to this one (only for named, resolved reports).
+          if (t && !!res.closed !== !!t.closed) loadList(); // the chat just closed: update the list
+          const closedNote = document.getElementById('closedNote');
+          const closingNote = document.getElementById('closingNote');
+          const statusWord = t?.status === 'Rejected' ? 'rejected' : 'resolved';
+          form.hidden = !!res.closed;
+          closedNote.hidden = !res.closed;
+          closingNote.hidden = !res.closing;
+          if (res.closing) {
+            closingNote.textContent = `Report ${LIA.caseNo(t)} has been ${statusWord}. This conversation will close automatically after 3 days with no messages.`;
+          }
+          if (res.closed) {
+            const canFollowUp = t.status === 'Resolved' && !t.anonymous;
+            closedNote.innerHTML = `<span>${LIA.icon('archive')}<b>This conversation is closed.</b> Report ${LIA.esc(LIA.caseNo(t))} was ${statusWord} and no messages were sent for 3 days. ${canFollowUp
+              ? 'If the incident happens again, you may submit a new report and link it to this one.'
+              : 'If you need further assistance, you may message the Guidance Office or submit a new report.'}</span>
+              ${canFollowUp ? `<a class="btn btn-sm" href="/app/report.html?related=${t.reportNo}">Submit a Related Report</a>` : ''}`;
+          }
+          const sig = current + (res.closed ? ':closed' : '') + JSON.stringify(messages.map((m) => [m.id, m.text, m.deleted, m.edited]));
           if (sig === lastSig) return;
           lastSig = sig;
           log.innerHTML = messages.length
             ? CHAT.render(messages, {
+                closed: !!res.closed,
                 who: (m) => m.staffName || 'Guidance office',
-                caseCard: (c) => `<a class="case-card" href="/app/account.html#report-${c.reportNo}">${LIA.icon('folder')}<span><b>Your report #${c.reportNo}</b>${LIA.esc(c.category)} · ${LIA.esc(LIA.STATUS[c.status]?.student || c.status)}</span></a>`,
+                caseCard: (c) => `<a class="case-card" href="/app/account.html#report-${c.reportNo}">${LIA.icon('folder')}<span><b>Your report ${LIA.esc(LIA.caseNo(c))}</b>${LIA.esc(c.category)} · ${LIA.esc(LIA.STATUS[c.status]?.student || c.status)}</span></a>`,
               })
             : `<div class="empty"><strong>No messages yet</strong><span>${current === 'general' ? 'Send your question or concern to the Guidance Office.' : 'Send a question about this report or provide additional details.'} A staff member will respond here.</span></div>`;
           log.scrollTop = log.scrollHeight;

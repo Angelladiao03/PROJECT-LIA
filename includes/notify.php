@@ -9,7 +9,7 @@
 function notify_report_update(int $reportNo, string $action, ?string $reason = null): void
 {
     $stmt = db()->prepare(
-        "SELECT u.email, u.status FROM reports r JOIN users u ON u.user_id = r.user_id WHERE r.report_no = ?"
+        "SELECT u.email, u.status, r.case_id FROM reports r JOIN users u ON u.user_id = r.user_id WHERE r.report_no = ?"
     );
     $stmt->execute([$reportNo]);
     $to = $stmt->fetch();
@@ -28,9 +28,9 @@ function notify_report_update(int $reportNo, string $action, ?string $reason = n
 
     send_email(
         $to['email'],
-        "[LagroInAction] Update on Report #$reportNo",
+        "[LagroInAction] Update on Report #{$to['case_id']}",
         [
-            'lines' => ["There is an update on your report #$reportNo. Its status is now:"],
+            'lines' => ["There is an update on your report #{$to['case_id']}. Its status is now:"],
             'note' => $what[0],
             'after' => [
                 $what[1],
@@ -94,7 +94,10 @@ function maybe_run_background_jobs(): void
              AND updated_at < NOW() - make_interval(mins => ?) RETURNING 1"
         );
         $claim->execute([REMINDER_CHECK_EVERY_MINUTES]);
-        if ($claim->fetch()) send_unread_message_reminders();
+        if ($claim->fetch()) {
+            send_unread_message_reminders();
+            close_quiet_chats(); // report chats quiet for 3 days after Resolved/Rejected (includes/messages.php)
+        }
     } catch (Throwable $e) {
         error_log('[LIA] reminders: ' . $e->getMessage()); // never break the page because of a reminder
     }
