@@ -783,9 +783,7 @@ th[aria-sort="descending"] .sort-btn::after { content: "▼"; opacity: 1; }
 .chat-closed svg { width: 16px; height: 16px; vertical-align: -3px; margin-right: 6px; color: var(--muted); }
 .chat-closed .btn { flex: none; }
 @media (max-width: 700px) { .chat-closed { flex-wrap: wrap; } .chat-closed .btn { width: 100%; justify-content: center; } }
-/* "This conversation will close automatically after 3 days with no messages." */
-.chat-closing { padding: 8px 16px; border-top: 1px solid var(--line); background: var(--field); font-size: 0.85rem; color: var(--muted); }
-/* Automatic notice inside a chat (e.g. the chat was closed): centred, no bubble */
+/* Automatic notice inside a chat (the chat was closed or reopened): centred, no bubble */
 .msg-system { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 14px auto; max-width: 560px; padding: 10px 14px;
   border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--field); text-align: center; font-size: 0.85rem; color: var(--ink); }
 .msg-system time { font-size: 0.75rem; color: var(--muted); }
@@ -1045,4 +1043,12 @@ input[type="date"].input::-webkit-datetime-edit { padding: 0; }
   .dash-actions { width: 100%; }
   .dash-actions .btn { flex: 1; justify-content: center; }
   .bar-row.with-prev { grid-template-columns: 110px 1fr 48px; }
+}
+
+/* ---------- Staff My Account: activity log ---------- */
+.activity-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 220px)); gap: 12px; margin-bottom: 4px; }
+.activity-filters .field { margin: 0; }
+#activityNote { margin: 10px 0 12px; }
+@media (max-width: 700px) {
+  .activity-filters { grid-template-columns: 1fr; }
 }

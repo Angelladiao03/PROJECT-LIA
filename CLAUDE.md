@@ -82,10 +82,13 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
   subjects start with "[LagroInAction]"); formal wording across the site; README rewritten as an introduction.
 - alpha.6 additions (Nov 8 2026, same version): report IDs `#YYYY-0001` (`reports.case_year`, `case_seq`, generated
   `case_id`; numbered in create.php under `pg_advisory_xact_lock(7310001)`; shown with `LIA.caseNo(r)`; reportNo stays the
-  internal id in links/actions). Resolved/Rejected reports get `finished_at`; their chat closes after 3 days with no messages
-  (`close_quiet_chats()` / `chat_state()` / `stop_if_chat_closed()` in includes/messages.php set `chat_closed_at` and add a
-  `sender_type='System'` notice; runs with background jobs and when chats/report lists open); pages show a "will close" note,
-  then a read-only note; Report Records has "Print Conversation". Follow-up reports: `reports.related_report_no`, only from a
+  internal id in links/actions). Resolved/Rejected reports get `finished_at`. Staff close/reopen a finished report's chat by hand
+  ("Close Conversation" in staff Messages, POST admin/messages.php action=close|reopen; `set_chat_closed()` sets
+  `chat_closed_at`, adds a `sender_type='System'` notice, audits `chat.close`/`chat.reopen`; `stop_if_chat_closed()` blocks
+  send/edit/delete); no automatic closing. Report Records has "Print Conversation". Every status change asks for
+  confirmation (`confirmAction()` in admin-case.js). Case window opened from Messages shows "View in Manage Reports"
+  (`#report-N` opens it there) instead of status buttons. Staff My Account has activity logs (`api/admin/activity.php`:
+  mine for everyone, all for counselor, summary for counselor + principal) and "Previous Sign-in". Follow-up reports: `reports.related_report_no`, only from a
   report that includes the student's identity to their own earlier Resolved report that also included it (never guests or
   anonymous); student form shows "related to an earlier resolved report?" only with "Include My Identity" (`?related=N`
   preselects it); case window shows "follow-up to #...". Dashboard: `api/admin/stats.php` takes from/to, group

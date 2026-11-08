@@ -206,12 +206,16 @@ didn't get a code. The email text itself is not stored.
   and the Terms say so.
 - **Student details behind a password:** staff lists show only names; grade & section, adviser, email and
   phone need the staff member's password (unlocked for 10 minutes, every view logged).
-- **Closing conversations:** when a report is Resolved or Rejected (`reports.finished_at`), its chat stays open
-  until 3 days pass with no messages (counted from the status change or the last message, whichever is later).
-  Then `close_quiet_chats()` (includes/messages.php) sets `reports.chat_closed_at` and adds an automatic notice
-  (`messages.sender_type = 'System'`); the chat is read-only for everyone (checked on the server). It runs with the
-  background jobs and whenever a report chat or report list is opened. Staff can print a conversation from Report
-  Records ("Print Conversation").
+- **Closing conversations:** after a report is Resolved or Rejected, staff may close its chat ("Close Conversation"
+  in staff Messages) and reopen it ("Reopen Conversation"). `set_chat_closed()` (includes/messages.php) sets or clears
+  `reports.chat_closed_at`, adds an automatic notice (`messages.sender_type = 'System'`) and records `chat.close` /
+  `chat.reopen` in the case history. A closed chat is read-only for everyone (checked on the server). Nothing closes
+  by itself. Staff can print a conversation from Report Records ("Print Conversation").
+- **Status changes ask first:** Accept, Start investigation, For intervention, Mark resolved, Archive and Restore
+  open a confirmation (`confirmAction()` in admin-case.js); Reject and For referral open their own forms.
+- **Activity logs** (`api/admin/activity.php`, staff My Account): `scope=mine` (every role), `scope=all`
+  (counselor only), `scope=summary` (counselor and principal: totals per staff member, no case details); filters
+  `days`, `type`, `staff`, `page` (25 per page; `page=0` = all, for printing). Read from `audit_log`.
 - **Follow-up reports:** only a report that includes the student's identity can be linked, and only to the
   student's own earlier Resolved report that also included it (checked in `api/reports/create.php`). Guests'
   reports are always anonymous, so they cannot link. This way a link never reveals who sent an anonymous report.

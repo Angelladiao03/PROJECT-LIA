@@ -85,7 +85,7 @@ const CASE = (() => {
         title: 'Reject this report',
         body: `<form id="rejForm" novalidate><div class="field"><label for="reason">Reason the student will see</label>
                <textarea class="input" id="reason" maxlength="1000" placeholder="e.g. We need more details. Please message the guidance office so we can help."></textarea>
-               <p class="hint">Be kind and clear. The student reads this in My Report History.</p></div></form>`,
+               <p class="hint">Be kind and clear. The student reads this in My Report History. A rejected report can no longer be changed.</p></div></form>`,
         foot: `<button class="btn btn-quiet" data-close>Cancel</button><button class="btn btn-sos" form="rejForm" type="submit">Reject report</button>`,
         onOpen: (el, close) => {
           el.querySelector('#rejForm').addEventListener('submit', (e) => {
@@ -150,8 +150,35 @@ const CASE = (() => {
     });
   }
 
+  // A confirmation before every status change, so a report is never changed by an accidental click.
+  // (Reject and For referral already open their own form, which works as the confirmation.)
+  const CONFIRM = {
+    approve: ['Accept this report?', 'Active', 'Accept Report'],
+    investigate: ['Start the investigation?', 'Under Investigation', 'Start Investigation'],
+    intervene: ['Move to For Intervention?', 'For Intervention', 'Move to For Intervention'],
+    resolve: ['Mark this report as resolved?', 'Resolved', 'Mark Resolved'],
+  };
+  function confirmAction(r, action) {
+    if (action === 'archive' || action === 'unarchive') {
+      return LIA.confirmBox(action === 'archive'
+        ? { title: 'Archive this report?', text: `Report ${LIA.caseNo(r)} will be hidden from the main list of Report Records. It is kept and can be restored at any time.`, confirmLabel: 'Archive Report' }
+        : { title: 'Restore this report?', text: `Report ${LIA.caseNo(r)} will return to the main list of Report Records.`, confirmLabel: 'Restore Report' });
+    }
+    const c = CONFIRM[action];
+    if (!c) return Promise.resolve(true);
+    const [title, to, label] = c;
+    const from = LIA.STATUS[r.status]?.staff || r.status;
+    return LIA.confirmBox({
+      title,
+      text: `Report ${LIA.caseNo(r)} will change from "${from}" to "${LIA.STATUS[to]?.staff || to}". The change is recorded in the case history under your name, and the reporter will see the new status.`
+        + (action === 'resolve' ? ' A resolved report can no longer be changed.' : ''),
+      confirmLabel: label,
+    });
+  }
+
   // Runs one action. Returns true if it worked.
   async function act(r, action, button) {
+    if (!await confirmAction(r, action)) return false;
     let body = { action, reportNo: r.reportNo };
     if (action === 'reject') {
       const reason = await askReason();

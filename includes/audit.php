@@ -36,6 +36,8 @@ function audit_label(string $action): string
         'sos.respond' => 'Marked the SOS as responded',
         'account.approve' => 'Approved the permanent account',
         'account.decline' => 'Declined the account request',
+        'chat.close' => 'Closed the conversation',
+        'chat.reopen' => 'Reopened the conversation',
         'message.edit' => 'Edited a message',
         'message.delete' => 'Deleted a message',
         'staff_message.edit' => 'Edited a staff chat message',

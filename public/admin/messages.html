@@ -31,14 +31,13 @@
               <button class="btn btn-quiet btn-sm" id="viewInfo" type="button">View Info</button>
               <button class="btn btn-quiet btn-sm" id="viewCase" type="button">View Case</button>
               <button class="btn btn-quiet btn-sm" id="printReports" type="button">Print Reports</button>
+              <button class="btn btn-quiet btn-sm" id="closeChat" type="button" hidden>Close Conversation</button>
             </div>
           </header>
           <div class="chat-log" id="log" aria-live="polite">
             <div class="empty"><strong>No chat open</strong><span id="noChatHint">Select a chat on the left. To message the reporter of a report (including anonymous reports), open the report and select Message.</span></div>
           </div>
-          <!-- A Resolved or Rejected report's chat closes after 3 days with no messages:
-               closingNote shows until then, closedNote replaces the message box afterwards -->
-          <div class="chat-closing" id="closingNote" hidden></div>
+          <!-- Shown instead of the message box when staff closed a report's chat (after Resolved or Rejected) -->
           <div class="chat-closed" id="closedNote" hidden></div>
           <form class="chat-form" id="chatForm" hidden>
             <label class="visually-hidden" for="text">Reply</label>
@@ -179,7 +178,7 @@
         back.hidden = false;
         form.hidden = false;
         document.getElementById('closedNote').hidden = true;
-        document.getElementById('closingNote').hidden = true;
+        document.getElementById('closeChat').hidden = true;
         document.getElementById('chatTools').hidden = true;
         const av = document.getElementById('chatAvatar');
         av.hidden = false;
@@ -211,22 +210,15 @@
           messages = res.messages;
           split.classList.add('has-chat');
           back.hidden = false;
-          // A Resolved or Rejected report's chat closes after 3 days with no messages:
-          // then it is read-only, and can be printed from Report Records
-          const listed = threads.find((x) => x.key === thread.key);
-          if (listed && !!listed.closed !== !!thread.closed) loadList(); // the chat just closed: update the list
+          // After a report is Resolved or Rejected, staff may close its chat when there are no further
+          // questions ("Close Conversation"), and reopen it if needed. A closed chat is read-only.
           form.hidden = !!thread.closed;
+          document.getElementById('closeChat').hidden = !thread.canClose;
           const closedNote = document.getElementById('closedNote');
-          const closingNote = document.getElementById('closingNote');
-          const statusWord = thread.status === 'Rejected' ? 'rejected' : 'resolved';
           closedNote.hidden = !thread.closed;
-          closingNote.hidden = !thread.closing;
-          if (thread.closing) {
-            closingNote.textContent = `Report ${LIA.caseNo(thread)} has been ${statusWord}. This conversation will close automatically after 3 days with no messages.`;
-          }
           if (thread.closed) {
-            closedNote.innerHTML = `<span>${LIA.icon('archive')}<b>This conversation is closed.</b> Report ${LIA.esc(LIA.caseNo(thread))} was ${statusWord} and no messages were sent for 3 days. The conversation can be printed from Report Records.</span>
-              <a class="btn btn-sm btn-quiet" href="/admin/records.html">Open Report Records</a>`;
+            closedNote.innerHTML = `<span>${LIA.icon('archive')}<b>This conversation is closed.</b> The reporter can still read it but can no longer send messages. It can be printed from Report Records.</span>
+              <button class="btn btn-sm btn-quiet" type="button" data-reopen>Reopen Conversation</button>`;
           }
           document.getElementById('chatTools').hidden = false;
           const isCase = thread.kind === 'case';
@@ -264,6 +256,26 @@
           if (r) CASE.open(r, () => { lastSig = ''; loadChat(); }, { fromMessages: true }); else LIA.toast('That report was not found.', 'error');
         } catch (err) { LIA.toast(err.message, 'error'); }
       }
+
+      // "Close Conversation" / "Reopen Conversation" (report chats, after Resolved or Rejected)
+      async function setClosed(close, button) {
+        const ok = await LIA.confirmBox(close
+          ? { title: 'Close this conversation?', text: `The reporter of report ${LIA.caseNo(thread)} will still be able to read the conversation, but no one will be able to send messages. You can reopen it later if needed.`, confirmLabel: 'Close Conversation' }
+          : { title: 'Reopen this conversation?', text: `The reporter of report ${LIA.caseNo(thread)} will be able to send messages again.`, confirmLabel: 'Reopen Conversation' });
+        if (!ok) return;
+        try {
+          const res = await LIA.busy(button, () => LIA.api('admin/messages.php', { body: { action: close ? 'close' : 'reopen', case: thread.reportNo } }));
+          LIA.toast(res.message);
+        } catch (err) { LIA.toast(err.message, 'error'); }
+        lastSig = '';
+        await loadChat();
+        loadList();
+      }
+      document.getElementById('closeChat').addEventListener('click', (e) => { if (thread) setClosed(true, e.currentTarget); });
+      document.getElementById('closedNote').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-reopen]');
+        if (b && thread) setClosed(false, b);
+      });
 
       // "View Info": the student's details, after typing your password (anonymous reports: contact number only)
       document.getElementById('viewInfo').addEventListener('click', () => {

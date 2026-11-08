@@ -25,9 +25,7 @@
             <a class="btn btn-quiet btn-sm" id="viewReport" hidden>View Report</a>
           </header>
           <div class="chat-log" id="log" aria-live="polite"></div>
-          <!-- A Resolved or Rejected report's chat closes after 3 days with no messages:
-               closingNote shows until then, closedNote replaces the message box afterwards -->
-          <div class="chat-closing" id="closingNote" hidden></div>
+          <!-- Shown instead of the message box when the Guidance Office closed the report's chat -->
           <div class="chat-closed" id="closedNote" hidden></div>
           <form class="chat-form" id="chatForm">
             <label class="visually-hidden" for="text">Message</label>
@@ -131,22 +129,16 @@
           view.hidden = !t?.reportNo;
           if (t?.reportNo) view.href = `/app/account.html#report-${t.reportNo}`;
           back.hidden = false;
-          // A Resolved or Rejected report's chat closes after 3 days with no messages.
+          // After the report is Resolved or Rejected, the Guidance Office may close its chat.
           // Closed: it can be read, but no new messages. If the incident happens again, a student
           // may submit a new report linked to this one (only for named, resolved reports).
-          if (t && !!res.closed !== !!t.closed) loadList(); // the chat just closed: update the list
+          if (t && !!res.closed !== !!t.closed) loadList(); // the chat was just closed or reopened: update the list
           const closedNote = document.getElementById('closedNote');
-          const closingNote = document.getElementById('closingNote');
-          const statusWord = t?.status === 'Rejected' ? 'rejected' : 'resolved';
           form.hidden = !!res.closed;
           closedNote.hidden = !res.closed;
-          closingNote.hidden = !res.closing;
-          if (res.closing) {
-            closingNote.textContent = `Report ${LIA.caseNo(t)} has been ${statusWord}. This conversation will close automatically after 3 days with no messages.`;
-          }
           if (res.closed) {
             const canFollowUp = t.status === 'Resolved' && !t.anonymous;
-            closedNote.innerHTML = `<span>${LIA.icon('archive')}<b>This conversation is closed.</b> Report ${LIA.esc(LIA.caseNo(t))} was ${statusWord} and no messages were sent for 3 days. ${canFollowUp
+            closedNote.innerHTML = `<span>${LIA.icon('archive')}<b>This conversation has been closed by the Guidance Office.</b> ${canFollowUp
               ? 'If the incident happens again, you may submit a new report and link it to this one.'
               : 'If you need further assistance, you may message the Guidance Office or submit a new report.'}</span>
               ${canFollowUp ? `<a class="btn btn-sm" href="/app/report.html?related=${t.reportNo}">Submit a Related Report</a>` : ''}`;

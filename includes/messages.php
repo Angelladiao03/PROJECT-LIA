@@ -55,61 +55,61 @@ function message_out(array $m, string $viewer, ?int $myAdminId = null): array
 }
 
 // ----- Closing a report's chat -----
-// When a report is Resolved or Rejected, its chat stays open for any last questions until
-// 3 days pass with no messages (counted from the status change or the last message, whichever
-// is later). Then the chat closes: it can still be read (and staff can print it from Report
-// Records), but no one can send, edit or delete messages, and an automatic notice is added.
-const CHAT_CLOSES_AFTER_DAYS = 3;
+// Once a report is Resolved or Rejected, guidance staff may close its chat when there are no further
+// questions, and reopen it if needed. A closed chat can still be read (and printed from Report Records),
+// but no one can send, edit or delete messages. An automatic notice is added each time, and the case
+// history records who closed or reopened it.
 
-// Closes the chats that have been quiet for 3 days. $reportNo = only check that report (null = all).
-// Runs with the background jobs (includes/notify.php) and whenever a report chat is opened or used.
-// "chat_closed_at IS NULL" in the UPDATE makes sure each chat is closed (and the notice sent) only once.
-function close_quiet_chats(?int $reportNo = null): void
-{
-    $stmt = db()->prepare(
-        "UPDATE reports r SET chat_closed_at = NOW()
-         WHERE r.report_status IN ('Resolved', 'Rejected') AND r.chat_closed_at IS NULL
-           AND (CAST(? AS INT) IS NULL OR r.report_no = CAST(? AS INT))
-           AND GREATEST(COALESCE(r.finished_at, r.updated_at, r.report_datetime),
-                        (SELECT MAX(m.sent_datetime) FROM messages m WHERE m.case_no = r.report_no))
-               < NOW() - make_interval(days => ?)
-         RETURNING r.report_no, r.user_id, r.case_id, r.report_status"
-    );
-    $stmt->bindValue(1, $reportNo, $reportNo === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
-    $stmt->bindValue(2, $reportNo, $reportNo === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
-    $stmt->bindValue(3, CHAT_CLOSES_AFTER_DAYS, PDO::PARAM_INT);
-    $stmt->execute();
-    foreach ($stmt->fetchAll() as $r) {
-        if ($r['user_id'] === null) continue; // very old report without an account: it has no chat
-        $days = CHAT_CLOSES_AFTER_DAYS;
-        db()->prepare("INSERT INTO messages (user_id, sender_type, message_text, case_no) VALUES (?, 'System', ?, ?)")->execute([
-            $r['user_id'],
-            "This conversation was closed automatically because no messages were sent for $days days after report #{$r['case_id']} was marked as {$r['report_status']}. It remains available to read, but new messages can no longer be sent.",
-            $r['report_no'],
-        ]);
-    }
-}
-
-// What a report's chat page needs to know: is it closed, or will it close after 3 quiet days?
+// What a report's chat page needs to know: is it closed, and may staff close it now?
 function chat_state(?int $caseNo): array
 {
-    if ($caseNo === null) return ['closed' => false, 'closing' => false];
-    close_quiet_chats($caseNo);
+    if ($caseNo === null) return ['closed' => false, 'canClose' => false];
     $stmt = db()->prepare('SELECT report_status, chat_closed_at FROM reports WHERE report_no = ?');
     $stmt->execute([$caseNo]);
     $r = $stmt->fetch();
     $closed = $r && $r['chat_closed_at'] !== null;
     return [
         'closed' => $closed,
-        'closing' => $r && !$closed && in_array($r['report_status'], ['Resolved', 'Rejected'], true),
+        'canClose' => $r && !$closed && in_array($r['report_status'], ['Resolved', 'Rejected'], true),
     ];
+}
+
+// Staff: close ($close = true) or reopen the chat of report $reportNo for the reporter $userId.
+function set_chat_closed(int $reportNo, int $userId, int $adminId, bool $close): void
+{
+    $stmt = db()->prepare('SELECT report_status, chat_closed_at FROM reports WHERE report_no = ?');
+    $stmt->execute([$reportNo]);
+    $r = $stmt->fetch();
+    if ($close) {
+        if (!in_array($r['report_status'], ['Resolved', 'Rejected'], true)) {
+            json_error('A conversation can only be closed after the report is Resolved or Rejected.', 409);
+        }
+        if ($r['chat_closed_at'] !== null) json_error('This conversation is already closed.', 409);
+    } elseif ($r['chat_closed_at'] === null) {
+        json_error('This conversation is already open.', 409);
+    }
+    $pdo = db();
+    $pdo->beginTransaction();
+    // "chat_closed_at IS [NOT] NULL" makes sure two staff clicking at the same time change it only once
+    $change = $pdo->prepare('UPDATE reports SET chat_closed_at = ' . ($close ? 'NOW() WHERE chat_closed_at IS NULL' : 'NULL WHERE chat_closed_at IS NOT NULL') . ' AND report_no = ?');
+    $change->execute([$reportNo]);
+    if ($change->rowCount() === 0) { $pdo->rollBack(); json_error('This conversation was just changed by another staff member. Please reload the page.', 409); }
+    $pdo->prepare("INSERT INTO messages (user_id, sender_type, message_text, case_no) VALUES (?, 'System', ?, ?)")->execute([
+        $userId,
+        $close
+            ? 'The Guidance Office has closed this conversation. It remains available to read, but new messages can no longer be sent.'
+            : 'The Guidance Office has reopened this conversation. Messages can be sent again.',
+        $reportNo,
+    ]);
+    $pdo->commit();
+    audit($adminId, $close ? 'chat.close' : 'chat.reopen', 'report', $reportNo);
 }
 
 // Stops with an error if the chat of report $caseNo is closed.
 function stop_if_chat_closed(?int $caseNo): void
 {
     if ($caseNo === null || !chat_state($caseNo)['closed']) return;
-    json_error('This conversation has been closed, so new messages can no longer be sent or changed. It remains available to read.', 409, ['closed' => true]);
+    json_error('The Guidance Office has closed this conversation, so new messages can no longer be sent or changed. It remains available to read.', 409, ['closed' => true]);
 }
 
 // Saves a message (with an optional file and report case card). Returns the new message id.

@@ -364,12 +364,11 @@ ALTER TABLE reports ADD COLUMN IF NOT EXISTS case_id VARCHAR(20)
 -- e.g. the same bullying happened again after the first case was resolved).
 ALTER TABLE reports ADD COLUMN IF NOT EXISTS related_report_no INT REFERENCES reports(report_no);
 
--- A Resolved or Rejected report's chat stays open until 3 days pass with no messages
--- (counted from the status change or the last message, whichever is later). Then it closes:
--- it can still be read, but no one can send, edit or delete messages, and an automatic
--- notice (sender_type 'System') is added at the end. See close_quiet_chats() in includes/messages.php.
-ALTER TABLE reports ADD COLUMN IF NOT EXISTS finished_at    TIMESTAMPTZ; -- when it became Resolved or Rejected
-ALTER TABLE reports ADD COLUMN IF NOT EXISTS chat_closed_at TIMESTAMPTZ; -- when its chat closed
+-- After a report is Resolved or Rejected, staff may close its chat (and reopen it if needed).
+-- A closed chat can still be read, but no one can send, edit or delete messages; an automatic
+-- notice (sender_type 'System') is added each time. See set_chat_closed() in includes/messages.php.
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS finished_at    TIMESTAMPTZ; -- when it became Resolved or Rejected (dashboard: days to resolve)
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS chat_closed_at TIMESTAMPTZ; -- when staff closed its chat (NULL = open)
 UPDATE reports SET finished_at = COALESCE(updated_at, report_datetime)
  WHERE finished_at IS NULL AND report_status IN ('Resolved', 'Rejected');
 ALTER TABLE messages DROP CONSTRAINT IF EXISTS messages_sender_type_check;

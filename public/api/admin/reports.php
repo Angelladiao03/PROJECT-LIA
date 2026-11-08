@@ -55,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['history'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $grade = staff_grade($admin); // null = all grade levels
-    close_quiet_chats(); // so "chatClosed" below is up to date
     $stmt = db()->prepare(
         'SELECT r.*, u.account_type, u.guest_id, u.full_name, rel.case_id AS related_case_id
          FROM reports r LEFT JOIN users u ON u.user_id = r.user_id
@@ -97,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'archived' => $r['archived_at'] !== null,
             'submittedAt' => $r['report_datetime'],
             'updatedAt' => $r['updated_at'],
-            'chatClosed' => $r['chat_closed_at'] !== null, // its chat closed 3 days after the last message
+            'chatClosed' => $r['chat_closed_at'] !== null, // its chat was closed by staff
         ];
     }, $rows);
 

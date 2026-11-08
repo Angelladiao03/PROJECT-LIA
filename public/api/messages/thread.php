@@ -4,8 +4,7 @@
 // GET                 -> { threads: [...] }  the general chat first, then your reports (newest first)
 // GET ?case=general   -> the general chat
 // GET ?case=12        -> the chat about your report with reportNo 12 (shown as e.g. #2026-0012)
-//                        When the report is Resolved or Rejected, its chat closes (read-only) after
-//                        3 days with no messages (see close_quiet_chats() in includes/messages.php).
+//                        After the report is Resolved or Rejected, staff may close its chat (read-only).
 //                        (opening a chat marks the guidance office's messages in it as read)
 // POST case=general|12, text, file (optional) -> send (PDF, Word, JPG, PNG; up to 5 MB)
 // POST action=edit   id, text   -> edit one of your own messages
@@ -47,11 +46,9 @@ if (isset($_GET['case'])) {
         "UPDATE messages SET read_at = NOW()
          WHERE user_id = ? AND case_no IS NOT DISTINCT FROM CAST(? AS INT) AND sender_type = 'Admin' AND read_at IS NULL"
     )->execute([$userId, $caseNo]);
-    $state = chat_state($caseNo); // closed = read-only; closing = will close after 3 quiet days
     send_json([
         'success' => true,
-        'closed' => $state['closed'],
-        'closing' => $state['closing'],
+        'closed' => chat_state($caseNo)['closed'], // closed by staff: read-only
         'messages' => array_map(fn ($m) => message_out($m, 'student'), thread_messages($userId, $caseNo)),
     ]);
 }
@@ -76,7 +73,6 @@ $thread = fn (string $key, array $extra) => $extra + [
 ];
 
 $threads = [$thread('general', ['case' => 'general', 'title' => 'Guidance Office', 'reportNo' => null])];
-close_quiet_chats(); // so the "Closed" labels below are up to date
 $reports = db()->prepare('SELECT report_no, case_id, category, report_status, is_anonymous, chat_closed_at FROM reports WHERE user_id = ? ORDER BY report_datetime DESC');
 $reports->execute([$userId]);
 foreach ($reports->fetchAll() as $r) {

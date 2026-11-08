@@ -31,19 +31,50 @@
         <ul class="plain-list" id="access"></ul>
         <p class="small muted" style="margin:0">Your role and grade level are set by the system administrator. Every action you take is recorded under your own account.</p>
       </section>
+
+      <!-- Activity log (from the audit log). Everyone: My Activity. Counselor: also All Staff Activity
+           and Staff Summary. Principal: also Staff Summary (totals only). -->
+      <section class="card table-card" id="activityCard">
+        <div class="card-title"><h2 id="activityTitle">My Activity</h2>
+          <button class="btn btn-quiet btn-sm" id="printActivity" type="button">Print / Save as PDF</button></div>
+        <div class="tabs" id="activityTabs" role="tablist" hidden></div>
+        <div class="activity-filters">
+          <div class="field"><label for="aDays">Period</label>
+            <select class="input" id="aDays">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="0">All time</option>
+            </select></div>
+          <div class="field" id="aTypeField"><label for="aType">Type of Activity</label><select class="input" id="aType"></select></div>
+          <div class="field" id="aStaffField" hidden><label for="aStaff">Staff Member</label>
+            <select class="input" id="aStaff"><option value="">All staff</option></select></div>
+        </div>
+        <p class="small muted" id="activityNote"></p>
+        <div class="table-scroll">
+          <table class="data-table activity-table"><thead id="aHead"></thead><tbody id="aRows"></tbody></table>
+        </div>
+        <div class="table-foot">
+          <p class="small muted" id="aShowing" aria-live="polite"></p>
+          <nav class="pager" id="aPager" aria-label="Pages"></nav>
+        </div>
+      </section>
     </div>
   </main>
   <script src="/assets/js/core.js"></script>
+  <script src="/assets/js/pdf.js"></script>
+  <script src="/assets/js/print.js"></script>
   <script>
     (async () => {
       const me = await LIA.start();
       let a = me.account;
+      let previousSignIn = null; // the sign-in before this one (filled in by the activity log)
 
       const ACCESS = {
-        counselor: ['Dashboard and insights', 'Manage Reports and Report Records of every grade level', 'All SOS alerts', 'Registration requests of every grade level', 'Every chat with students'],
-        advocate: [`Manage Reports and Report Records of Grade ${a.gradeLevel} only`, 'All SOS alerts', `Registration requests of Grade ${a.gradeLevel}`, `Chats about Grade ${a.gradeLevel} reports and with Grade ${a.gradeLevel} students`],
-        principal: ['Dashboard and insights (totals only, no student names or case details)'],
-        security: ['Nothing yet: what security staff can open is still being decided.'],
+        counselor: ['Dashboard and insights', 'Manage Reports and Report Records of every grade level', 'All SOS alerts', 'Registration requests of every grade level', 'Every chat with students, and chats with staff', 'Activity of every staff member'],
+        advocate: [`Manage Reports and Report Records of Grade ${a.gradeLevel} only`, 'All SOS alerts', `Registration requests of Grade ${a.gradeLevel}`, `Chats about Grade ${a.gradeLevel} reports and with Grade ${a.gradeLevel} students, and chats with staff`, 'Your own activity'],
+        principal: ['Dashboard and insights (totals only, no student names or case details)', 'Chats with staff', 'Staff activity summary (totals only)'],
+        security: ['Chats with staff', 'Your own activity', 'Other features for security staff are still being decided.'],
       };
 
       function draw() {
@@ -52,10 +83,145 @@
         document.getElementById('whoType').textContent = a.roleLabel;
         const fact = (k, v) => v ? `<dt>${LIA.esc(k)}:</dt><dd>${LIA.esc(v)}</dd>` : '';
         document.getElementById('facts').innerHTML = fact('Username', a.username) + fact('Role', a.roleLabel.split(' · ')[0])
-          + fact('Grade Level', a.gradeLevel ? 'Grade ' + a.gradeLevel : (a.role === 'counselor' ? 'All grade levels' : ''));
+          + fact('Grade Level', a.gradeLevel ? 'Grade ' + a.gradeLevel : (a.role === 'counselor' ? 'All grade levels' : ''))
+          + fact('Previous Sign-in', previousSignIn ? LIA.fmtDateTime(previousSignIn) : '');
         document.getElementById('access').innerHTML = (ACCESS[a.role] || []).map((t) => `<li>${LIA.icon('check')}<span>${LIA.esc(t)}</span></li>`).join('');
       }
       draw();
+
+      // ---------- Activity log ----------
+      const $ = (id) => document.getElementById(id);
+      const TABS = [
+        ['mine', 'My Activity', ['counselor', 'advocate', 'principal', 'security']],
+        ['all', 'All Staff Activity', ['counselor']],
+        ['summary', 'Staff Summary', ['counselor', 'principal']],
+      ].filter((t) => t[2].includes(a.role));
+      // Types of activity each role can have
+      const TYPES = [
+        ['', 'All activity'],
+        ['reports', 'Reports and conversations', ['counselor', 'advocate']],
+        ['students', 'Student details viewed', ['counselor', 'advocate']],
+        ['registration', 'Registration requests', ['counselor', 'advocate']],
+        ['sos', 'SOS alerts', ['counselor', 'advocate']],
+        ['messages', 'Edited or deleted messages'],
+        ['account', 'Sign-ins and account changes'],
+      ];
+      let scope = 'mine', page = 1, last = null;
+
+      $('activityTabs').hidden = TABS.length < 2;
+      $('activityTabs').innerHTML = TABS.map(([k, label]) => `<button type="button" class="tab" role="tab" data-scope="${k}">${label}</button>`).join('');
+      const fillTypes = () => {
+        // the "All Staff" tab can show every type; "My Activity" only the types this role can do
+        const list = TYPES.filter((t) => scope === 'all' || !t[2] || t[2].includes(a.role));
+        $('aType').innerHTML = list.map(([v, label]) => `<option value="${v}">${label}</option>`).join('');
+      };
+
+      const NOTES = {
+        mine: 'Everything you did in LagroInAction, newest first. If you see a sign-in that was not yours, change your password at once.',
+        all: 'Every action of every staff member, newest first. Entries are never edited or deleted.',
+        summary: 'Totals for each staff member in the chosen period (no case or student details). Last sign-in is shown for any time.',
+      };
+
+      async function loadActivity() {
+        const q = new URLSearchParams({ scope, days: $('aDays').value });
+        if (scope !== 'summary') {
+          q.set('page', page);
+          if ($('aType').value) q.set('type', $('aType').value);
+          if (scope === 'all' && $('aStaff').value) q.set('staff', $('aStaff').value);
+        }
+        $('activityTitle').textContent = TABS.find((t) => t[0] === scope)[1];
+        $('activityNote').textContent = NOTES[scope];
+        $('aTypeField').hidden = scope === 'summary';
+        $('aStaffField').hidden = scope !== 'all';
+        document.querySelectorAll('[data-scope]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.scope === scope)));
+        let res;
+        try { res = await LIA.api('admin/activity.php?' + q.toString()); } catch (e) {
+          $('aRows').innerHTML = `<tr><td colspan="7" class="empty-cell">${LIA.esc(e.message)}</td></tr>`;
+          return;
+        }
+        last = res;
+        if (scope === 'summary') return drawSummary(res);
+        if (scope === 'mine' && res.previousSignIn !== previousSignIn) { previousSignIn = res.previousSignIn; draw(); }
+        if (scope === 'all' && $('aStaff').options.length === 1) {
+          $('aStaff').insertAdjacentHTML('beforeend', res.staff.map((s) => `<option value="${s.adminId}">${LIA.esc(s.name)} (${LIA.esc(s.role)})</option>`).join(''));
+        }
+        const withStaff = scope === 'all';
+        $('aHead').innerHTML = `<tr><th>Date &amp; Time</th>${withStaff ? '<th>Staff Member</th>' : ''}<th>Action</th><th>Item</th><th>Details</th></tr>`;
+        $('aRows').innerHTML = res.entries.length ? res.entries.map((e) => `<tr>
+            <td>${LIA.esc(LIA.fmtDateTime(e.at))}</td>
+            ${withStaff ? `<td><b>${LIA.esc(e.staffName)}</b><br><span class="small muted">${LIA.esc(e.staffRole)}</span></td>` : ''}
+            <td>${LIA.esc(e.what)}</td><td>${LIA.esc(e.item)}</td><td class="summary">${LIA.esc(e.details)}</td></tr>`).join('')
+          : `<tr><td colspan="5" class="empty-cell">No activity in this period.</td></tr>`;
+        const from = res.total ? (res.page - 1) * 25 + 1 : 0;
+        $('aShowing').textContent = res.total ? `Showing ${from}–${from + res.entries.length - 1} of ${res.total}` : '';
+        let nums = '';
+        for (let i = 1; i <= res.pages; i++) {
+          if (res.pages > 7 && i !== 1 && i !== res.pages && Math.abs(i - res.page) > 1) { if (!nums.endsWith('…</span>')) nums += '<span class="pager-gap">…</span>'; continue; }
+          nums += `<button type="button" class="pager-btn" data-page="${i}" ${i === res.page ? 'aria-current="page"' : ''}>${i}</button>`;
+        }
+        $('aPager').innerHTML = res.pages > 1
+          ? `<button type="button" class="pager-btn" data-page="${res.page - 1}" ${res.page === 1 ? 'disabled' : ''}>Previous</button>${nums}<button type="button" class="pager-btn" data-page="${res.page + 1}" ${res.page === res.pages ? 'disabled' : ''}>Next</button>`
+          : '';
+      }
+
+      function drawSummary(res) {
+        $('aHead').innerHTML = '<tr><th>Staff Member</th><th>Role</th><th>Actions</th><th>Report Updates</th><th>Resolved</th><th>Replies Sent</th><th>Last Sign-in</th></tr>';
+        $('aRows').innerHTML = res.staff.map((s) => `<tr>
+            <td><b>${LIA.esc(s.name)}</b></td><td>${LIA.esc(s.role)}</td><td>${s.actions}</td><td>${s.reportUpdates}</td>
+            <td>${s.resolved}</td><td>${s.replies}</td><td>${s.lastSignIn ? LIA.esc(LIA.fmtDateTime(s.lastSignIn)) : 'Never'}</td></tr>`).join('');
+        $('aShowing').textContent = `${res.staff.length} staff ${res.staff.length === 1 ? 'member' : 'members'}`;
+        $('aPager').innerHTML = '';
+      }
+
+      $('activityTabs').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-scope]');
+        if (!b || b.dataset.scope === scope) return;
+        scope = b.dataset.scope; page = 1; fillTypes(); loadActivity();
+      });
+      ['aDays', 'aType', 'aStaff'].forEach((id) => $(id).addEventListener('change', () => { page = 1; loadActivity(); }));
+      $('aPager').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-page]');
+        if (!b || b.disabled) return;
+        page = Number(b.dataset.page); loadActivity();
+        $('activityCard').scrollIntoView({ block: 'start', behavior: 'auto' });
+      });
+
+      // Print / Save as PDF: this page, or every matching entry
+      $('printActivity').addEventListener('click', async () => {
+        if (!last) return;
+        const period = $('aDays').selectedOptions[0].textContent;
+        const title = TABS.find((t) => t[0] === scope)[1];
+        if (scope === 'summary') {
+          return PRINT.choose({
+            title: 'Staff Activity Summary',
+            subtitle: `${period} · Lagro High School Guidance Office · LagroInAction`,
+            columns: [{ label: 'Staff Member' }, { label: 'Role', width: 110 }, { label: 'Actions', width: 50 }, { label: 'Report Updates', width: 60 }, { label: 'Resolved', width: 50 }, { label: 'Replies Sent', width: 55 }, { label: 'Last Sign-in', width: 110 }],
+            sets: [{ label: `All staff (${last.staff.length})`, rows: last.staff.map((s) => [s.name, s.role, String(s.actions), String(s.reportUpdates), String(s.resolved), String(s.replies), s.lastSignIn ? LIA.fmtDateTime(s.lastSignIn) : 'Never']) }],
+            filename: 'staff-activity-summary',
+          });
+        }
+        const q = new URLSearchParams({ scope, days: $('aDays').value, page: '0' });
+        if ($('aType').value) q.set('type', $('aType').value);
+        if (scope === 'all' && $('aStaff').value) q.set('staff', $('aStaff').value);
+        let all;
+        try { all = await LIA.api('admin/activity.php?' + q.toString()); } catch (e) { return LIA.toast(e.message, 'error'); }
+        const withStaff = scope === 'all';
+        const toRow = (e) => [LIA.fmtDateTime(e.at), ...(withStaff ? [`${e.staffName} (${e.staffRole})`] : []), e.what, e.item, e.details];
+        const filters = [period, $('aType').selectedOptions[0].textContent, withStaff ? $('aStaff').selectedOptions[0].textContent : a.displayName].join(' · ');
+        PRINT.choose({
+          title: scope === 'mine' ? `Activity Log · ${a.displayName}` : 'Staff Activity Log',
+          subtitle: `${filters} · Lagro High School Guidance Office · LagroInAction`,
+          columns: [{ label: 'Date & Time', width: 110 }, ...(withStaff ? [{ label: 'Staff Member', width: 120 }] : []), { label: 'Action', width: 140 }, { label: 'Item', width: 110 }, { label: 'Details' }],
+          sets: [
+            { label: `This page (${last.entries.length})`, rows: last.entries.map(toRow) },
+            ...(all.total > last.entries.length ? [{ label: `All matching entries (${all.entries.length})`, rows: all.entries.map(toRow) }] : []),
+          ],
+          filename: scope === 'mine' ? 'my-activity' : 'staff-activity',
+        });
+      });
+
+      fillTypes();
+      loadActivity();
 
       document.getElementById('changePw').addEventListener('click', () => LIA.changePasswordModal(null, null, true));
       document.getElementById('logOut').addEventListener('click', async () => {

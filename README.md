@@ -58,9 +58,9 @@ handling more organized for the Guidance Office.
 - **Follow-up reports.** If an incident happens again, a student may link a new report that includes their
   identity to an earlier resolved report that also included it, so that the Guidance Office can connect the cases.
 - **Private messaging** with the Guidance Office: one conversation per report and a general conversation,
-  with file attachments. Usage guidelines are shown before a student messages the Guidance Office. When a report
-  is resolved or rejected, its conversation closes automatically after three days without messages, with an
-  automatic notice; it remains available to read.
+  with file attachments. Usage guidelines are shown before a student messages the Guidance Office. After a report
+  is resolved or rejected, guidance staff may close its conversation when there are no further questions (and
+  reopen it if needed); a closed conversation remains available to read.
 - **Learning resources:** the definition of bullying under RA 10627, the kinds of bullying, what to do as
   a victim, witness, or person who has bullied someone, anti-bullying posters, articles, and videos.
 - **Crisis hotlines:** 911, the Quezon City Helpline (122), the NCMH Crisis Hotline (1553), and Hopeline.
@@ -93,7 +93,9 @@ Each staff member has an individual account, so every action is recorded under t
 - **SOS monitoring** with an audible alert (SOS in Morse code) on every staff page, and dispatch and
   response tracking.
 - **Case history** of every action taken on a report, and printable case records and conversations
-  (Print / Save as PDF).
+  (Print / Save as PDF). Every status change asks for confirmation first.
+- **Activity logs** on each staff member's account page: their own activity for every role, the activity of all
+  staff for the Guidance Counselor, and a staff activity summary (totals only) for the Counselor and the Principal.
 - **Dashboard** of reports by day, month, or year for any period, with filters (grade level, category,
   location, status, reporter type), comparison with the previous period, charts by location, category,
   grade level, reporter type, status, and day of the week, and a printable summary (totals only).

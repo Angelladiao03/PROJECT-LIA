@@ -94,10 +94,7 @@ function maybe_run_background_jobs(): void
              AND updated_at < NOW() - make_interval(mins => ?) RETURNING 1"
         );
         $claim->execute([REMINDER_CHECK_EVERY_MINUTES]);
-        if ($claim->fetch()) {
-            send_unread_message_reminders();
-            close_quiet_chats(); // report chats quiet for 3 days after Resolved/Rejected (includes/messages.php)
-        }
+        if ($claim->fetch()) send_unread_message_reminders();
     } catch (Throwable $e) {
         error_log('[LIA] reminders: ' . $e->getMessage()); // never break the page because of a reminder
     }

@@ -4,7 +4,6 @@
 require_once __DIR__ . '/../../../includes/bootstrap.php';
 require_method('GET');
 $user = require_user();
-close_quiet_chats(); // so "chatClosed" below is up to date
 
 $stmt = db()->prepare(
     'SELECT r.report_no, r.case_id, r.is_anonymous, r.reporter_role, r.category, r.report_location, r.incident_date,
@@ -31,7 +30,7 @@ $reports = array_map(fn ($r) => [
     'gradeLevel' => $r['grade_level'] !== null ? (int) $r['grade_level'] : null,
     'submittedAt' => $r['report_datetime'],
     'updatedAt' => $r['updated_at'],
-    'chatClosed' => $r['chat_closed_at'] !== null, // closed 3 days after the last message (Resolved/Rejected)
+    'chatClosed' => $r['chat_closed_at'] !== null, // closed by staff (after Resolved/Rejected)
 ], $stmt->fetchAll());
 
 send_json(['success' => true, 'reports' => $reports]);

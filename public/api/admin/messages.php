@@ -10,6 +10,7 @@
 //                        reportNo attaches a case card (only reports with the student's name shown).
 // POST action=edit   id, text   -> edit one of your own messages
 // POST action=delete id         -> delete one of your own messages (hidden, never erased)
+// POST action=close|reopen case=12 -> close or reopen a report's chat (after Resolved or Rejected)
 //
 // Counselor: every chat. Advocate: chats about reports of their grade level, and general chats
 // with students of their grade level. (Guests have no grade level: their general chats go to the counselor.)
@@ -39,7 +40,7 @@ function open_thread(array $admin, ?int $caseNo, ?int $userId): array
             'kind' => 'case',
             'reportNo' => $caseNo,
             'caseId' => $r['case_id'],
-            ...chat_state($caseNo), // closed = read-only; closing = Resolved/Rejected, closes after 3 quiet days
+            ...chat_state($caseNo), // closed = read-only; canClose = Resolved/Rejected and still open
             'anonymous' => $anonymous,
             // never send the account of an anonymous reporter to the browser
             'userId' => $anonymous ? null : (int) $r['user_id'],
@@ -60,7 +61,7 @@ function open_thread(array $admin, ?int $caseNo, ?int $userId): array
         'reportNo' => null,
         'caseId' => null,
         'closed' => false,
-        'closing' => false,
+        'canClose' => false,
         'anonymous' => false,
         'userId' => $userId,
         'name' => display_name($user),
@@ -77,6 +78,12 @@ $userParam = $_SERVER['REQUEST_METHOD'] === 'POST' ? input('user') : (string) ($
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = input('action');
     if ($action === 'edit' || $action === 'delete') edit_or_delete_message($action, ['staff' => $myId]);
+    // Close or reopen a report's chat (only after the report is Resolved or Rejected)
+    if ($action === 'close' || $action === 'reopen') {
+        $t = open_thread($admin, positive_int($caseParam) ?? json_error('Choose a report chat first.'), null);
+        set_chat_closed($t['caseNo'], $t['userId'], $myId, $action === 'close');
+        json_success($action === 'close' ? 'Conversation closed. The reporter can still read it.' : 'Conversation reopened.');
+    }
 
     $t = open_thread($admin, $caseParam === '' ? null : positive_int($caseParam), $userParam === '' ? null : positive_int($userParam));
     $reportNo = input('reportNo') === '' ? null : positive_int(input('reportNo'));
@@ -111,7 +118,6 @@ if ($caseParam !== '' || $userParam !== '') {
 
 // ----- GET the list of chats -----
 // The newest message of each chat (a chat = one account + one case, or the account's general chat)
-close_quiet_chats(); // so the "Closed" labels are up to date
 $grade = staff_grade($admin);
 $stmt = db()->prepare(
     "SELECT last.*, u.account_type, u.guest_id, u.full_name, u.grade_level AS user_grade,
