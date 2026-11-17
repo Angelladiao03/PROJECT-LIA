@@ -49,7 +49,7 @@ document.getElementById('openTerms').addEventListener('click', async () => {
         <input type="checkbox" id="agreeBox" disabled>
         <span>I have read the Terms &amp; Privacy Notice and I agree to them, for my safety and privacy.</span>
       </label>`,
-    foot: `<button class="btn btn-quiet" data-close>Cancel</button><button class="btn" id="agreeBtn" disabled>Continue</button>`,
+    foot: `<button class="btn btn-quiet" data-close>Back</button><button class="btn" id="agreeBtn" disabled>Continue</button>`,
     onOpen: (el, close) => {
       const box = el.querySelector('#termsScroll');
       const check = el.querySelector('#agreeBox');

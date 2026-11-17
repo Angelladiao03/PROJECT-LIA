@@ -111,7 +111,7 @@
         if (tab === 'staff') {
           convosEl.innerHTML = people.length ? people.map((p) => `
             <button class="convo" data-key="staff-${p.adminId}" ${'staff-' + p.adminId === keyOf(current) ? 'aria-current="true"' : ''}>
-              <span class="avatar staff">${LIA.esc(LIA.initials(p.name))}</span>
+              ${LIA.avatar('staff')}
               <span class="who"><strong>${LIA.esc(p.name)}</strong>
                 <span class="sub">${LIA.esc(p.roleLabel)}</span>
                 <span>${p.lastText ? LIA.esc((p.lastFromMe ? 'You: ' : '') + p.lastText) : 'No messages yet'}</span></span>
@@ -123,7 +123,7 @@
         const list = threads.filter((t) => (tab === 'reports' ? t.kind === 'case' : t.kind !== 'case'));
         convosEl.innerHTML = list.length ? list.map((t) => `
             <button class="convo" data-key="${t.key}" ${t.key === keyOf(current) ? 'aria-current="true"' : ''}>
-              <span class="avatar ${t.kind === 'case' ? 'case' : t.accountType === 'guest' ? 'guest' : ''}">${t.kind === 'case' ? '#' : LIA.esc(LIA.initials(t.name))}</span>
+              ${t.kind === 'case' ? '<span class="avatar case">#</span>' : LIA.avatar(t.accountType === 'guest' ? 'guest' : 'student')}
               <span class="who"><strong>${t.kind === 'case' ? `Case ${LIA.esc(LIA.caseNo(t))}` : LIA.esc(t.name)}</strong>
                 <span class="sub">${t.kind === 'case' ? LIA.esc(t.name + ' · ' + t.category + (t.closed ? ' · Closed' : '')) : 'General chat'}</span>
                 <span>${LIA.esc(t.lastText)}</span></span>
@@ -182,8 +182,7 @@
         document.getElementById('chatTools').hidden = true;
         const av = document.getElementById('chatAvatar');
         av.hidden = false;
-        av.textContent = LIA.initials(person.name);
-        av.className = 'avatar staff';
+        LIA.setAvatar(av, 'staff');
         document.getElementById('chatName').textContent = person.name;
         document.getElementById('chatInfo').textContent = person.roleLabel + ' · Staff chat';
         const sig = 'staff-' + person.adminId + JSON.stringify(messages.map((m) => [m.id, m.text, m.deleted, m.edited]));
@@ -226,8 +225,8 @@
           document.getElementById('printReports').hidden = isCase || thread.accountType === 'guest';
           const av = document.getElementById('chatAvatar');
           av.hidden = false;
-          av.textContent = isCase ? '#' : LIA.initials(thread.name);
-          av.className = 'avatar ' + (isCase ? 'case' : thread.accountType === 'guest' ? 'guest' : '');
+          if (isCase) { av.className = 'avatar case'; av.textContent = '#'; }
+          else LIA.setAvatar(av, thread.accountType === 'guest' ? 'guest' : 'student');
           document.getElementById('chatName').textContent = isCase ? `Case ${LIA.caseNo(thread)} · ${thread.name}` : thread.name;
           document.getElementById('chatInfo').textContent = [
             isCase ? `${thread.category} · ${LIA.STATUS[thread.status]?.staff || thread.status}` : 'General chat',

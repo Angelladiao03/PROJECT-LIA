@@ -1,4 +1,4 @@
-// My Account: profile (Edit Profile, Change Password, Log Out), request for a
+// My Account: profile (Edit Profile, Change Password, Sign Out), request for a
 // permanent student account (guests), and My Report History.
 
 (async () => {
@@ -9,8 +9,7 @@
   // ---------- Profile card ----------
   function drawProfile() {
     const big = document.getElementById('bigAvatar');
-    big.textContent = LIA.initials(isGuest ? 'Guest' : a.fullName);
-    big.classList.toggle('guest', isGuest);
+    LIA.setAvatar(big, isGuest ? 'guest' : 'student');
     document.getElementById('who').textContent = isGuest ? 'Guest ' + a.guestId : a.fullName;
     document.getElementById('whoType').textContent = isGuest ? 'Guest account' : 'Student account';
     const fact = (k, v) => v ? `<dt>${LIA.esc(k)}:</dt><dd>${LIA.esc(v)}</dd>` : '';
@@ -24,7 +23,7 @@
 
   document.getElementById('changePw').addEventListener('click', () => LIA.changePasswordModal());
   document.getElementById('logOut').addEventListener('click', async () => {
-    const ok = await LIA.confirmBox({ title: 'Log out', text: 'Do you want to log out?', confirmLabel: 'Log out' });
+    const ok = await LIA.confirmBox({ title: 'Sign out', text: 'Do you want to sign out?', confirmLabel: 'Sign out' });
     if (!ok) return;
     try { await LIA.api('auth/logout.php', { body: {} }); } catch (e) { /* leaving anyway */ }
     location.href = '/index.html';
@@ -43,16 +42,17 @@
           <div class="field"><label for="pUsername">Username</label><input class="input" id="pUsername" name="username" maxlength="24" value="${LIA.esc(a.username)}"></div>
           <div class="form-row">
             <div class="field"><label for="pGrade">Grade Level</label><select class="input" id="pGrade" name="gradeLevel"></select></div>
-            <div class="field"><label for="pSection">Section</label><select class="input" id="pSection" name="section"></select></div>
+            <div class="field"><label for="pSection">Section</label><input class="input" id="pSection" value="${LIA.esc(a.section || '')}" readonly aria-describedby="pSectionHint">
+              <p class="hint" id="pSectionHint">Set when your account was approved.</p></div>
           </div>
           <div class="field"><label for="pAdviser">Adviser</label><input class="input" id="pAdviser" name="adviser" maxlength="150" value="${LIA.esc(a.adviser)}"></div>
           <div class="field"><label for="pContact">Contact Number</label><input class="input" id="pContact" name="contactNumber" inputmode="numeric" maxlength="11" value="${LIA.esc(a.contactNumber)}"></div>
-          <p class="small muted" style="margin:0">To change your full name or email, message the guidance office.</p>
+          <p class="small muted" style="margin:0">To change your full name, email or section, please message the Guidance Office.</p>
         </form>`,
       foot: `<button class="btn btn-quiet" data-close>Cancel</button><button class="btn" form="profileForm" type="submit">Save changes</button>`,
       onOpen: (el, close) => {
         const form = el.querySelector('#profileForm');
-        LIA.gradeSectionFields(form.gradeLevel, form.section, a.gradeLevel, a.section);
+        LIA.gradeSectionFields(form.gradeLevel, null, a.gradeLevel);
         form.contactNumber.addEventListener('input', () => { form.contactNumber.value = form.contactNumber.value.replace(/\D/g, '').slice(0, 11); });
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
@@ -106,9 +106,9 @@
         <td>${LIA.esc(r.category)}</td>
         <td>${LIA.esc(r.location)}</td>
         <td>${r.anonymous ? '<span class="muted">Anonymous</span>' : LIA.esc(a.fullName || 'You')}</td>
-        <td>${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</td>
+        <td data-sort="${LIA.esc(r.submittedAt)}">${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</td>
         <td>${LIA.chip(r.status)}</td>
-        <td><button class="btn btn-ghost btn-sm" type="button" data-open="${r.reportNo}">View</button></td>
+        <td class="actions"><div class="row-actions"><button class="btn btn-quiet btn-sm" type="button" data-open="${r.reportNo}">View Details</button></div></td>
       </tr>`).join('');
   }
 
@@ -197,7 +197,7 @@ function drawActivation(req) {
       </div>
       <div class="form-row">
         <div class="field"><label for="gradeLevel">Grade Level</label><select class="input" id="gradeLevel" name="gradeLevel"></select></div>
-        <div class="field"><label for="section">Section</label><select class="input" id="section" name="section"></select></div>
+        <div class="field"><label for="section">Section</label><input class="input" id="section" name="section" maxlength="40" placeholder="e.g. ROSSUM"><p class="hint">Typed in capital letters. It cannot be changed after approval.</p></div>
       </div>
       <div class="field"><label for="adviser">Adviser</label><input class="input" id="adviser" name="adviser" maxlength="150"><p class="hint">The mobile number of your guest account will be used.</p></div>
       <div class="field">
@@ -216,7 +216,7 @@ function drawActivation(req) {
         <input type="checkbox" id="consent">
         <span>I agree that the guidance office may view my ID photo to check my account, as explained above and in the <a href="/terms.html" target="_blank">Terms &amp; privacy</a>.</span>
       </label>
-      <div style="display:flex;justify-content:flex-end"><button class="btn btn-big" type="submit">Send request</button></div>
+      <div style="display:flex;justify-content:flex-end"><button class="btn btn-big" type="submit" id="sendRequest" disabled>Send request</button></div>
     </form>`;
 
   const form = document.getElementById('actForm');
@@ -224,6 +224,11 @@ function drawActivation(req) {
   const preview = document.getElementById('photoPreview');
   let photoBlob = null;
   LIA.gradeSectionFields(form.gradeLevel, form.section);
+
+  // "Send request" stays locked until the guest checks the consent box
+  const consent = document.getElementById('consent');
+  const sendBtn = document.getElementById('sendRequest');
+  consent.addEventListener('change', () => { sendBtn.disabled = !consent.checked; });
 
   // Phone photos are big: shrink in the browser first (max 1600px, JPEG) so it uploads fast.
   fileInput.addEventListener('change', async () => {
@@ -248,20 +253,21 @@ function drawActivation(req) {
     if (!val('fullName')) problem = 'Enter your full name.';
     else if (!/^[A-Za-z0-9._]{8,24}$/.test(val('username'))) problem = 'Username must be 8 to 24 letters, numbers, dots or underscores.';
     else if (!val('gradeLevel')) problem = 'Choose your grade level.';
-    else if (!val('section')) problem = 'Choose your section.';
+    else if (!val('section')) problem = 'Enter your section.';
     else if (!val('adviser')) problem = "Enter your adviser's name.";
     else if (!photoBlob) problem = 'Add a photo of your school ID.';
-    else if (!document.getElementById('consent').checked) problem = 'Check the box to agree to the ID photo being reviewed.';
+    else if (!consent.checked) problem = 'Check the box to agree to the ID photo being reviewed.';
     if (problem) return LIA.showFormError(form, problem);
 
     const fd = new FormData(form);
     fd.set('idPhoto', photoBlob, 'id-photo.jpg');
     fd.set('consent', 'yes');
     try {
-      await LIA.busy(form.querySelector('button[type=submit]'), () => LIA.api('account/activation.php', { body: fd }));
+      await LIA.busy(sendBtn, () => LIA.api('account/activation.php', { body: fd }));
       LIA.toast('Request sent.');
       setTimeout(() => location.reload(), 900);
     } catch (err) { LIA.showFormError(form, err.message); }
+    sendBtn.disabled = !consent.checked; // busy() unlocks the button; keep it locked if the box was unchecked
   });
 }
 

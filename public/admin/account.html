@@ -22,7 +22,7 @@
         <div class="profile-actions">
           <button class="btn" id="editProfile" type="button">Edit Profile</button>
           <button class="btn btn-quiet" id="changePw" type="button">Change Password</button>
-          <button class="btn btn-danger" id="logOut" type="button">Log Out</button>
+          <button class="btn btn-danger" id="logOut" type="button">Sign Out</button>
         </div>
       </section>
 
@@ -52,7 +52,7 @@
         </div>
         <p class="small muted" id="activityNote"></p>
         <div class="table-scroll">
-          <table class="data-table activity-table"><thead id="aHead"></thead><tbody id="aRows"></tbody></table>
+          <table class="data-table activity-table sortable"><thead id="aHead"></thead><tbody id="aRows"></tbody></table>
         </div>
         <div class="table-foot">
           <p class="small muted" id="aShowing" aria-live="polite"></p>
@@ -77,13 +77,20 @@
         security: ['Chats with staff', 'Your own activity', 'Other features for security staff are still being decided.'],
       };
 
+      // What the notification email receives, per role
+      const EMAIL_HINT = {
+        counselor: 'An email is sent to this address when an SOS alert is received.',
+        advocate: `An email is sent to this address when a new Grade ${a.gradeLevel} report is submitted or an SOS alert is received.`,
+      };
+
       function draw() {
-        document.getElementById('bigAvatar').textContent = LIA.initials(a.displayName);
+        LIA.setAvatar(document.getElementById('bigAvatar'), 'staff');
         document.getElementById('who').textContent = a.displayName;
         document.getElementById('whoType').textContent = a.roleLabel;
         const fact = (k, v) => v ? `<dt>${LIA.esc(k)}:</dt><dd>${LIA.esc(v)}</dd>` : '';
         document.getElementById('facts').innerHTML = fact('Username', a.username) + fact('Role', a.roleLabel.split(' · ')[0])
           + fact('Grade Level', a.gradeLevel ? 'Grade ' + a.gradeLevel : (a.role === 'counselor' ? 'All grade levels' : ''))
+          + fact('Email', a.email || (EMAIL_HINT[a.role] ? 'Not set (add it in Edit Profile to receive notification emails)' : ''))
           + fact('Previous Sign-in', previousSignIn ? LIA.fmtDateTime(previousSignIn) : '');
         document.getElementById('access').innerHTML = (ACCESS[a.role] || []).map((t) => `<li>${LIA.icon('check')}<span>${LIA.esc(t)}</span></li>`).join('');
       }
@@ -106,7 +113,13 @@
         ['messages', 'Edited or deleted messages'],
         ['account', 'Sign-ins and account changes'],
       ];
+      const PER_PAGE = 10; // entries per page (the server uses the same number)
       let scope = 'mine', page = 1, last = null;
+      // Sorting by clicking a heading: the log is sorted by the server (it has pages);
+      // the Staff Summary is sorted here.
+      let sort = { key: 'at', dir: 'desc' };
+      let sumSort = { key: 'name', dir: 'asc' };
+      const head = (key, label, st = sort) => `<th aria-sort="${st.key === key ? (st.dir === 'asc' ? 'ascending' : 'descending') : 'none'}"><button type="button" class="sort-btn" data-sort="${key}" title="${st.key === key ? 'Click to reverse the order.' : 'Sort by ' + label}">${label}</button></th>`;
 
       $('activityTabs').hidden = TABS.length < 2;
       $('activityTabs').innerHTML = TABS.map(([k, label]) => `<button type="button" class="tab" role="tab" data-scope="${k}">${label}</button>`).join('');
@@ -126,6 +139,8 @@
         const q = new URLSearchParams({ scope, days: $('aDays').value });
         if (scope !== 'summary') {
           q.set('page', page);
+          q.set('sort', sort.key);
+          q.set('dir', sort.dir);
           if ($('aType').value) q.set('type', $('aType').value);
           if (scope === 'all' && $('aStaff').value) q.set('staff', $('aStaff').value);
         }
@@ -146,27 +161,28 @@
           $('aStaff').insertAdjacentHTML('beforeend', res.staff.map((s) => `<option value="${s.adminId}">${LIA.esc(s.name)} (${LIA.esc(s.role)})</option>`).join(''));
         }
         const withStaff = scope === 'all';
-        $('aHead').innerHTML = `<tr><th>Date &amp; Time</th>${withStaff ? '<th>Staff Member</th>' : ''}<th>Action</th><th>Item</th><th>Details</th></tr>`;
+        $('aHead').innerHTML = `<tr>${head('at', 'Date &amp; Time')}${withStaff ? head('staff', 'Staff Member') : ''}${head('action', 'Action')}${head('item', 'Item')}${head('details', 'Details')}</tr>`;
         $('aRows').innerHTML = res.entries.length ? res.entries.map((e) => `<tr>
             <td>${LIA.esc(LIA.fmtDateTime(e.at))}</td>
             ${withStaff ? `<td><b>${LIA.esc(e.staffName)}</b><br><span class="small muted">${LIA.esc(e.staffRole)}</span></td>` : ''}
             <td>${LIA.esc(e.what)}</td><td>${LIA.esc(e.item)}</td><td class="summary">${LIA.esc(e.details)}</td></tr>`).join('')
           : `<tr><td colspan="5" class="empty-cell">No activity in this period.</td></tr>`;
-        const from = res.total ? (res.page - 1) * 25 + 1 : 0;
+        const from = res.total ? (res.page - 1) * PER_PAGE + 1 : 0;
         $('aShowing').textContent = res.total ? `Showing ${from}–${from + res.entries.length - 1} of ${res.total}` : '';
-        let nums = '';
-        for (let i = 1; i <= res.pages; i++) {
-          if (res.pages > 7 && i !== 1 && i !== res.pages && Math.abs(i - res.page) > 1) { if (!nums.endsWith('…</span>')) nums += '<span class="pager-gap">…</span>'; continue; }
-          nums += `<button type="button" class="pager-btn" data-page="${i}" ${i === res.page ? 'aria-current="page"' : ''}>${i}</button>`;
-        }
-        $('aPager').innerHTML = res.pages > 1
-          ? `<button type="button" class="pager-btn" data-page="${res.page - 1}" ${res.page === 1 ? 'disabled' : ''}>Previous</button>${nums}<button type="button" class="pager-btn" data-page="${res.page + 1}" ${res.page === res.pages ? 'disabled' : ''}>Next</button>`
-          : '';
+        LIA.pager($('aPager'), res.page, res.pages); // "<  1  >"
       }
 
       function drawSummary(res) {
-        $('aHead').innerHTML = '<tr><th>Staff Member</th><th>Role</th><th>Actions</th><th>Report Updates</th><th>Resolved</th><th>Replies Sent</th><th>Last Sign-in</th></tr>';
-        $('aRows').innerHTML = res.staff.map((s) => `<tr>
+        const SUM = [['name', 'Staff Member'], ['role', 'Role'], ['actions', 'Actions'], ['reportUpdates', 'Report Updates'],
+          ['resolved', 'Resolved'], ['replies', 'Replies Sent'], ['lastSignIn', 'Last Sign-in']];
+        $('aHead').innerHTML = `<tr>${SUM.map(([k, label]) => head(k, label, sumSort)).join('')}</tr>`;
+        const val = (s) => s[sumSort.key] ?? '';
+        const list = res.staff.slice().sort((x, y) => {
+          const p = val(x), q = val(y);
+          const c = typeof p === 'number' && typeof q === 'number' ? p - q : String(p).localeCompare(String(q), 'en', { numeric: true });
+          return sumSort.dir === 'asc' ? c : -c;
+        });
+        $('aRows').innerHTML = list.map((s) => `<tr>
             <td><b>${LIA.esc(s.name)}</b></td><td>${LIA.esc(s.role)}</td><td>${s.actions}</td><td>${s.reportUpdates}</td>
             <td>${s.resolved}</td><td>${s.replies}</td><td>${s.lastSignIn ? LIA.esc(LIA.fmtDateTime(s.lastSignIn)) : 'Never'}</td></tr>`).join('');
         $('aShowing').textContent = `${res.staff.length} staff ${res.staff.length === 1 ? 'member' : 'members'}`;
@@ -179,6 +195,15 @@
         scope = b.dataset.scope; page = 1; fillTypes(); loadActivity();
       });
       ['aDays', 'aType', 'aStaff'].forEach((id) => $(id).addEventListener('change', () => { page = 1; loadActivity(); }));
+      // Click a heading to sort (click again to reverse). Dates and numbers start with the highest.
+      $('aHead').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-sort]');
+        if (!b) return;
+        const st = scope === 'summary' ? sumSort : sort;
+        const firstDir = ['at', 'actions', 'reportUpdates', 'resolved', 'replies', 'lastSignIn'].includes(b.dataset.sort) ? 'desc' : 'asc';
+        const next = st.key === b.dataset.sort ? { key: st.key, dir: st.dir === 'asc' ? 'desc' : 'asc' } : { key: b.dataset.sort, dir: firstDir };
+        if (scope === 'summary') { sumSort = next; drawSummary(last); } else { sort = next; page = 1; loadActivity(); }
+      });
       $('aPager').addEventListener('click', (e) => {
         const b = e.target.closest('[data-page]');
         if (!b || b.disabled) return;
@@ -200,7 +225,7 @@
             filename: 'staff-activity-summary',
           });
         }
-        const q = new URLSearchParams({ scope, days: $('aDays').value, page: '0' });
+        const q = new URLSearchParams({ scope, days: $('aDays').value, page: '0', sort: sort.key, dir: sort.dir });
         if ($('aType').value) q.set('type', $('aType').value);
         if (scope === 'all' && $('aStaff').value) q.set('staff', $('aStaff').value);
         let all;
@@ -225,7 +250,7 @@
 
       document.getElementById('changePw').addEventListener('click', () => LIA.changePasswordModal(null, null, true));
       document.getElementById('logOut').addEventListener('click', async () => {
-        if (!await LIA.confirmBox({ title: 'Log out', text: 'Do you want to log out?', confirmLabel: 'Log out' })) return;
+        if (!await LIA.confirmBox({ title: 'Sign out', text: 'Do you want to sign out?', confirmLabel: 'Sign out' })) return;
         try { await LIA.api('auth/logout.php', { body: {} }); } catch (e) { /* leaving anyway */ }
         location.href = '/staff.html';
       });
@@ -237,6 +262,8 @@
               <div class="field"><label for="pName">Full Name</label><input class="input" id="pName" name="fullName" maxlength="150" value="${LIA.esc(a.displayName)}"></div>
               <div class="field"><label for="pUser">Username</label><input class="input" id="pUser" name="username" maxlength="24" value="${LIA.esc(a.username)}">
                 <p class="hint">8 to 24 letters, numbers, dots or underscores. You sign in with it.</p></div>
+              <div class="field"><label for="pEmail">Email for Notifications <span class="muted">(optional)</span></label><input class="input" id="pEmail" name="email" type="email" maxlength="150" autocomplete="email" value="${LIA.esc(a.email || '')}">
+                <p class="hint">${LIA.esc(EMAIL_HINT[a.role] || 'Leave this empty if you do not need notification emails.')}</p></div>
             </form>`,
           foot: '<button class="btn btn-quiet" data-close>Cancel</button><button class="btn" form="profileForm" type="submit">Save changes</button>',
           onOpen: (el, close) => {

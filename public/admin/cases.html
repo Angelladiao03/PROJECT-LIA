@@ -22,7 +22,7 @@
         <div class="card-title"><h2>New Report Approval Requests <span class="count-pill" id="nNew">0</span></h2></div>
         <div class="table-scroll">
           <table class="data-table">
-            <thead><tr><th>Report ID</th><th>Date Submitted</th><th>Reporter Type</th><th>Category</th><th>Details / Summary</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Report ID</th><th data-sort-first="desc">Date Submitted</th><th>Reporter Type</th><th>Category</th><th>Details / Summary</th><th>Actions</th></tr></thead>
             <tbody id="newRows"><tr><td colspan="6"><div class="skeleton" style="height:40px"></div></td></tr></tbody>
           </table>
         </div>
@@ -43,12 +43,12 @@
       <section class="card table-card sos-card" id="sos">
         <div class="card-title">
           <h2 class="sos-title">Emergency SOS Verification &amp; Dispatch <span class="count-pill sos" id="nSos">0</span></h2>
-          <button class="btn btn-ghost btn-sm" id="testSound" type="button">Test alert sound</button>
+          <button class="btn btn-quiet btn-sm" id="testSound" type="button">Test Alert Sound</button>
         </div>
         <p class="small muted" style="margin-top:-6px"><b>Dispatched:</b> a security guard or staff member has been sent to the location. <b>Responded:</b> the student has been reached and the situation has been addressed. New alerts play an SOS sound on every staff page.</p>
         <div class="table-scroll">
           <table class="data-table">
-            <thead><tr><th>Time Alert</th><th>Student Info</th><th>Location</th><th>Description / Note</th><th>Status</th><th>Action</th></tr></thead>
+            <thead><tr><th data-sort-first="desc">Time Alert</th><th>Student Info</th><th>Location</th><th>Description / Note</th><th>Status</th><th>Action</th></tr></thead>
             <tbody id="sosRows"><tr><td colspan="6"><div class="skeleton" style="height:40px"></div></td></tr></tbody>
           </table>
         </div>

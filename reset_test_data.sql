@@ -11,7 +11,7 @@
 --   2. Paste this whole file and click Run.
 --
 -- Test accounts it creates (username / password):
---   Student            studentaccount     / studentaccount123     (Grade 10 - Section A)
+--   Student            studentaccount     / studentaccount123     (Grade 10 - SECTION A)
 --   Guest              guestaccount       / guestaccount123       (sign in on the Guest tab)
 --   Guidance Counselor guidancecounselor  / guidancecounselor123  (all grade levels)
 --   Principal          principal          / principal123          (dashboard + staff chat)
@@ -48,7 +48,7 @@ INSERT INTO users (account_type, guest_id, username, email, password_hash, full_
                    grade_section, adviser_name, contact_number, terms_version, terms_accepted_at)
 VALUES ('student', 'LIA-STUDNT', 'studentaccount', 'studentaccount@example.com',
         '$2y$10$Z7XTwB5Fs7NxKXTVxTW4TO8oDBf1PDnRtB4JE75eG5kidBjnT.xDe',
-        'Student Account (Test)', 10, 'Section A', 'Grade 10 - Section A', 'Adviser (Test)', '09000000001',
+        'Student Account (Test)', 10, 'SECTION A', 'Grade 10 - SECTION A', 'Adviser (Test)', '09000000001',
         'test-data', NOW());
 
 -- A guest account. It signs in on the Guest tab with "guestaccount" (or its guest ID LIA-GUESTA).

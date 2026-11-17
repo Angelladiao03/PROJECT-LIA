@@ -51,9 +51,12 @@ $sent = send_email(
     $user['email'],
     '[LagroInAction] Password Reset Request',
     [
+        'title' => 'Password Reset Request',
+        'greeting' => email_greeting($user),
         'lines' => ['We received a request to reset the password of your LagroInAction account. Please select the button below to set a new password.'],
         'button' => ['label' => 'Reset Password', 'url' => $link],
         'after' => ['This link may be used only once and is valid for ' . RESET_LINK_MINUTES . ' minutes. If you did not request a password reset, you may disregard this email; your password will remain unchanged.'],
+        'audience' => 'reset',
     ]
 );
 $masked = mask_email($user['email']);

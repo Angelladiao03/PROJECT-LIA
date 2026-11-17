@@ -21,7 +21,7 @@
         <div class="card-title"><h2>Pending Account Approvals (<span id="nPending">0</span>)</h2></div>
         <div class="table-scroll">
           <table class="data-table">
-            <thead><tr><th>Date Requested</th><th>Full Name</th><th>Grade &amp; Section</th><th>Guest ID</th><th>Actions</th></tr></thead>
+            <thead><tr><th data-sort-first="desc">Date Requested</th><th>Full Name</th><th>Grade &amp; Section</th><th>Guest ID</th><th>Actions</th></tr></thead>
             <tbody id="pending"><tr><td colspan="5"><div class="skeleton" style="height:40px"></div></td></tr></tbody>
           </table>
         </div>
@@ -31,7 +31,7 @@
         <div class="card-title"><h2>Recently Reviewed</h2></div>
         <div class="table-scroll">
           <table class="data-table">
-            <thead><tr><th>Full Name</th><th>Result</th><th>Reviewed</th><th>By</th></tr></thead>
+            <thead><tr><th>Full Name</th><th>Result</th><th data-sort-first="desc">Reviewed</th><th>By</th></tr></thead>
             <tbody id="recent"></tbody>
           </table>
         </div>
@@ -116,20 +116,20 @@
           document.getElementById('nPending').textContent = pending.length;
           pendingEl.innerHTML = pending.length ? pending.map((r) => `
             <tr>
-              <td>${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</td>
+              <td data-sort="${LIA.esc(r.submittedAt)}">${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</td>
               <td><b>${LIA.esc(r.fullName)}</b></td>
               <td>${LIA.esc(r.gradeSection)}</td>
               <td>${LIA.esc(r.guestId)}</td>
-              <td class="actions">
-                <button class="btn btn-quiet btn-sm" data-info="${r.requestId}">View</button>
+              <td class="actions"><div class="row-actions">
                 <button class="btn btn-sm" data-approve="${r.requestId}">Approve</button>
                 <button class="btn btn-danger btn-sm" data-decline="${r.requestId}">Decline</button>
-              </td>
+                <button class="btn btn-quiet btn-sm" data-info="${r.requestId}">View Details</button>
+              </div></td>
             </tr>`).join('') : `<tr><td colspan="5" class="empty-cell">No requests waiting.</td></tr>`;
           document.getElementById('recent').innerHTML = data.recent.length ? data.recent.map((r) => `
             <tr><td><b>${LIA.esc(r.fullName)}</b><br><span class="small muted">${LIA.esc(r.gradeSection)}</span></td>
             <td><span class="chip ${r.status === 'Approved' ? 'resolved' : 'rejected'}">${LIA.esc(r.status)}</span>${r.declineReason ? `<br><span class="small muted">${LIA.esc(r.declineReason)}</span>` : ''}</td>
-            <td>${LIA.esc(LIA.fmtDateTime(r.reviewedAt))}</td><td>${LIA.esc(r.reviewedBy || '')}</td></tr>`).join('')
+            <td data-sort="${LIA.esc(r.reviewedAt || '')}">${LIA.esc(LIA.fmtDateTime(r.reviewedAt))}</td><td>${LIA.esc(r.reviewedBy || '')}</td></tr>`).join('')
             : `<tr><td colspan="4" class="empty-cell">Nothing reviewed yet.</td></tr>`;
         } catch (e) { pendingEl.innerHTML = `<tr><td colspan="5" class="empty-cell">${LIA.esc(e.message)}</td></tr>`; }
       }

@@ -6,7 +6,8 @@
 //     days   = 7 | 30 | 90 | 0 (0 = all time; default 30)
 //     type   = reports | messages | students | registration | sos | account (optional)
 //     staff  = admin id (optional, scope=all only)
-//     page   = 1, 2, ... (25 per page), or 0 for every matching entry (for printing, up to 2,000)
+//     page   = 1, 2, ... (10 per page), or 0 for every matching entry (for printing, up to 2,000)
+//     sort   = at | staff | action | item | details (default at), dir = asc | desc (default desc)
 //   -> { entries: [{ at, action, what, staffName, staffRole, item, details }], page, pages, total,
 //        previousSignIn (scope=mine), staff: [{ adminId, name, role }] (scope=all) }
 //
@@ -19,7 +20,7 @@ $admin = require_admin();
 $role = $admin['staff_role'];
 $myId = (int) $admin['admin_id'];
 
-const PER_PAGE = 25;
+const PER_PAGE = 10;
 const PRINT_LIMIT = 2000;
 // Which actions each "type" choice includes
 const ACTIVITY_TYPES = [
@@ -103,6 +104,19 @@ if ($page > $pages) $page = $pages;
 $limit = $page === 0 ? PRINT_LIMIT : PER_PAGE;
 $offset = $page === 0 ? 0 : ($page - 1) * PER_PAGE;
 
+// Sorting (clicking a column heading). Only these fixed column names are ever put into the SQL.
+$sortColumns = [
+    'at' => ['l.created_at', 'l.log_id'],
+    'staff' => ['a.admin_fullname'],
+    'action' => ['l.action'],
+    'item' => ['l.target_type', 'l.target_id'],
+    'details' => ["COALESCE(l.details, '')"],
+];
+$sortKey = array_key_exists((string) ($_GET['sort'] ?? ''), $sortColumns) ? (string) $_GET['sort'] : 'at';
+$dir = ($_GET['dir'] ?? '') === 'asc' ? 'ASC' : 'DESC';
+$orderBy = implode(', ', array_map(fn ($c) => "$c $dir", $sortColumns[$sortKey]))
+    . ($sortKey === 'at' ? '' : ', l.created_at DESC, l.log_id DESC'); // ties: newest first
+
 $stmt = db()->prepare(
     "SELECT l.action, l.target_type, l.target_id, l.details, l.created_at,
             a.admin_fullname, a.staff_role, a.grade_level, r.case_id
@@ -110,7 +124,7 @@ $stmt = db()->prepare(
      LEFT JOIN admin_profile a ON a.admin_id = l.admin_id
      LEFT JOIN reports r ON l.target_type = 'report' AND r.report_no = l.target_id
      WHERE $where
-     ORDER BY l.created_at DESC, l.log_id DESC
+     ORDER BY $orderBy
      LIMIT $limit OFFSET $offset"
 );
 $stmt->execute($params);

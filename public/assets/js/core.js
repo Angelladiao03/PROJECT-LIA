@@ -9,7 +9,7 @@
 
 const LIA = (() => {
   // The version shown on the sign-in pages. Change it here when you tag a new version.
-  const VERSION = 'v1.0.0-alpha.6';
+  const VERSION = 'v1.0.0-alpha.7';
   document.querySelectorAll('[data-version]').forEach((el) => { el.textContent = VERSION; });
 
   // ---------- Icons (simple line drawings, 24x24) ----------
@@ -45,6 +45,8 @@ const LIA = (() => {
     pin: '<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
     star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
     arrowLeft: '<path d="M19 12H5M12 19l-7-7 7-7"/>',
+    chevronLeft: '<path d="m15 18-6-6 6-6"/>',
+    chevronRight: '<path d="m9 18 6-6-6-6"/>',
     dots: '<circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/>',
     edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>',
     trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
@@ -324,7 +326,12 @@ const LIA = (() => {
       form.prepend(box);
     }
     box.innerHTML = icon('alert') + `<span>${esc(message)}</span>`;
-    box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    // Make sure the message can be seen: if it is above or below the visible area (or under the
+    // top bar), jump to it at once (no sliding), so the person sees what to fix.
+    const area = box.closest('.modal-body')?.getBoundingClientRect()
+      || { top: document.querySelector('.topbar')?.offsetHeight || 0, bottom: window.innerHeight };
+    const r = box.getBoundingClientRect();
+    if (r.top < area.top + 4 || r.bottom > area.bottom) box.scrollIntoView({ block: 'start', behavior: 'instant' });
   }
   async function busy(button, task) {
     button.disabled = true;
@@ -416,28 +423,31 @@ const LIA = (() => {
   // Sorts names A to Z, with numbers in counting order ("Section 2" before "Section 10").
   const sortAZ = (list) => [...new Set(list)].sort((a, b) => a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' }));
 
-  // ---------- Grade level and section dropdowns ----------
-  // The sections are in /assets/school-sections.json (the server checks the same file).
-  let sectionsPromise = null;
-  function sections() {
-    sectionsPromise ??= fetch('/assets/school-sections.json').then((r) => r.json()).then((j) => j.sections);
-    return sectionsPromise;
+  // ---------- Grade level dropdown and Section box ----------
+  // The section is typed (no fixed list) and always turned into capital letters as it is typed;
+  // the server saves it in capitals too.
+  function upperCaseInput(input) {
+    if (!input) return;
+    input.setAttribute('autocapitalize', 'characters');
+    input.setAttribute('spellcheck', 'false');
+    input.addEventListener('input', () => {
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const upper = input.value.toUpperCase();
+      if (upper !== input.value) {
+        input.value = upper;
+        try { input.setSelectionRange(start, end); } catch (e) { /* some input types have no cursor */ }
+      }
+    });
   }
-  // Fills a Grade level <select> and a Section <select>; the sections change with the grade.
-  async function gradeSectionFields(gradeSelect, sectionSelect, grade = null, section = null) {
-    const all = await sections();
+  function gradeSectionFields(gradeSelect, sectionInput, grade = null, section = null) {
     gradeSelect.innerHTML = '<option value="">Select grade level...</option>' +
-      Object.keys(all).map((g) => `<option value="${g}">Grade ${g}</option>`).join('');
-    const fill = () => {
-      const list = sortAZ(all[gradeSelect.value] || []); // shown A to Z
-      sectionSelect.innerHTML = `<option value="">${gradeSelect.value ? 'Select section...' : 'Choose the grade level first'}</option>` +
-        list.map((s) => `<option>${esc(s)}</option>`).join('');
-      sectionSelect.disabled = !list.length;
-    };
+      [7, 8, 9, 10, 11, 12].map((g) => `<option value="${g}">Grade ${g}</option>`).join('');
     gradeSelect.value = grade ? String(grade) : '';
-    fill();
-    if (section) sectionSelect.value = section;
-    gradeSelect.addEventListener('change', fill);
+    if (sectionInput) {
+      if (section) sectionInput.value = String(section).toUpperCase();
+      upperCaseInput(sectionInput);
+    }
   }
 
   // ---------- Locations (Submit Report and SOS) ----------
@@ -559,6 +569,105 @@ const LIA = (() => {
     return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
   }
 
+  // ---------- Profile pictures ----------
+  // Every account shows a drawn picture instead of letters. The picture depends on the kind of
+  // account: student (graduation cap), guest (plain figure) and staff (collar and tie).
+  const AVATARS = {
+    student: '<circle cx="12" cy="11.6" r="4.1"/><path d="M3.6 25c0-5 3.8-8.1 8.4-8.1s8.4 3.1 8.4 8.1z"/>'
+      + '<path class="cut" d="M12 3.3 3.8 6.9 12 10.5l8.2-3.6z"/><path d="M12 3.3 3.8 6.9 12 10.5l8.2-3.6z"/>'
+      + '<path class="line" d="M18.6 7.6v4.2"/>',
+    guest: '<circle cx="12" cy="9.6" r="4.4"/><path d="M3.6 25c0-5.2 3.8-8.4 8.4-8.4s8.4 3.2 8.4 8.4z"/>',
+    staff: '<circle cx="12" cy="9.6" r="4.4"/><path d="M3.6 25c0-5.2 3.8-8.4 8.4-8.4s8.4 3.2 8.4 8.4z"/>'
+      + '<path class="cut-fill" d="M9.6 16.9 12 20l2.4-3.1z"/><path class="cut-fill" d="m12 20.4-1.2 1.4L12 25l1.2-3.2z"/>',
+  };
+  function avatar(kind, extraClass = '') {
+    const k = AVATARS[kind] ? kind : 'student';
+    return `<span class="avatar av-${k} ${extraClass}" aria-hidden="true"><svg viewBox="0 0 24 24">${AVATARS[k]}</svg></span>`;
+  }
+  // Fills an existing .avatar element (keeps its other classes, e.g. "xl")
+  function setAvatar(el, kind) {
+    if (!el) return;
+    const k = AVATARS[kind] ? kind : 'student';
+    el.className = [...el.classList].filter((c) => !/^av-|^guest$|^staff$|^case$/.test(c)).concat('av-' + k).join(' ');
+    el.innerHTML = `<svg viewBox="0 0 24 24">${AVATARS[k]}</svg>`;
+    el.setAttribute('aria-hidden', 'true');
+  }
+  // Label of the tag in the top bar, e.g. "Advocate Access"
+  const ACCESS_LABEL = { counselor: 'Counselor', advocate: 'Advocate', principal: 'Principal', security: 'Security', student: 'Student', guest: 'Guest' };
+
+  // ---------- Sorting tables by clicking a column heading ----------
+  // Every table.data-table gets clickable headings (except "Action(s)" columns and headings marked
+  // data-nosort). Clicking sorts the rows A to Z (or lowest/oldest first); clicking again reverses.
+  // A cell can give its own sort value in data-sort (e.g. a date as 2026-11-17T08:13:00Z), otherwise
+  // its text is used. The choice is kept when the page redraws the table.
+  // Tables with pages sort their own data instead (class "sortable", e.g. Report Records).
+  function sortValue(td) {
+    if (!td) return '';
+    return td.dataset.sort ?? td.textContent.trim();
+  }
+  function applySort(table) {
+    const st = table._liaSort;
+    const tbody = table.tBodies[0];
+    if (!st || !tbody) return;
+    const rows = [...tbody.rows];
+    if (rows.length < 2 || rows.some((tr) => tr.cells.length === 1 && tr.cells[0].colSpan > 1)) return; // empty or message row
+    const sorted = rows.slice().sort((a, b) => {
+      const x = sortValue(a.cells[st.col]), y = sortValue(b.cells[st.col]);
+      const nx = Number(x), ny = Number(y);
+      const c = x !== '' && y !== '' && !Number.isNaN(nx) && !Number.isNaN(ny) ? nx - ny
+        : String(x).localeCompare(String(y), 'en', { numeric: true, sensitivity: 'base' });
+      return st.dir === 'asc' ? c : -c;
+    });
+    if (sorted.every((tr, i) => tr === rows[i])) return;
+    st.busy = true;
+    tbody.append(...sorted);
+    st.busy = false;
+  }
+  function markSorted(table) {
+    const st = table._liaSort;
+    table.querySelectorAll('thead th').forEach((th, i) => {
+      const b = th.querySelector('.sort-btn');
+      if (!b) return;
+      const on = st && st.col === i;
+      th.setAttribute('aria-sort', on ? (st.dir === 'asc' ? 'ascending' : 'descending') : 'none');
+      b.title = on ? 'Click to reverse the order.' : `Sort by ${b.textContent.trim()}`;
+    });
+  }
+  function sortableTables() {
+    document.querySelectorAll('main table.data-table:not(.sortable)').forEach((table) => {
+      const ths = [...table.querySelectorAll('thead th')];
+      ths.forEach((th, i) => {
+        if (th.querySelector('.sort-btn') || th.hasAttribute('data-nosort')) return;
+        const label = th.textContent.trim();
+        if (!label || /^(actions?|update action)$/i.test(label)) return;
+        th.innerHTML = `<button type="button" class="sort-btn">${esc(label)}</button>`;
+        th.setAttribute('aria-sort', 'none');
+        th.querySelector('.sort-btn').addEventListener('click', () => {
+          const st = table._liaSort;
+          table._liaSort = { col: i, dir: st && st.col === i && st.dir === 'asc' ? 'desc' : (st && st.col === i ? 'asc' : (th.dataset.sortFirst || 'asc')) };
+          applySort(table);
+          markSorted(table);
+        });
+      });
+      if (!table._liaWatch && table.tBodies[0]) {
+        // When the page redraws the rows, sort them again the chosen way
+        table._liaWatch = new MutationObserver(() => { if (!table._liaSort?.busy) applySort(table); });
+        table._liaWatch.observe(table.tBodies[0], { childList: true });
+      }
+      markSorted(table);
+    });
+  }
+
+  // ---------- Pages: a simple "<  1  >" in the center ----------
+  // nav: the <nav class="pager"> element. The arrow buttons carry data-page (the page to open).
+  function pager(nav, page, pages) {
+    if (!nav) return;
+    nav.innerHTML = pages > 1 ? `
+      <button type="button" class="pager-btn" data-page="${page - 1}" ${page <= 1 ? 'disabled' : ''} aria-label="Previous page">${icon('chevronLeft')}</button>
+      <span class="pager-now" aria-current="page" title="Page ${page} of ${pages}">${page}</span>
+      <button type="button" class="pager-btn" data-page="${page + 1}" ${page >= pages ? 'disabled' : ''} aria-label="Next page">${icon('chevronRight')}</button>` : '';
+  }
+
   function navLink(item, current) {
     return `<a class="nav-link" href="${item.href}" ${item.id === current ? 'aria-current="page"' : ''}>
       ${icon(item.icon)}<span>${esc(item.label)}</span>${item.count ? `<span class="count" data-count="${item.count}" hidden></span>` : ''}</a>`;
@@ -572,6 +681,8 @@ const LIA = (() => {
     const isGuest = !isAdmin && acct.accountType === 'guest';
     const name = isAdmin ? acct.displayName : (isGuest ? 'Guest ' + acct.guestId : acct.fullName || acct.username);
     const accountHref = isAdmin ? '/admin/account.html' : '/app/account.html';
+    const picture = isAdmin ? 'staff' : isGuest ? 'guest' : 'student';
+    const accessWord = ACCESS_LABEL[isAdmin ? acct.role : picture] || 'Staff';
 
     const top = document.createElement('header');
     top.className = 'topbar';
@@ -580,15 +691,15 @@ const LIA = (() => {
       <img class="seal" src="/assets/img/lagro-seal.png" alt="Lagro High School">
       <a class="topbar-title" href="${isAdmin ? staffHome(acct) : '/app/home.html'}">Lagro<b>In</b>Action</a>
       <div class="topbar-right">
-      ${isAdmin ? `<span class="admin-tag" title="You are signed in to the staff side of LagroInAction">${icon('shield')}<span class="hide-sm">LagroInAction Administrator Access</span><span class="show-sm">Admin</span></span>` : ''}
+      <span class="admin-tag ${isGuest ? 'guest' : ''}" title="${isAdmin ? 'You are signed in to the staff side of LagroInAction' : isGuest ? 'You are signed in with a guest account' : 'You are signed in with a student account'}">${icon('shield')}<span>${accessWord}<span class="hide-sm"> Access</span></span></span>
       <div class="menu">
         <button class="menu-btn" id="acctBtn" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
           <span class="menu-name">${esc(name)}</span>
-          <span class="avatar ${isGuest ? 'guest' : ''}">${esc(initials(name))}</span>
+          ${avatar(picture)}
         </button>
         <div class="menu-panel" id="acctMenu" hidden>
           <div class="menu-head">
-            <span class="avatar ${isGuest ? 'guest' : ''}">${esc(initials(name))}</span>
+            ${avatar(picture)}
             <div><strong>${esc(name)}</strong><span class="small muted">${isAdmin ? esc(acct.roleLabel) : isGuest ? 'Guest account' : 'Student account'}</span></div>
           </div>
           <a class="menu-item" href="${accountHref}">${icon('user')} My Account</a>
@@ -754,8 +865,12 @@ const LIA = (() => {
           strip.className = 'sos-strip';
           strip.setAttribute('role', 'alert');
           document.body.append(strip);
+          // The page content starts below the strip. Its height changes (e.g. when "Turn on sound"
+          // is added, or the text wraps on a phone), so it is measured again whenever it changes.
+          const measure = () => document.body.style.setProperty('--strip-h', strip.offsetHeight + 'px');
+          if (window.ResizeObserver) new ResizeObserver(measure).observe(strip);
         }
-        strip.innerHTML = `${icon('alert')} <span>${active.length} active SOS ${active.length === 1 ? 'alert' : 'alerts'}. Latest: ${esc(active[0].location)} · ${esc(timeAgo(active[0].sentAt))}</span> <a href="/admin/cases.html#sos">Open SOS alerts</a>`;
+        strip.innerHTML = `${icon('alert')} <span>${active.length} active SOS ${active.length === 1 ? 'alert' : 'alerts'}<span class="hide-sm">. Latest: ${esc(active[0].location)} · ${esc(timeAgo(active[0].sentAt))}</span></span> <a href="/admin/cases.html#sos">Open SOS alerts</a>`;
         document.body.classList.add('has-sos-strip');
         document.body.style.setProperty('--strip-h', strip.offsetHeight + 'px');
       } else {
@@ -827,8 +942,9 @@ const LIA = (() => {
       }));
     });
     labelTables();
+    sortableTables();
     let labelSoon = 0;
-    new MutationObserver(() => { if (!labelSoon) labelSoon = requestAnimationFrame(() => { labelSoon = 0; labelTables(); }); })
+    new MutationObserver(() => { if (!labelSoon) labelSoon = requestAnimationFrame(() => { labelSoon = 0; labelTables(); sortableTables(); }); })
       .observe(document.querySelector('main'), { childList: true, subtree: true });
 
     document.body.classList.add('ready');
@@ -838,7 +954,7 @@ const LIA = (() => {
 
   return {
     VERSION, api, esc, icon, toast, openModal, confirmBox, showFormError, busy, wirePasswordToggles, copyText,
-    changePasswordModal, start, initials, chip, STATUS, ROLE, staffHome, noAutofill, gradeSectionFields, fillLocations,
+    changePasswordModal, start, initials, avatar, setAvatar, chip, pager, STATUS, ROLE, staffHome, noAutofill, gradeSectionFields, fillLocations,
     caseNo, toDate, fmtDate, fmtDateTime, fmtTime, dayLabel, shortWhen, timeAgo, daysLeft, todayInManila, sosSound: () => { unlockSound(); return beep(); },
   };
 })();

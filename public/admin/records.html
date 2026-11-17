@@ -130,31 +130,23 @@
 
         rows.innerHTML = shown.length ? shown.map((r) => `
           <tr>
-            <td><b>${LIA.esc(LIA.caseNo(r))}</b></td>
+            <td class="id-cell"><b>${LIA.esc(LIA.caseNo(r))}</b></td>
             <td>${CASE.reporterLabel(r)}</td>
             <td>${LIA.esc(r.category)}</td>
             <td>${LIA.esc(LIA.fmtDateTime(r.updatedAt || r.submittedAt))}</td>
             <td>${LIA.chip(r.status, 'staff')} ${r.archived ? '<span class="chip rejected">Archived</span>' : ''}</td>
-            <td class="actions">
+            <td class="actions"><div class="row-actions">
               <button class="btn btn-quiet btn-sm" data-view="${r.reportNo}">View Details</button>
-              ${r.canMessage ? `<a class="btn btn-ghost btn-sm" href="/admin/messages.html?case=${r.reportNo}">${r.chatClosed ? 'Conversation' : 'Message'}</a>
-              <button class="btn btn-ghost btn-sm" data-print-chat="${r.reportNo}">Print Conversation</button>` : ''}
-              <button class="btn btn-ghost btn-sm" data-act="${r.archived ? 'unarchive' : 'archive'}" data-no="${r.reportNo}">${r.archived ? 'Restore' : 'Archive'}</button>
-            </td>
+              ${r.canMessage ? `<a class="btn btn-quiet btn-sm" href="/admin/messages.html?case=${r.reportNo}">${r.chatClosed ? 'Conversation' : 'Message'}</a>
+              <button class="btn btn-quiet btn-sm" data-print-chat="${r.reportNo}">Print Conversation</button>` : ''}
+              <button class="btn btn-quiet btn-sm" data-act="${r.archived ? 'unarchive' : 'archive'}" data-no="${r.reportNo}">${r.archived ? 'Restore' : 'Archive'}</button>
+            </div></td>
           </tr>`).join('') : `<tr><td colspan="6" class="empty-cell">No records match these filters.</td></tr>`;
 
         $('showing').textContent = list.length
           ? `Showing ${(page - 1) * PER_PAGE + 1}–${(page - 1) * PER_PAGE + shown.length} of ${list.length} records`
           : '';
-        // Page buttons: Previous, 1 2 3 ..., Next
-        let nums = '';
-        for (let i = 1; i <= pages; i++) {
-          if (pages > 7 && i !== 1 && i !== pages && Math.abs(i - page) > 1) { if (!nums.endsWith('…</span>')) nums += '<span class="pager-gap">…</span>'; continue; }
-          nums += `<button type="button" class="pager-btn" data-page="${i}" ${i === page ? 'aria-current="page"' : ''}>${i}</button>`;
-        }
-        $('pager').innerHTML = pages > 1
-          ? `<button type="button" class="pager-btn" data-page="${page - 1}" ${page === 1 ? 'disabled' : ''}>Previous</button>${nums}<button type="button" class="pager-btn" data-page="${page + 1}" ${page === pages ? 'disabled' : ''}>Next</button>`
-          : '';
+        LIA.pager($('pager'), page, pages); // "<  1  >"
 
         // Show which column is sorted, and which way
         document.querySelectorAll('.sort-btn').forEach((b) => {

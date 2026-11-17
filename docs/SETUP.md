@@ -19,7 +19,7 @@ see the [README](../README.md).
 ```
 PROJECT-LIA/
 ├── public/                     ← everything the browser can open
-│   ├── index.html              sign in (Student / Guest). The version number in the corner opens staff log in
+│   ├── index.html              sign in (Student / Guest). The version number in the corner opens staff sign in
 │   ├── guest.html              create a guest account (Terms → email + phone → code → done)
 │   ├── reset.html              forgot password (username → link by email → new password)
 │   ├── staff.html              guidance staff sign in
@@ -29,7 +29,7 @@ PROJECT-LIA/
 │   │   ├── report.html         report an incident
 │   │   ├── reports.html        old link, now opens My Account → My Report History
 │   │   ├── messages.html       chats with the guidance office: one per report + a general chat
-│   │   ├── account.html        profile (Edit Profile, password, log out), report history,
+│   │   ├── account.html        profile (Edit Profile, password, sign out), report history,
 │   │   │                       request a permanent account
 │   │   └── guide.html          what counts as bullying, what to do
 │   ├── admin/                  guidance staff pages
@@ -48,7 +48,6 @@ PROJECT-LIA/
 │   │   ├── js/print.js         "Print or save as PDF" window used by Records, Messages and the case window
 │   │   ├── js/chat.js          Messages: the "+" (Attach File / Attach Case), message bubbles, ⋮ Edit / Delete
 │   │   ├── js/pages/*.js       code for individual pages (admin-case.js = the case details window)
-│   │   ├── school-sections.json  the Section dropdown lists per grade (PLACEHOLDERS: put the real sections here)
 │   │   ├── locations.json        the Location dropdown places (Submit Report + SOS); add places here
 │   │   ├── referrals.json        offices a case can be referred to, with their contact details (staff only)
 │   │   └── img/                seal, posters, favicon
@@ -169,10 +168,18 @@ Emails the system sends:
 | Student account approved / declined | `[LagroInAction] Student Account Request Approved` / `... Not Approved` (with the reason) |
 | Staff change a report's status | `[LagroInAction] Update on Report #2026-0001` (new status only; no report details) |
 | Guidance messages unread for 1 hour | `[LagroInAction] Unread Messages from the Guidance Office` (count only; once per message) |
+| A new report is submitted | `[LagroInAction] New Report #2026-0001 for Grade 10` to the advocate(s) of that grade level |
+| An SOS alert is sent | `[LagroInAction] URGENT: SOS Alert Received` to the Guidance Counselor and every advocate (location and time only) |
 
-All emails use one layout (`email_html()` in `includes/mailer.php`): school seal and name, title, a box with
-"Dear ...", the message, a big code / status / button, "Thank you, LagroInAction", then "Please do not reply"
-and the school address. A plain-text copy is sent too.
+Staff receive emails only after they add an email address in **My Account → Edit Profile**
+(`admin_profile.admin_email`). Staff emails are sent after the student's page has its reply
+(`after_response()` in `includes/json.php`), so submitting a report or an SOS never waits for email.
+
+All emails use one layout (`email_html()` in `includes/mailer.php`): a dark green header with the school seal,
+the title, "Dear ...", the message, a big code / note / table of details / button, and "Respectfully,
+LagroInAction, Guidance Office". Below it: help links ("Forgot your password? Reset it here" for students and
+guests; staff sign-in for staff), the "automatically generated, please do not reply" notice, a confidentiality
+notice, the Data Privacy Act notice and the school address. A plain-text copy is sent too.
 
 **Unread-message reminders.** Render's free plan has no scheduled jobs, so the reminder check runs
 after normal website requests (at most every 10 minutes). If nobody uses the site for a while, a

@@ -44,8 +44,12 @@ if ($row['username']) clear_failed_logins('student:' . strtolower($row['username
 if ($row['email']) clear_failed_logins('student:' . strtolower($row['email']));
 
 send_email($row['email'], '[LagroInAction] Password Changed', [
-    'lines' => ['The password of your LagroInAction account was changed through a password reset link.'],
-    'after' => ['If you did not make this change, please inform the Lagro High School Guidance Office immediately.'],
+    'title' => 'Your Password Has Been Changed',
+    'greeting' => email_greeting($row),
+    'lines' => ['This is to confirm that the password of your LagroInAction account was changed through a password reset link.'],
+    'details' => ['Date Changed' => email_when()],
+    'after' => ['You may now sign in with your new password. If you did not make this change, please inform the Guidance Office of Lagro High School immediately.'],
+    'audience' => 'reset',
 ]);
 
 json_success('Password changed. You can sign in now.', ['signInAs' => $row['account_type']]);

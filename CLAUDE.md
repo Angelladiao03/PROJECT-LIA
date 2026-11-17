@@ -53,8 +53,8 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
 - alpha.4 (Nov 2 2026): staff roles (`admin_profile.staff_role` counselor/advocate/principal/security +
   `grade_level`; `require_admin('counselor','advocate')`, `staff_grade()`, `staff_sees_grade()` in
   includes/accounts.php; core.js `ADMIN_NAV[].roles` hides pages and redirects). Reports have `grade_level`
-  (student account's grade, or chosen by guests on the form). Grade + section dropdowns from
-  `public/assets/school-sections.json` (placeholders; PHP validates against the same file). Messages are
+  (student account's grade, or chosen by guests on the form). Grade dropdown; the section is typed (see Nov 17
+  below). Messages are
   grouped by case (`messages.case_no`, NULL = general chat; anonymous case chats never send the account to
   staff); sender can edit/delete (soft delete `deleted_at`, history in `message_edits`) via the ⋮ menu in
   `assets/js/chat.js`. Student details need the staff password again (`api/admin/student.php`, 10 min,
@@ -94,9 +94,29 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
   preselects it); case window shows "follow-up to #...". Dashboard: `api/admin/stats.php` takes from/to, group
   day|month|year, filters grade/category/location/status/role, compare=1 (previous period of the same length); page has
   Days/Months/Years, period presets + custom dates, filters, comparison (green = this period, orange #e0a030 = previous),
-  6 breakdown charts and Print Summary; choices kept in the URL. Staff log in keeps normal sizes (`body.auth-short`);
+  6 breakdown charts and Print Summary; choices kept in the URL. Staff sign in keeps normal sizes (`body.auth-short`);
   sign-in cards keep `min(640px, 100vh - padding)` height. SOS sound: beep-beep-beep twice (BEEP_LENGTH/BEEP_GAP/ROUND_GAP
   in core.js). Student report filters: 3 per row on phones. Reporter roles shown as Victim / Witness / Other.
+- alpha.7 (Nov 17 2026): wording "Sign in"/"Sign out" everywhere (never "log in"). Top-bar tag is
+  "<Role> Access" (Counselor/Advocate/Principal/Security/Student/Guest; `ACCESS_LABEL` in core.js). Profile pictures
+  are drawn icons, no initials (`LIA.avatar(kind)` / `LIA.setAvatar(el, kind)`: student green with cap, guest orange,
+  staff blue with tie). Section is a typed text box, upper-cased as typed (`gradeSectionFields()`, `clean_section()` +
+  `section_error()` in validation.php) and read-only in student Edit Profile (profile.php keeps the approved section);
+  school-sections.json removed. Staff email `admin_profile.admin_email` (optional, staff Edit Profile): new report ->
+  advocates of its grade (`notify_staff_new_report()`), SOS -> counselors + advocates (`notify_staff_sos()`), sent via
+  `after_response()` (includes/json.php) after the reply. Emails: dark green header, details table, "Respectfully",
+  help links by `audience` (account/signup/reset/staff), do-not-reply + confidentiality + RA 10173 notices
+  (`email_help_lines()`, `email_notices()`, `email_greeting()`, `email_when()`). Report form: "Include My Identity" first and
+  default, no read-only name fields (a note says what staff see); "knows the person" is Yes/No radio buttons.
+  Permanent account request: "Send request" (#sendRequest) is disabled until the consent box is checked.
+  `showFormError()` jumps to the message (no sliding) below the top bar; toasts only fade. Case window has no status
+  buttons (only Message / Print / Save as PDF / Close, and Archive/Restore in Records); statuses change in Manage Reports
+  tables (`CASE.statusChoices(r)` fills "Update status"). Row buttons use `.row-actions` (2 per line, odd last one full
+  width; one column on tablets). Every `table.data-table` in main gets click-to-sort headings automatically
+  (`sortableTables()` in core.js, `data-sort` on cells, `data-sort-first="desc"` on date headings, `data-nosort`);
+  tables with pages sort their own data (class `sortable`: Records, activity log with server `sort`/`dir`). Pager is a
+  centered "‹ 1 ›" (`LIA.pager(nav, page, pages)`), "Showing ..." under it. Activity log 10 per page. SOS strip height is
+  re-measured with ResizeObserver. Terms page rewritten (contents list, summary, Back button; TERMS_VERSION draft-2026-11-17).
 - Purpose note from the team: LIA is for tracking reports, updates and case management. It does not
   solve cases or replace the guidance sessions themselves.
 - Settings via `setting()` in `includes/config.php`: env vars on Render (`DATABASE_URL`,

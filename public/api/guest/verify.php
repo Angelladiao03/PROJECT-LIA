@@ -48,6 +48,8 @@ send_email(
     $email,
     '[LagroInAction] Guest Account Registration Successful',
     [
+        'title' => 'Welcome to LagroInAction',
+        'greeting' => 'Dear Guest ' . $guestId . ',',
         'lines' => ['Your LagroInAction guest account has been successfully created. Your Guest ID is:'],
         'code' => $guestId,
         'after' => [

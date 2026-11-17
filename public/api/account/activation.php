@@ -1,6 +1,6 @@
 <?php
 // Ask the guidance office to turn a guest account into a permanent student account.
-// POST (multipart form): fullName, username, gradeLevel (7-12), section (from the list), adviser,
+// POST (multipart form): fullName, username, gradeLevel (7-12), section (typed; saved in capital letters), adviser,
 //                        consent ("yes"), idPhoto (JPG, PNG or WEBP image, max 3 MB)
 // The phone number is not asked again: the guest account's number is kept.
 //
@@ -22,14 +22,14 @@ if ($stmt->fetch()) json_error('You already sent a request. Wait for the guidanc
 $fullName = input('fullName');
 $username = input('username');
 $grade = grade_input('gradeLevel');
-$section = input('section');
+$section = clean_section(input('section')); // always capital letters
 $adviser = input('adviser');
 $contact = (string) $user['contact_number']; // from the guest account (asked at sign-up)
 
 if ($fullName === '' || too_long($fullName, 150)) json_error('Enter your full name.');
 if ($error = username_error($username)) json_error($error);
 if ($grade === null) json_error('Choose your grade level.');
-if ($error = section_error($grade, $section)) json_error($error);
+if ($error = section_error($section)) json_error($error);
 if ($adviser === '' || too_long($adviser, 150)) json_error("Enter your adviser's name.");
 if ($contact === '') json_error('Add your phone number in Edit Profile first, then send the request.');
 if (input('consent') !== 'yes') json_error('Check the box to agree to the ID photo being reviewed.');

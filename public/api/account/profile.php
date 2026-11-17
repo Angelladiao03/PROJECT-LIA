@@ -1,6 +1,7 @@
 <?php
 // Edit Profile (permanent student accounts only, like the prototype's My Account page).
-// POST: username, gradeLevel, section, adviser, contactNumber
+// POST: username, gradeLevel, adviser, contactNumber
+// The section cannot be changed here: it was checked by the Guidance Office when the account was approved.
 
 require_once __DIR__ . '/../../../includes/bootstrap.php';
 require_method('POST');
@@ -12,13 +13,12 @@ if ($user['account_type'] !== 'student') {
 
 $username = input('username');
 $grade = grade_input('gradeLevel');
-$section = input('section');
+$section = $user['section']; // kept as approved
 $adviser = input('adviser');
 $contact = input('contactNumber');
 
 if ($error = username_error($username)) json_error($error);
 if ($grade === null) json_error('Choose your grade level.');
-if ($error = section_error($grade, $section)) json_error($error);
 if ($adviser === '' || too_long($adviser, 150)) json_error("Enter your adviser's name.");
 if ($error = contact_number_error($contact)) json_error($error);
 if (contact_in_use($contact, (int) $user['user_id'])) json_error('This phone number already belongs to another account.', 409);

@@ -16,7 +16,7 @@ function choose(kind) {
   idLabel.textContent = kind === 'guest' ? 'Guest ID' : 'Username or email';
   idInput.value = '';
   form.password.value = '';
-  document.getElementById('authTitle').textContent = kind === 'guest' ? 'Guest log in' : 'Student log in';
+  document.getElementById('authTitle').textContent = kind === 'guest' ? 'Guest sign in' : 'Student sign in';
   idInput.placeholder = kind === 'guest' ? 'LIA-' : '';
   idInput.autocapitalize = kind === 'guest' ? 'characters' : 'none';
   idHint.hidden = kind !== 'guest';

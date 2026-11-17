@@ -27,4 +27,8 @@ $stmt = db()->prepare(
 );
 $stmt->execute([$user['user_id'], $location, $description]);
 
-json_success('SOS sent. The guidance office has been alerted.', ['sosNo' => (int) $stmt->fetchColumn()]);
+$sosNo = (int) $stmt->fetchColumn();
+// Email every guidance counselor and advocate (after the reply, so the student doesn't wait)
+after_response(fn () => notify_staff_sos($sosNo));
+
+json_success('SOS sent. The guidance office has been alerted.', ['sosNo' => $sosNo]);

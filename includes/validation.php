@@ -65,17 +65,15 @@ function contact_number_error(string $number): ?string
 }
 
 // ---------- Grade level and section ----------
-// The sections come from public/assets/school-sections.json (the dropdowns on the pages read the same file).
+// The section is typed by the student (no fixed list) and always saved in capital letters,
+// e.g. "ROSSUM" or "STEM 12-A". It is set when the guest requests a permanent student account;
+// after approval, the student cannot change it in Edit Profile.
 const GRADE_LEVELS = [7, 8, 9, 10, 11, 12];
+const SECTION_MAX_LENGTH = 40;
 
-function school_sections(): array
+function clean_section(string $section): string
 {
-    static $sections = null;
-    if ($sections === null) {
-        $json = json_decode((string) file_get_contents(__DIR__ . '/../public/assets/school-sections.json'), true);
-        $sections = $json['sections'] ?? [];
-    }
-    return $sections;
+    return mb_strtoupper(trim((string) preg_replace('/\s+/u', ' ', $section)), 'UTF-8');
 }
 
 // Places for the Location dropdowns (Submit Report and SOS), from public/assets/locations.json
@@ -123,14 +121,16 @@ function grade_input(string $name): ?int
     return in_array($grade, GRADE_LEVELS, true) ? $grade : null;
 }
 
-function section_error(int $grade, string $section): ?string
+// Checks a section that already went through clean_section()
+function section_error(string $section): ?string
 {
-    if ($section === '') return 'Choose your section.';
-    if (!in_array($section, school_sections()[(string) $grade] ?? [], true)) return 'Choose a section from the list.';
+    if ($section === '') return 'Enter your section.';
+    if (mb_strlen($section) > SECTION_MAX_LENGTH) return 'The section is too long. Keep it under ' . SECTION_MAX_LENGTH . ' characters.';
+    if (!preg_match("/^[\p{Lu}0-9][\p{Lu}0-9 .'-]*$/u", $section)) return 'The section can only have letters, numbers, spaces, dots, apostrophes and dashes.';
     return null;
 }
 
-// "Grade 10 - Section A" (shown on pages and saved in grade_section)
+// "Grade 10 - ROSSUM" (shown on pages and saved in grade_section)
 function grade_section_label(?int $grade, ?string $section): ?string
 {
     if (!$grade) return null;

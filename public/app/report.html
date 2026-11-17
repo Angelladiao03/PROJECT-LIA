@@ -18,14 +18,11 @@
         <fieldset class="pref-box" id="anonStudent" hidden>
           <legend>Submission Preference</legend>
           <div class="pref-options">
-            <label><input type="radio" name="submitAs" value="anonymous" checked> Submit Anonymously</label>
-            <label><input type="radio" name="submitAs" value="identity"> Include My Identity</label>
+            <label><input type="radio" name="submitAs" value="identity" checked> Include My Identity</label>
+            <label><input type="radio" name="submitAs" value="anonymous"> Submit Anonymously</label>
           </div>
-          <p class="small muted" id="prefNote">Note: Guidance staff will not see your name, only your mobile number, so that they may contact you if necessary. The report will still appear in your My Report History so that you can monitor it.</p>
-          <div class="form-row" id="identityFields" hidden>
-            <div class="field"><label for="idName">Full Name</label><input class="input" id="idName" readonly></div>
-            <div class="field"><label for="idGrade">Grade &amp; Section</label><input class="input" id="idGrade" readonly></div>
-          </div>
+          <!-- What guidance staff will see with the chosen option (filled in by report.js) -->
+          <p class="small muted" id="prefNote" style="margin:0"></p>
         </fieldset>
         <div class="pref-box" id="anonGuest" hidden>
           <p class="pref-title">Submission Preference: Anonymous</p>
@@ -98,12 +95,11 @@
         </div>
 
         <div class="field">
-          <label for="involvedKnown">Do you know the person(s) involved? <span class="req">*</span></label>
-          <select class="input" id="involvedKnown" name="involvedKnown">
-            <option value="">Select an answer...</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
+          <span class="label" id="involvedLabel">Do you know the person(s) involved? <span class="req">*</span></span>
+          <div class="pref-options radio-row" role="radiogroup" aria-labelledby="involvedLabel">
+            <label><input type="radio" name="involvedKnown" value="yes"> Yes</label>
+            <label><input type="radio" name="involvedKnown" value="no"> No</label>
+          </div>
         </div>
         <div class="field" id="involvedField" hidden>
           <label for="involvedDescription">Describe the Person(s) Involved <span class="req">*</span></label>

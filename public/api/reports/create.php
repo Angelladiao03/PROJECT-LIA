@@ -99,4 +99,8 @@ $stmt->execute();
 $row = $stmt->fetch();
 $pdo->commit();
 
+// Email the guidance advocate(s) of this grade level (after the reply, so the student doesn't wait)
+$newReportNo = (int) $row['report_no'];
+after_response(fn () => notify_staff_new_report($newReportNo));
+
 json_success('Report submitted. The Guidance Office will review it.', ['reportNo' => (int) $row['report_no'], 'caseId' => $row['case_id']]);

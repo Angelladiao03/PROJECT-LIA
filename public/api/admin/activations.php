@@ -126,8 +126,9 @@ if ($action === 'approve') {
         $request['email'],
         '[LagroInAction] Student Account Request Approved',
         [
+            'title' => 'Student Account Request Approved',
             'greeting' => "Dear $name,",
-            'lines' => ['The Guidance Office has approved your request. Your LagroInAction account is now a permanent student account. Your username is:'],
+            'lines' => ['We are pleased to inform you that the Guidance Office has approved your request. Your LagroInAction account is now a permanent student account. Your username is:'],
             'code' => $request['username'],
             'after' => [
                 'Please sign in on the Student tab using this username or this email address, with your current password. Your guest ID is no longer needed.',
@@ -140,8 +141,9 @@ if ($action === 'approve') {
         $request['email'],
         '[LagroInAction] Student Account Request Not Approved',
         [
+            'title' => 'Student Account Request Not Approved',
             'greeting' => "Dear $name,",
-            'lines' => ['The Guidance Office was unable to approve your request for a permanent student account for the following reason:'],
+            'lines' => ['We regret to inform you that the Guidance Office was unable to approve your request for a permanent student account for the following reason:'],
             'note' => $reason,
             'after' => [
                 'You may continue to use your guest account, and you may submit a new request once the concern above has been addressed.',

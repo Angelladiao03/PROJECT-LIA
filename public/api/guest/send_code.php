@@ -34,9 +34,11 @@ $sent = send_email(
     $email,
     '[LagroInAction] Verification Code', // the code is only in the email body, never in the subject (subjects are saved in email_outbox)
     [
+        'title' => 'Verify Your Email Address',
         'lines' => ['Please use the verification code below to proceed with the creation of your LagroInAction guest account.'],
         'code' => $code,
-        'after' => ['This code is valid for ' . CODE_VALID_MINUTES . ' minutes. If you did not request this code, you may disregard this email.'],
+        'after' => ['This code is valid for ' . CODE_VALID_MINUTES . ' minutes. For your security, do not share this code with anyone, including guidance staff. If you did not request this code, you may disregard this email.'],
+        'audience' => 'signup',
     ]
 );
 

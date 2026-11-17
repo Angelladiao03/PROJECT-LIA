@@ -375,6 +375,23 @@ ALTER TABLE messages DROP CONSTRAINT IF EXISTS messages_sender_type_check;
 ALTER TABLE messages ADD CONSTRAINT messages_sender_type_check CHECK (sender_type IN ('Student', 'Admin', 'System'));
 
 -- =====================================================================
+-- alpha.7 additions (staff notification emails, typed sections)
+-- =====================================================================
+
+-- Staff email for notification emails (optional; set in My Account > Edit Profile):
+-- the advocates of a grade level are emailed when a new report is submitted for it, and
+-- every counselor and advocate is emailed when an SOS alert is sent.
+ALTER TABLE admin_profile ADD COLUMN IF NOT EXISTS admin_email VARCHAR(150);
+
+-- Sections are now typed (no fixed list) and saved in capital letters. Older sections become capitals too.
+UPDATE users SET section = UPPER(section),
+                 grade_section = CASE WHEN grade_level IS NOT NULL THEN 'Grade ' || grade_level || ' - ' || UPPER(section) ELSE grade_section END
+ WHERE section IS NOT NULL AND section <> UPPER(section);
+UPDATE activation_requests SET section = UPPER(section),
+                 grade_section = CASE WHEN grade_level IS NOT NULL THEN 'Grade ' || grade_level || ' - ' || UPPER(section) ELSE grade_section END
+ WHERE section IS NOT NULL AND section <> UPPER(section);
+
+-- =====================================================================
 -- Test accounts: run reset_test_data.sql (it ERASES everything first).
 --
 -- Or add one real staff account by hand (run separately, with your own values):

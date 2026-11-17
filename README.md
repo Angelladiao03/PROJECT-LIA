@@ -9,7 +9,7 @@
   Lagro High School · Schools Division Office of Quezon City · National Capital Region
 </p>
 
-<p align="center"><i>Version 1.0.0-alpha.6</i></p>
+<p align="center"><i>Version 1.0.0-alpha.7</i></p>
 
 ---
 
@@ -50,8 +50,9 @@ handling more organized for the Guidance Office.
   after verifying the student's school ID.
 - **Incident reporting.** Students report an incident by category, location, date, and description, and
   state whether they were the victim, a witness, or another party.
-- **Anonymity.** Guest reports are always anonymous. Students may choose to hide their name from staff;
-  the report remains in their own report history so that they can monitor it.
+- **Anonymity.** Guest reports are always anonymous. Students choose between *Include My Identity* (the first
+  choice) and *Submit Anonymously*, which hides their name from staff; the form states exactly what staff will
+  see, and the report remains in their own report history so that they can monitor it.
 - **SOS alerts** for urgent situations, with the student's current location.
 - **Report history and status tracking** from submission to resolution, with the reason shown if a report
   is not accepted. Every report has an ID such as **#2026-0001** (the year and its number within that year).
@@ -65,7 +66,8 @@ handling more organized for the Guidance Office.
   a victim, witness, or person who has bullied someone, anti-bullying posters, articles, and videos.
 - **Crisis hotlines:** 911, the Quezon City Helpline (122), the NCMH Crisis Hotline (1553), and Hopeline.
 - **Email notifications** for verification codes, account decisions, report status updates, and unread
-  messages. Emails never contain report details or message contents.
+  messages, in one formal layout with a password-reset link and a "do not reply" notice. Emails never
+  contain report details or message contents.
 
 ### For school personnel
 
@@ -79,6 +81,9 @@ Each staff member has an individual account, so every action is recorded under t
 | **Security Personnel** | To be finalized |
 | **All personnel** | Home page, staff-to-staff messaging, and account settings |
 
+- **New report and SOS emails.** The guidance advocate of a report's grade level is emailed when a new report
+  is submitted; the Guidance Counselor and every advocate are emailed when an SOS alert is sent (to the email
+  address each staff member adds in My Account). The emails contain no names or report details.
 - **Case management.** Reports move through clear steps:
 
   ```
@@ -93,7 +98,9 @@ Each staff member has an individual account, so every action is recorded under t
 - **SOS monitoring** with an audible alert (SOS in Morse code) on every staff page, and dispatch and
   response tracking.
 - **Case history** of every action taken on a report, and printable case records and conversations
-  (Print / Save as PDF). Every status change asks for confirmation first.
+  (Print / Save as PDF). Statuses are changed only from the tables in Manage Reports, never from the
+  details window, and every status change asks for confirmation first. Every table can be sorted by
+  clicking a column heading.
 - **Activity logs** on each staff member's account page: their own activity for every role, the activity of all
   staff for the Guidance Counselor, and a staff activity summary (totals only) for the Counselor and the Principal.
 - **Dashboard** of reports by day, month, or year for any period, with filters (grade level, category,

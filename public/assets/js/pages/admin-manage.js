@@ -18,16 +18,16 @@
     document.getElementById('nNew').textContent = fresh.length;
     document.getElementById('newRows').innerHTML = fresh.length ? fresh.map((r) => `
       <tr>
-        <td><b>${LIA.esc(LIA.caseNo(r))}</b></td>
-        <td>${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</td>
+        <td class="id-cell"><b>${LIA.esc(LIA.caseNo(r))}</b></td>
+        <td data-sort="${LIA.esc(r.submittedAt)}">${LIA.esc(LIA.fmtDateTime(r.submittedAt))}</td>
         <td>${LIA.esc(CASE.reporterType(r))}</td>
         <td>${LIA.esc(r.category)}</td>
         <td class="summary">${summary(r.description)}</td>
-        <td class="actions">
-          <button class="btn btn-quiet btn-sm" data-view="${r.reportNo}">View Details</button>
+        <td class="actions"><div class="row-actions">
           <button class="btn btn-sm" data-act="approve" data-no="${r.reportNo}">Accept</button>
           <button class="btn btn-danger btn-sm" data-act="reject" data-no="${r.reportNo}">Reject</button>
-        </td>
+          <button class="btn btn-quiet btn-sm" data-view="${r.reportNo}">View Details</button>
+        </div></td>
       </tr>`).join('') : emptyRow(6, 'No new reports to review.');
 
     // 2. Active cases
@@ -35,21 +35,19 @@
     document.getElementById('nActive').textContent = active.length;
     document.getElementById('activeRows').innerHTML = active.length ? active.map((r) => `
       <tr>
-        <td><b>${LIA.esc(LIA.caseNo(r))}</b></td>
+        <td class="id-cell"><b>${LIA.esc(LIA.caseNo(r))}</b></td>
         <td>${CASE.reporterLabel(r)}</td>
         <td>${LIA.esc(r.category)}</td>
         <td>${LIA.chip(r.status, 'staff')}</td>
-        <td class="actions"><div class="row-actions">
+        <td class="actions"><div class="status-update">
           <select class="input input-sm" data-update="${r.reportNo}" aria-label="New status for report ${LIA.esc(LIA.caseNo(r))}">
             <option value="">Update status...</option>
-            ${r.status === 'Active' ? '<option value="investigate">Under investigation</option>' : ''}
-            ${r.status !== 'For Intervention' ? '<option value="intervene">For intervention</option>' : ''}
-            ${r.status !== 'For Referral' ? '<option value="refer">For referral</option>' : ''}
-            <option value="resolve">Resolved</option>
-            ${r.status === 'Active' ? '<option value="reject">Rejected</option>' : ''}
+            ${CASE.statusChoices(r).map(([act, label]) => `<option value="${act}">${label}</option>`).join('')}
           </select>
-          <button class="btn btn-sm" data-apply="${r.reportNo}">Update</button>
-          <button class="btn btn-quiet btn-sm" data-view="${r.reportNo}">View Details</button>
+          <div class="row-actions">
+            <button class="btn btn-sm" data-apply="${r.reportNo}">Update</button>
+            <button class="btn btn-quiet btn-sm" data-view="${r.reportNo}">View Details</button>
+          </div>
         </div></td>
       </tr>`).join('') : emptyRow(5, 'No active cases.');
 
@@ -59,16 +57,16 @@
     document.getElementById('nSos').textContent = alerts.filter((a) => a.status === 'Active').length;
     document.getElementById('sosRows').innerHTML = (open.length || done.length) ? [...open, ...done].map((a) => `
       <tr class="${a.status === 'Active' ? 'sos-active' : ''}">
-        <td>${LIA.esc(LIA.fmtDateTime(a.sentAt))}<br><span class="small muted">${LIA.esc(LIA.timeAgo(a.sentAt))}</span></td>
+        <td data-sort="${LIA.esc(a.sentAt)}">${LIA.esc(LIA.fmtDateTime(a.sentAt))}<br><span class="small muted">${LIA.esc(LIA.timeAgo(a.sentAt))}</span></td>
         <td><b>${LIA.esc(a.name)}</b>${a.gradeSection ? `<br><span class="small muted">${LIA.esc(a.gradeSection)}</span>` : ''}${a.contactNumber ? `<br><a class="small" href="tel:${LIA.esc(a.contactNumber)}">${LIA.esc(a.contactNumber)}</a>` : ''}</td>
         <td>${LIA.esc(a.location)}</td>
         <td class="summary">${LIA.esc(a.description)}</td>
         <td><span class="chip ${a.status === 'Active' ? 'sos' : a.status === 'Dispatched' ? 'active' : 'resolved'}">${LIA.esc(a.status)}</span></td>
-        <td class="actions">
+        <td class="actions"><div class="row-actions">
           ${a.status === 'Active' ? `<button class="btn btn-sos btn-sm" data-sos="dispatch" data-id="${a.sosNo}">Dispatch</button>` : ''}
-          ${a.status !== 'Responded' ? `<button class="btn btn-quiet btn-sm" data-sos="respond" data-id="${a.sosNo}">Mark responded</button>` : ''}
-          ${a.userId ? `<a class="btn btn-ghost btn-sm" href="/admin/messages.html?user=${a.userId}">Message</a>` : ''}
-        </td>
+          ${a.status !== 'Responded' ? `<button class="btn btn-quiet btn-sm" data-sos="respond" data-id="${a.sosNo}">Mark Responded</button>` : ''}
+          ${a.userId ? `<a class="btn btn-quiet btn-sm" href="/admin/messages.html?user=${a.userId}">Message</a>` : ''}
+        </div></td>
       </tr>`).join('') : emptyRow(6, 'No SOS alerts.');
   }
 

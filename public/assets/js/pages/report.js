@@ -28,14 +28,12 @@
   const askGrade = !acct.gradeLevel; // guests (students already have a grade level)
   document.getElementById('gradeField').hidden = !askGrade;
   if (!isGuest) {
-    document.getElementById('idName').value = acct.fullName || '';
-    document.getElementById('idGrade').value = acct.gradeSection || '';
+    // "Include My Identity" is the first choice and is selected by default
     const updatePref = () => {
       const identity = form.submitAs.value === 'identity';
-      document.getElementById('identityFields').hidden = !identity;
       document.getElementById('prefNote').textContent = identity
-        ? 'Guidance staff will see your name and details so that they may contact you regarding this report.'
-        : 'Note: Guidance staff will not see your name, only your mobile number, so that they may contact you if necessary. The report will still appear in your My Report History so that you can monitor it.';
+        ? 'Guidance staff will see your full name, grade level and section, adviser, and mobile number, so that they may follow up with you regarding this report.'
+        : 'Guidance staff will not see your name. They will see only your grade level and mobile number, so that they may contact you if necessary. The report will still appear in your My Report History so that you can monitor it.';
       document.getElementById('relatedField').hidden = !identity || !earlier.length;
       if (!identity) form.relatedReport.value = ''; // an anonymous report is never linked
     };
@@ -54,17 +52,17 @@
   form.incidentDate.max = today;
   form.incidentDate.value = today;
 
-  // Show extra fields only when needed
-  const showWhen = (select, value, fieldId) => {
-    const update = () => { document.getElementById(fieldId).hidden = select.value !== value; };
-    select.addEventListener('change', update);
+  // Show extra fields only when needed (works for a dropdown or a group of radio buttons)
+  const showWhen = (name, value, fieldId) => {
+    const update = () => { document.getElementById(fieldId).hidden = form.elements[name].value !== value; };
+    form.querySelectorAll(`[name="${name}"]`).forEach((el) => el.addEventListener('change', update));
     update();
     return update;
   };
   const refresh = [
-    showWhen(form.category, 'Other', 'categoryOtherField'),
-    showWhen(form.location, 'Other', 'locationOtherField'),
-    showWhen(form.involvedKnown, 'yes', 'involvedField'),
+    showWhen('category', 'Other', 'categoryOtherField'),
+    showWhen('location', 'Other', 'locationOtherField'),
+    showWhen('involvedKnown', 'yes', 'involvedField'),
   ];
 
   const count = document.getElementById('descCount');
@@ -88,20 +86,20 @@
       updateCount();
       LIA.showFormError(form, '');
       try { localStorage.removeItem(DRAFT); } catch (e) {}
-      if (!isGuest) form.querySelector('[name=submitAs][value=anonymous]').dispatchEvent(new Event('change'));
+      if (!isGuest) form.querySelector('[name=submitAs]:checked')?.dispatchEvent(new Event('change'));
     });
   });
 
   function check() {
     if (askGrade && !form.gradeLevel.value) return 'Choose your grade level.';
-    if (!form.reporterRole.value) return 'Choose who you are in this incident: bullied, witness, or other.';
+    if (!form.reporterRole.value) return 'Choose who you are in this incident: victim, witness, or other.';
     if (!form.category.value) return 'Select the category of bullying.';
     if (form.category.value === 'Other' && !form.categoryOther.value.trim()) return 'Please specify the category.';
     if (!form.location.value) return 'Select where it happened.';
     if (form.location.value === 'Other' && !form.locationOther.value.trim()) return 'Please specify the location.';
     if (!form.incidentDate.value) return 'Choose the date it happened.';
     if (form.incidentDate.value > today) return 'The date cannot be in the future.';
-    if (!form.involvedKnown.value) return 'Answer: do you know the person(s) involved?';
+    if (!form.involvedKnown.value) return 'Please answer: do you know the person(s) involved?';
     if (form.involvedKnown.value === 'yes' && !form.involvedDescription.value.trim()) return 'Describe the person(s) involved.';
     if (form.description.value.trim().length < 10) return 'Describe what happened (at least a sentence).';
     return null;

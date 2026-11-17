@@ -63,16 +63,23 @@ const CASE = (() => {
     if (s) LIA.openModal({ title: s.anonymous ? 'Reporter contact' : 'Student Information', body: studentFacts(s), foot: '<button class="btn btn-gray" data-close>Close</button>' });
   }
 
-  // Which buttons each status gets
+  // The status changes a report can have next: [action, label]. They are made from the tables in
+  // Manage Reports (Accept / Reject buttons and the "Update status" list), not from the details window.
+  function statusChoices(r) {
+    const list = [];
+    if (r.status === 'Pending') list.push(['approve', 'Accept'], ['reject', 'Reject']);
+    if (r.status === 'Active') list.push(['investigate', 'Under Investigation']);
+    const handling = ['Active', 'Under Investigation', 'For Intervention', 'For Referral'].includes(r.status);
+    if (handling && r.status !== 'For Intervention') list.push(['intervene', 'For Intervention']);
+    if (handling && r.status !== 'For Referral') list.push(['refer', 'For Referral']);
+    if (handling) list.push(['resolve', 'Resolved']);
+    if (r.status === 'Active') list.push(['reject', 'Rejected']);
+    return list;
+  }
+
+  // Buttons in the details window: only archiving (it does not change the status)
   function actionsFor(r) {
     const list = [];
-    if (r.status === 'Pending') list.push(['approve', 'Accept report', '']);
-    if (r.status === 'Active') list.push(['investigate', 'Start investigation', '']);
-    const handling = ['Active', 'Under Investigation', 'For Intervention', 'For Referral'].includes(r.status);
-    if (handling && r.status !== 'For Intervention') list.push(['intervene', 'For intervention', 'btn-quiet']);
-    if (handling && r.status !== 'For Referral') list.push(['refer', 'For referral', 'btn-quiet']);
-    if (handling) list.push(['resolve', 'Mark resolved', '']);
-    if (r.status === 'Pending' || r.status === 'Active') list.push(['reject', 'Reject', 'btn-danger']);
     if ((r.status === 'Resolved' || r.status === 'Rejected') && !r.archived) list.push(['archive', 'Archive', 'btn-quiet']);
     if (r.archived) list.push(['unarchive', 'Restore to records', 'btn-quiet']);
     return list;
@@ -157,6 +164,7 @@ const CASE = (() => {
     investigate: ['Start the investigation?', 'Under Investigation', 'Start Investigation'],
     intervene: ['Move to For Intervention?', 'For Intervention', 'Move to For Intervention'],
     resolve: ['Mark this report as resolved?', 'Resolved', 'Mark Resolved'],
+    // Reject and For Referral open their own forms (reason / office), which serve as the confirmation
   };
   function confirmAction(r, action) {
     if (action === 'archive' || action === 'unarchive') {
@@ -202,9 +210,11 @@ const CASE = (() => {
   }
 
   // Opens the details window. onChange() runs after an action so the page can reload.
-  // fromMessages: opened from the Messages page. The status buttons (For referral, Mark resolved, ...)
-  // are replaced by one button that opens the same case in Manage Reports (or Report Records once it
-  // is Resolved or Rejected), where the case is handled. Fewer buttons next to the chat.
+  // The window has no status buttons: statuses are changed in the tables of Manage Reports, so a
+  // status is never changed by accident while reading a report. It keeps Message, Print, Save as PDF
+  // and Close (and Archive / Restore in Report Records, which do not change the status).
+  // fromMessages: opened from the Messages page; it also gets a button that opens the same case in
+  // Manage Reports (or Report Records once it is Resolved or Rejected).
   function open(r, onChange, { fromMessages = false } = {}) {
     const p = r.reporter || {};
     let shown = null; // the student details, once the password was typed
@@ -250,8 +260,8 @@ const CASE = (() => {
         <ol class="case-history" data-history><li class="muted">Loading...</li></ol>`,
       foot: `${buttons}
         ${r.canMessage && !fromMessages ? `<a class="btn btn-quiet" href="/admin/messages.html?case=${r.reportNo}">Message</a>` : ''}
-        ${r.status !== 'Pending' ? `<button class="btn btn-ghost" data-print>Print</button>
-        <button class="btn btn-ghost" data-pdf>Save as PDF</button>` : ''}
+        ${r.status !== 'Pending' ? `<button class="btn btn-quiet" data-print>Print</button>
+        <button class="btn btn-quiet" data-pdf>Save as PDF</button>` : ''}
         <button class="btn btn-gray" data-close>Close</button>`,
       onOpen: (el, close) => {
         // Follow-up: open the earlier report it is linked to
@@ -311,5 +321,5 @@ const CASE = (() => {
     });
   }
 
-  return { open, act, actionsFor, reporterType, reporterLabel, showStudent };
+  return { open, act, actionsFor, statusChoices, reporterType, reporterLabel, showStudent };
 })();

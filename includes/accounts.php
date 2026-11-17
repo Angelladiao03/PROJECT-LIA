@@ -4,7 +4,7 @@
 
 const GUEST_LIFETIME_DAYS = 30;
 const OPEN_CASE_STATUSES = ['Pending', 'Active', 'Under Investigation', 'For Intervention', 'For Referral'];
-const TERMS_VERSION = 'draft-2026-11-06';
+const TERMS_VERSION = 'draft-2026-11-17';
 
 // Letters and numbers that are easy to read (no 0/O, 1/I/L).
 const READABLE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -172,6 +172,7 @@ function public_staff(array $admin): array
         'role' => $admin['staff_role'],
         'roleLabel' => staff_role_label($admin),
         'gradeLevel' => $admin['grade_level'] !== null ? (int) $admin['grade_level'] : null,
+        'email' => $admin['admin_email'] ?? null, // for notification emails (new reports, SOS)
     ];
 }
 
