@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Messages · LagroInAction staff</title>
+  <!-- Staff Messages: Reports / Students / Staff chats. The script at the bottom uses chat.js,
+       api/admin/messages.php (chats with students) and api/admin/staff_chat.php (chats between staff). -->
   <link rel="icon" href="/assets/img/favicon.ico">
   <link rel="stylesheet" href="/assets/css/lia.css">
 </head>
@@ -54,6 +56,11 @@
   <script src="/assets/js/print.js"></script>
   <script src="/assets/js/chat.js"></script>
   <script>
+    // HOW THIS PAGE WORKS
+    //   - Left: the list of chats (Reports / Students / Staff buttons). loadList() fills it.
+    //   - Right: the open chat. loadChat() gets its messages and draws them with CHAT.render (chat.js).
+    //   - "current" remembers which chat is open; the address bar (?case=, ?user=, ?staff=) keeps it on reload.
+    //   - Every 10 seconds both are loaded again, so new replies appear without reloading the page.
     (async () => {
       const me = await LIA.start();
       // Counselor and advocates chat with students AND staff. Principal and security: staff only.

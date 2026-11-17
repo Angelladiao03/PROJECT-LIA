@@ -4,6 +4,14 @@
 //                                    Attach File (everyone) and Attach Case (staff, general chats only)
 //   CHAT.render(messages, opts)       the messages of one chat, like Messenger
 //   CHAT.composer({ form, ... })      sending, editing and deleting your own messages (the ⋮ menu)
+//   CHAT.jumpButton(log)              the round arrow that goes back to the latest message
+//
+// HOW THE MESSAGES PAGES WORK
+//   - The page asks the server for the messages of the open chat every 10 seconds.
+//   - CHAT.render() turns the list of messages into HTML (bubbles, day dividers, file cards),
+//     and the page puts it into the message area (#log).
+//   - Sending a message (or editing/deleting one) calls the server, then redraws the chat.
+// ATTACH and CHAT use the same "module pattern" as core.js: (() => { ... return {...}; })()
 
 const ATTACH = (() => {
   const MAX_BYTES = 5 * 1024 * 1024; // same limit as includes/attachments.php
@@ -21,6 +29,8 @@ const ATTACH = (() => {
   }
 
   // onCase: function to run for "Attach Case"; canCase(): whether "Attach Case" shows right now
+  // Returns "state": state.file is the chosen file (or null); state.clear() removes it;
+  // state.show(false) hides the "+" (while editing a message).
   function setup({ form, onCase, canCase = () => true }) {
     const textarea = form.querySelector('textarea');
     const wrap = document.createElement('div');
@@ -61,6 +71,8 @@ const ATTACH = (() => {
       else onCase?.();
     });
 
+    // A file was chosen: check its type and size here first (the server checks again), then show it
+    // in a small "chip" above the message box until the message is sent.
     input.addEventListener('change', () => {
       const f = input.files[0];
       input.value = ''; // lets the same file be chosen again later
@@ -93,7 +105,7 @@ const CHAT = (() => {
   // Automatic notices from the system (from = 'system', e.g. "This conversation was closed...")
   // show in the middle of the chat instead of in a bubble.
   function render(messages, { caseCard, who, closed = false }) {
-    let lastDay = null;
+    let lastDay = null; // the day of the previous message, so a divider is added only when the day changes
     return messages.map((m) => {
       const day = LIA.dayLabel(m.sentAt);
       const divider = day !== lastDay ? `<div class="day-divider"><span>${LIA.esc(day)}</span></div>` : '';
@@ -126,6 +138,7 @@ const CHAT = (() => {
     const sendLabel = sendBtn.innerHTML;
     let editing = null; // id of the message being edited
 
+    // Editing uses the same message box: "editing" holds the message id, and the Send button says Save.
     // Banner above the message box while editing
     const banner = document.createElement('div');
     banner.className = 'edit-banner';
@@ -145,6 +158,8 @@ const CHAT = (() => {
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
     log.addEventListener('scroll', closeMenu);
 
+    // One click listener on the whole chat (instead of one per message): it checks whether a ⋮ button
+    // was clicked. This keeps working after the chat is redrawn, because #log itself stays.
     log.addEventListener('click', async (e) => {
       const more = e.target.closest('[data-more]');
       if (!more) return;
@@ -180,6 +195,7 @@ const CHAT = (() => {
       });
     });
 
+    // Enter sends; Shift + Enter makes a new line; Escape stops editing
     textarea.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
       if (e.key === 'Escape' && editing) stopEditing();

@@ -1,4 +1,4 @@
-// Forgot password:
+// Forgot password (reset.html). Runs without signing in (no LIA.start()).
 //   1. type your username or guest ID  ->  a link is emailed to your account's address (shown partly hidden)
 //   2. the link opens this page again with ?token=...  ->  choose a new password  ->  done
 

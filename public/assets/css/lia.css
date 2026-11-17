@@ -5,6 +5,19 @@
    green + orange, soft mint-to-cream background, white cards with a
    soft green shadow, orange "LagroInAction" title in the top bar, and a
    dark green footer. Red is used ONLY for SOS.
+
+   HOW THIS FILE WORKS
+   - :root (just below) holds the "tokens": colours, fonts, sizes. Everything else uses them with
+     var(--green) etc., so changing a colour here changes it everywhere.
+   - The rest is grouped by part of the website. Search for "/* ----------" to jump between parts:
+     Base · Buttons · Forms · Cards · Top bar · Side menu · Footer · Home · Status labels · Pop-up
+     windows · Toasts · SOS strip · Messages · Dashboard · Sign-in pages · Tables · Case window ·
+     My Account · Submit Report · Sorting and pages · Phone layouts · Smaller screens · Activity log
+   - "@media (max-width: 760px) { ... }" blocks only apply on narrow screens (phones). Rules that come
+     later in the file win over earlier ones with the same selector, so screen-size rules are placed
+     after the normal ones.
+   - JavaScript adds and removes classes (e.g. body.has-sos-strip, .nav-open, [hidden]) and the rules
+     here decide how those look.
    ===================================================================== */
 
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Montserrat:wght@800;900&family=Space+Grotesk:wght@500;600;700&display=swap");
@@ -187,14 +200,12 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
 .brand-word b { color: var(--orange); font-weight: 900; }
 .admin-tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 8px; border-radius: var(--radius); background: var(--green); color: #fff; font-size: 0.78rem; font-weight: 700; white-space: nowrap; }
 .admin-tag .icon { width: 16px; height: 16px; }
-.show-sm { display: none; }
 
 .avatar {
   display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; flex: none;
   background: var(--green); color: #fff; font-weight: 700; font-size: 0.9rem; font-family: var(--font-head);
   box-shadow: 0 0 0 2px #fff, 0 0 0 3px var(--line);
 }
-.avatar.guest { background: var(--orange); color: #3d2700; }
 /* Drawn profile pictures (LIA.avatar): student = green with a graduation cap, guest = orange,
    staff = blue with a collar and tie. "cut" parts are drawn in the background colour to separate shapes. */
 .avatar svg { width: 100%; height: 100%; display: block; fill: currentColor; }
@@ -346,7 +357,6 @@ body.nav-mini .page { padding-left: 26px; }
 
 /* ---------- Lists of reports / cases ---------- */
 .list { display: grid; gap: 14px; }
-button.row-card:hover { box-shadow: var(--shadow); }
 .reason { padding: 10px 14px; border-radius: var(--radius); background: var(--st-rejected-bg); font-size: 0.92rem; border-left: 4px solid #9aa8a1; }
 
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
@@ -396,7 +406,7 @@ body.has-sos-strip .page { padding-top: calc(var(--topbar-h) + var(--strip-h, 40
 body.has-sos-strip .sidebar { top: calc(var(--topbar-h) + var(--strip-h, 40px)); }
 
 /* ---------- Messages (like Messenger: chats on the left, the open chat on the right) ---------- */
-.chat { display: grid; grid-template-rows: auto 1fr auto auto auto; height: calc(100vh - var(--topbar-h) - 80px); min-height: 440px; padding: 0; overflow: hidden; }
+.chat { position: relative; display: grid; grid-template-rows: auto 1fr auto auto auto; height: calc(100vh - var(--topbar-h) - 80px); min-height: 440px; padding: 0; overflow: hidden; }
 .chat-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 18px; border-bottom: 1px solid var(--line); min-width: 0; }
 .chat-title { flex: 1; min-width: 0; }
 .chat-title strong { display: block; color: var(--green); font-family: var(--font-head); font-size: 1.08rem; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -407,7 +417,6 @@ body.has-sos-strip .sidebar { top: calc(var(--topbar-h) + var(--strip-h, 40px));
 .chat-log { overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 2px; background: #f7faf8; }
 .chat-log > .empty { margin: auto; }
 /* "Go to the latest messages" arrow (CHAT.jumpButton in chat.js): bottom center of the message area */
-.chat { position: relative; }
 .chat-jump { position: absolute; left: 50%; z-index: 6; transform: translateX(-50%); display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--green); box-shadow: var(--shadow-sm); cursor: pointer; animation: fade 0.15s ease-out; }
 .chat-jump:hover { background: var(--green-tint); border-color: var(--green); }
 .chat-jump .icon { width: 22px; height: 22px; }
@@ -441,7 +450,7 @@ body.has-sos-strip .sidebar { top: calc(var(--topbar-h) + var(--strip-h, 40px));
 .msg-menu .icon { width: 18px; height: 18px; }
 .edit-banner { display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 16px; border-top: 1px solid var(--line); background: var(--orange-tint); color: #5a3c00; font-size: 0.88rem; font-weight: 600; }
 .edit-banner span { flex: 1; }
-.chat-form { display: flex; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--line); background: var(--surface); }
+.chat-form { position: relative; display: flex; align-items: flex-end; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--line); background: var(--surface); }
 .chat-form textarea { min-height: 46px; max-height: 140px; resize: none; }
 .chat-form textarea::placeholder { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .split { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 18px; }
@@ -558,7 +567,7 @@ a.version-link:hover { color: var(--green); text-decoration: underline; }
 
 /* Terms */
 .terms-scroll { max-height: min(52vh, 460px); overflow-y: auto; padding: 4px 16px 4px 2px; border-bottom: 1px solid var(--line); }
-.terms-doc h2 { font-size: 1.12rem; margin-top: 1.4em; }
+.terms-doc h2 { font-size: 1.12rem; margin-top: 1.4em; scroll-margin-top: 16px; }
 .terms-doc h2:first-child { margin-top: 0; }
 .terms-doc ul { padding-left: 1.2em; }
 .terms-doc li { margin-bottom: 0.35em; }
@@ -582,7 +591,6 @@ a.version-link:hover { color: var(--green); text-decoration: underline; }
 .terms-summary { margin: 0 0 18px; padding: 14px 18px; border-left: 4px solid var(--green); border-radius: var(--radius-sm); background: var(--green-tint); }
 .terms-summary-title { margin: 0 0 6px; font-weight: 700; color: var(--green); }
 .terms-summary ul { margin: 0; }
-.terms-doc h2 { scroll-margin-top: 16px; }
 
 body[data-area]:not(.ready) main { visibility: hidden; }
 
@@ -674,7 +682,6 @@ body.ready main > * { animation: fade 0.15s ease-out both; }
 .case-history li { position: relative; }
 .case-history li::before { content: ""; position: absolute; left: -25px; top: 6px; width: 11px; height: 11px; border-radius: 50%; background: var(--green-bright); border: 2px solid #fff; }
 /* "+" at the left of the message box, and the small box above it (Attach File / Attach Case) */
-.chat-form { position: relative; align-items: flex-end; }
 .attach-wrap { position: relative; flex: none; }
 .attach-plus { width: 46px; height: 46px; background: var(--green-tint); color: var(--green); }
 .attach-plus:hover, .attach-plus[aria-expanded="true"] { background: var(--green); color: #fff; }
@@ -711,7 +718,7 @@ body.ready main > * { animation: fade 0.15s ease-out both; }
 /* ---------- My Account ---------- */
 .profile-card { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; background: linear-gradient(135deg, var(--surface) 60%, var(--orange-tint)); border-left: 6px solid var(--green); }
 .avatar.xl { width: 96px; height: 96px; font-size: 2.1rem; box-shadow: 0 0 0 5px var(--green-tint); }
-.avatar.xl.guest, .avatar.xl.av-guest { box-shadow: 0 0 0 5px var(--orange-tint); }
+.avatar.xl.av-guest { box-shadow: 0 0 0 5px var(--orange-tint); }
 .avatar.xl.av-staff { box-shadow: 0 0 0 5px #e3ebf6; }
 .profile-details { flex: 1; min-width: 220px; }
 .profile-details h1, .profile-details h2 { margin: 0 0 2px; }
@@ -783,7 +790,6 @@ body.ready main > * { animation: fade 0.15s ease-out both; }
   .stat-icon { width: 32px; height: 32px; }
   .profile-actions { flex-direction: row; flex-wrap: wrap; width: 100%; }
   .report-card, .table-card { padding: 18px 16px; }
-  .input.search { width: 100%; }
   .filters { grid-template-columns: 1fr; }
 }
 
@@ -831,7 +837,6 @@ th[aria-sort="descending"] .sort-btn::after { content: "▼"; opacity: 1; }
 .chat-tabs button:hover { background: var(--field); }
 .chat-tabs button[aria-selected="true"] { background: var(--green); border-color: var(--green); color: #fff; }
 .chat-tabs .count-pill { min-width: 20px; height: 20px; padding: 0 6px; font-size: 0.72rem; }
-.avatar.staff { background: #e8eaf6; color: #283593; box-shadow: none; }
 .convo .avatar.av-student, .convo .avatar.av-guest, .convo .avatar.av-staff { box-shadow: none; }
 /* Time of the last message, at the right of each chat in the list */
 .convo-end { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: none; }
@@ -1020,7 +1025,6 @@ input[type="date"].input::-webkit-datetime-edit { padding: 0; }
   .topbar .seal { display: none; }
   .topbar-title { position: static; transform: none; font-size: 1.05rem; margin-right: auto; }
   .hide-sm { display: none; }
-  .show-sm { display: inline; }
   .to-top { right: 14px; bottom: calc(76px + env(safe-area-inset-bottom)); } /* above the bottom menu */
   body:not([data-area="user"]) .to-top { bottom: 18px; } /* staff pages and the Terms page have no bottom menu */
   .tabbar {

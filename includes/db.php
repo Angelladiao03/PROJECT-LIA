@@ -1,6 +1,7 @@
 <?php
 // Opens ONE connection to PostgreSQL (Neon) per request and reuses it.
-// Replaces DatabaseConnection.java.
+// "static $pdo" keeps its value between calls, so the first db() call connects and every later
+// call in the same request gets the same connection.
 
 require_once __DIR__ . '/config.php';
 

@@ -32,6 +32,7 @@ $action = input('action');
 $sosNo = positive_int(input('sosNo'));
 if ($sosNo === null) json_error('Missing SOS number.');
 
+// Each action: [the status it must have now (null = any), the new status, the message shown]
 $moves = [
     'dispatch' => ['Active', 'Dispatched', 'Marked as Dispatched: someone is on the way.'],
     'respond' => [null, 'Responded', 'Marked as Responded.'],
@@ -39,6 +40,8 @@ $moves = [
 if (!isset($moves[$action])) json_error('Unknown action.');
 [$from, $to, $message] = $moves[$action];
 
+// The WHERE part only matches when the alert is still in the right status. If two staff members press
+// the button at the same time, only the first one changes it (rowCount 1); the second gets the message below.
 $sql = 'UPDATE sos_alerts SET sos_status = ? WHERE sos_no = ? AND sos_status <> ?' . ($from ? ' AND sos_status = ?' : '');
 $params = $from ? [$to, $sosNo, $to, $from] : [$to, $sosNo, $to];
 $stmt = db()->prepare($sql);

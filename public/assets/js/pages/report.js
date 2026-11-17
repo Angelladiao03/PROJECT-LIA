@@ -1,4 +1,14 @@
-// Submit Report form.
+// Submit Report form (app/report.html).
+//   1. Show the right "Submission Preference" (students choose; guests are always anonymous).
+//   2. Fill the Location list and today's date; show extra boxes only when needed ("Other", "Yes").
+//   3. Keep a draft of the description in this browser (localStorage) in case the page closes.
+//   4. On Submit: check the answers here (check()), then send them to api/reports/create.php,
+//      which checks everything again (the server never trusts the browser).
+//
+// HOW IT WORKS: the whole script is one async function that runs as soon as the page loads:
+//   (async () => { ... })();
+// "async" lets it use "await", which waits for the server without freezing the page. It starts with
+// "await LIA.start()" (core.js), which checks who is signed in and draws the menus.
 
 (async () => {
   const me = await LIA.start();

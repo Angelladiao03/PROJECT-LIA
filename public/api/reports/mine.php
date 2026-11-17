@@ -14,6 +14,8 @@ $stmt = db()->prepare(
 );
 $stmt->execute([$user['user_id']]);
 
+// Turn each database row into the names the pages use (camelCase, numbers as numbers).
+// Only these fields are sent: the page never receives columns it doesn't need.
 $reports = array_map(fn ($r) => [
     'reportNo' => (int) $r['report_no'],
     'caseId' => $r['case_id'],

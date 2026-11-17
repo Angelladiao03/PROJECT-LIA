@@ -2,7 +2,8 @@
 
 This guide is for the development team: how the code is organized, how to run it on a computer,
 how to set up the database, and how the live site is deployed. For an introduction to the system,
-see the [README](../README.md).
+see the [README](../README.md). To learn how the code works (what happens when a page opens, how a
+request reaches the database), read [HOW-IT-WORKS.md](HOW-IT-WORKS.md).
 
 > Use **made-up test data only** while developing. Never put real student information in a test database.
 
@@ -27,7 +28,6 @@ PROJECT-LIA/
 │   ├── app/                    student & guest pages
 │   │   ├── home.html           feed: report box, posters, articles, videos, hotlines
 │   │   ├── report.html         report an incident
-│   │   ├── reports.html        old link, now opens My Account → My Report History
 │   │   ├── messages.html       chats with the guidance office: one per report + a general chat
 │   │   ├── account.html        profile (Edit Profile, password, sign out), report history,
 │   │   │                       request a permanent account
@@ -78,6 +78,7 @@ PROJECT-LIA/
 │   └── json.php                JSON responses
 ├── docker/apache-lia.conf      caching + security headers
 ├── docs/SETUP.md               this guide
+├── docs/HOW-IT-WORKS.md        how the code works (for learning)
 ├── schema.sql                  creates/updates the database tables
 ├── reset_test_data.sql         ERASES everything and adds the test accounts (development only)
 └── Dockerfile                  how Render builds and runs the site

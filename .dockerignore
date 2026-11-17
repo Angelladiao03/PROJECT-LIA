@@ -1,7 +1,6 @@
 .git
 .github
 .vscode
-target
 includes/config.local.php
 .env
 *.md

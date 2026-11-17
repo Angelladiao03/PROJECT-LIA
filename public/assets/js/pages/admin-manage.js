@@ -1,5 +1,14 @@
 // Staff: Manage Reports - new reports, active cases, and SOS alerts on one page.
 // Advocates only get the reports of their grade level (the server filters them); SOS alerts are for everyone.
+//   load() gets the reports and SOS alerts from the server; draw() builds the three tables.
+//   One click listener on <main> handles every button by its data-... attribute
+//   (data-view, data-act, data-apply, data-sos), so it keeps working after the tables are redrawn.
+//   The page reloads its data every 20 seconds and whenever a new SOS arrives.
+//
+// HOW IT WORKS: the whole script is one async function that runs as soon as the page loads:
+//   (async () => { ... })();
+// "async" lets it use "await", which waits for the server without freezing the page. It starts with
+// "await LIA.start()" (core.js), which checks who is signed in and draws the menus.
 
 (async () => {
   await LIA.start();

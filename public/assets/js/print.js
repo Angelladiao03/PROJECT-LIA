@@ -8,6 +8,11 @@
 //     sets: [{ label: 'This page (10 records)', rows: [...] }, { label: 'All matching records (34)', rows: [...] }],
 //     filename: 'resolved-records',
 //   });
+//
+// HOW IT WORKS: choose() opens a small window to pick which rows ("sets") and how (Print or PDF).
+//   Print: the rows are written as a simple table into a hidden <div id="printArea">, and the CSS
+//          (@media print in lia.css) prints only that div.
+//   Save as PDF: the rows go to LIA_PDF.table() in pdf.js, which makes the file in the browser.
 
 const PRINT = (() => {
   const SCHOOL = 'Lagro High School Guidance Office · LagroInAction';

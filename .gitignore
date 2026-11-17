@@ -2,9 +2,6 @@
 includes/config.local.php
 .env
 
-# Old Java/Maven build output (from the prototype)
-/target/
-
 # OS / editor junk
 .DS_Store
 Thumbs.db

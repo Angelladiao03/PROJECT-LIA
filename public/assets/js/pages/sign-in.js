@@ -1,4 +1,6 @@
-// Sign-in page: Student or Guest.
+// Sign-in page (index.html): Student or Guest tab, then api/auth/login.php.
+// This page is shown before anyone is signed in, so it does not call LIA.start(); the code below
+// simply runs from top to bottom when the page loads, and then waits for clicks.
 
 const form = document.getElementById('signInForm');
 const tabs = { student: document.getElementById('tabStudent'), guest: document.getElementById('tabGuest') };

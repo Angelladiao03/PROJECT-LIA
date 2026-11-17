@@ -1,4 +1,10 @@
-// Student/guest home page.
+// Student/guest home page: a reminder for guests (days left on the account), then the posters,
+// articles and videos that are already written in app/home.html.
+//
+// HOW IT WORKS: the whole script is one async function that runs as soon as the page loads:
+//   (async () => { ... })();
+// "async" lets it use "await", which waits for the server without freezing the page. It starts with
+// "await LIA.start()" (core.js), which checks who is signed in and draws the menus.
 
 (async () => {
   const me = await LIA.start();

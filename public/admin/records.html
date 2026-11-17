@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Report Records · LagroInAction staff</title>
+  <!-- Staff Report Records: resolved and rejected reports, with filters, sorting, pages and Print / Save as PDF.
+       The script at the bottom uses admin-case.js for the details window. -->
   <link rel="icon" href="/assets/img/favicon.ico">
   <link rel="stylesheet" href="/assets/css/lia.css">
 </head>
@@ -60,6 +62,10 @@
   <script src="/assets/js/pdf.js"></script>
   <script src="/assets/js/print.js"></script>
   <script>
+    // HOW THIS PAGE WORKS
+    //   All reports are loaded once (load()). filtered() applies the search box, the filters and the
+    //   sorting; draw() shows 10 of them (one page) and the "< 1 >" page buttons. Changing a filter or a
+    //   page only redraws; it does not ask the server again.
     (async () => {
       await LIA.start();
       let reports = [];

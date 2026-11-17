@@ -1,5 +1,13 @@
 // My Account: profile (Edit Profile, Change Password, Sign Out), request for a
 // permanent student account (guests), and My Report History.
+//   - drawProfile() shows the account details from LIA.start()
+//   - drawActivation() (guests) shows the request form, or the status of a request already sent
+//   - drawReports() draws the counter cards and the table; openReport() shows one report's progress
+//
+// HOW IT WORKS: the whole script is one async function that runs as soon as the page loads:
+//   (async () => { ... })();
+// "async" lets it use "await", which waits for the server without freezing the page. It starts with
+// "await LIA.start()" (core.js), which checks who is signed in and draws the menus.
 
 (async () => {
   const me = await LIA.start();

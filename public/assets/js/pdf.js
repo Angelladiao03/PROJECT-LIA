@@ -10,6 +10,15 @@
 //     filename: 'records.pdf',
 //     landscape: true,
 //   });
+//
+// HOW A PDF FILE WORKS (simplified)
+//   A PDF is mostly plain text: a list of numbered "objects" (the catalog, the list of pages, the fonts,
+//   and one object per page with its drawing commands), then a table ("xref") that says where each
+//   object starts, so a reader can jump to it. Positions are in points (1/72 inch) measured from the
+//   BOTTOM-left corner, which is why the code uses pageH - y. Drawing commands used here:
+//     BT ... Tj ET   write text        re f   fill a rectangle        m l S   draw a line
+//   Steps below: (1) measure and wrap the text of every cell, (2) split the rows into pages,
+//   (3) write the drawing commands of each page, (4) put the objects together and download the file.
 
 const LIA_PDF = (() => {
   // Character widths of Helvetica and Helvetica-Bold (from the standard font metrics), for ASCII 32..126.
@@ -32,6 +41,7 @@ const LIA_PDF = (() => {
     }
     return out;
   }
+  // How wide a piece of text is, in points, using the character widths above (needed to wrap text).
   function textWidth(s, size, bold) {
     const table = bold ? W.bold : W.normal;
     let w = 0;
@@ -62,6 +72,7 @@ const LIA_PDF = (() => {
     }
     return lines.length ? lines : [''];
   }
+  // In PDF text, \ ( and ) are special characters, so they get a backslash in front.
   const esc = (s) => s.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
   const num = (n) => (Math.round(n * 100) / 100).toString();
 
@@ -157,6 +168,7 @@ const LIA_PDF = (() => {
     out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offsets.map((o) => `${String(o).padStart(10, '0')} 00000 n \n`).join('');
     out += `trailer\n<< /Size ${objs.length + 1} /Root ${catalog} 0 R /Info ${info} 0 R >>\nstartxref\n${xref}\n%%EOF`;
 
+    // Turn the text into bytes and download it as a file (a temporary "blob:" link that is clicked by code)
     const bytes = new Uint8Array(out.length);
     for (let i = 0; i < out.length; i++) bytes[i] = out.charCodeAt(i) & 0xff;
     const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));

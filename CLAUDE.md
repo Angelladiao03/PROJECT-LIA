@@ -12,7 +12,9 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
 - **PHP alpha.** Plain PHP 8.5 + PDO (`pdo_pgsql`), PostgreSQL on **Neon**, plain HTML/CSS/vanilla JS,
   deployed to **Render** via `Dockerfile` (php:8.5-apache, document root `public/`). Java prototype
   preserved under Git tag `prototype-v1.2.1`. README.md is the public introduction (no setup steps);
-  docs/SETUP.md documents structure, setup, deployment and security details.
+  docs/SETUP.md documents structure, setup, deployment and security details; docs/HOW-IT-WORKS.md is the
+  learning guide for the team (page and request lifecycle, where things are). Every file starts with a
+  comment saying what it does and how; keep those up to date when changing a file.
 - **Accounts** (table `users`): `guest` (email-verified, 30-day expiry, guest ID like `LIA-7K3P9Q`,
   stays open while a case/request is open, reports always kept) and `student` (permanent; a guest
   submits details + school ID photo in `activation_requests`, staff approve/decline, photo is set
@@ -45,7 +47,7 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
   Print / Save as PDF (`pdf.js` + `print.js`, also in the case window and per student in Messages);
   staff can attach a report case to a message (`messages.report_no`); emails for registration, approval,
   report status changes and 1-hour unread reminders (`includes/notify.php`, piggybacks on requests;
-  optional `/api/system/reminders.php?key=CRON_KEY`). Staff top bar shows "LagroInAction Administrator Access".
+  optional `/api/system/reminders.php?key=CRON_KEY`).
 - Files in messages: "+" at the left of the message box (`assets/js/chat.js`) opens Attach File
   (staff + students) and Attach Case (staff). Files live in `messages.file_*` (bytea, 5 MB, PDF/Word/JPG/PNG,
   signature-checked in `includes/attachments.php`) and download via `api/messages/file.php?id=`.

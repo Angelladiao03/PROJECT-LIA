@@ -13,6 +13,8 @@ require_once __DIR__ . '/../../../includes/bootstrap.php';
 require_method('GET', 'POST');
 $admin = require_admin('counselor', 'advocate');
 $grade = staff_grade($admin); // null = all grade levels
+// Added to every query below: "no grade limit (counselor), or the request's grade is the advocate's grade".
+// It has two "?", so the grade is passed twice: execute([..., $grade, $grade]).
 $inScope = 'CAST(? AS INT) IS NULL OR r.grade_level = CAST(? AS INT)';
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['photo'])) {
@@ -79,6 +81,8 @@ if ($action === 'decline') {
     if (too_long($reason, 1000)) json_error('Keep the reason under 1,000 characters.');
 }
 
+// A transaction: every change below is saved together at commit(), or none of them (rollBack()).
+// "FOR UPDATE" locks the request row, so two staff members can't decide on it at the same moment.
 $pdo = db();
 $pdo->beginTransaction();
 

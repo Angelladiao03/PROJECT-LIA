@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Registration Requests · LagroInAction staff</title>
+  <!-- Staff Registration Requests: guests asking for a permanent student account (approve / decline).
+       The script at the bottom uses api/admin/activations.php. -->
   <link rel="icon" href="/assets/img/favicon.ico">
   <link rel="stylesheet" href="/assets/css/lia.css">
 </head>
@@ -40,6 +42,10 @@
   </main>
   <script src="/assets/js/core.js"></script>
   <script>
+    // HOW THIS PAGE WORKS
+    //   load() gets the waiting requests and the recently reviewed ones from api/admin/activations.php.
+    //   View Details shows the request with the school ID photo; Approve / Decline (with a reason) send the
+    //   decision, the student is emailed, and the photo is deleted from the database.
     (async () => {
       await LIA.start();
       let pending = [];

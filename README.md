@@ -151,5 +151,5 @@ Developed in consultation with the Lagro High School Guidance Office.
 
 <p align="center">
   Lagro High School · Misa de Gallo St. corner Ascension Ave., Brgy. Greater Lagro, Novaliches, Quezon City<br>
-  <sub>For the development team: technical documentation is in <a href="docs/SETUP.md">docs/SETUP.md</a>.</sub>
+  <sub>For the development team: technical documentation is in <a href="docs/SETUP.md">docs/SETUP.md</a>, and how the code works is explained in <a href="docs/HOW-IT-WORKS.md">docs/HOW-IT-WORKS.md</a>.</sub>
 </p>

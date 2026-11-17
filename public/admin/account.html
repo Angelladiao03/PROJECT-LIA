@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>My Account · LagroInAction staff</title>
+  <!-- Staff My Account: profile (with the email for notifications), what the role can open, and the
+       activity logs (api/admin/activity.php). The script is at the bottom of this file. -->
   <link rel="icon" href="/assets/img/favicon.ico">
   <link rel="stylesheet" href="/assets/css/lia.css">
 </head>
@@ -65,6 +67,11 @@
   <script src="/assets/js/pdf.js"></script>
   <script src="/assets/js/print.js"></script>
   <script>
+    // HOW THIS PAGE WORKS
+    //   - draw() shows the profile card and the "What your account can open" list for the role.
+    //   - The activity log asks api/admin/activity.php for one page (10 entries) at a time, with the chosen
+    //     tab (My Activity / All Staff Activity / Staff Summary), period, type, staff member and sorting.
+    //   - Edit Profile and Change Password open windows (LIA.openModal) and save to api/admin/account.php.
     (async () => {
       const me = await LIA.start();
       let a = me.account;

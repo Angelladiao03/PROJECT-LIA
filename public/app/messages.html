@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Messages · LagroInAction</title>
+  <!-- Student/guest Messages: one chat per report plus a general chat with the Guidance Office.
+       The script at the bottom uses chat.js (CHAT, ATTACH) and api/messages/thread.php. -->
   <link rel="icon" href="/assets/img/favicon.ico">
   <link rel="stylesheet" href="/assets/css/lia.css">
 </head>
@@ -39,6 +41,11 @@
   <script src="/assets/js/core.js"></script>
   <script src="/assets/js/chat.js"></script>
   <script>
+    // HOW THIS PAGE WORKS
+    //   - Left: the chats (Guidance Office + one per report). loadList() fills it.
+    //   - Right: the open chat. loadChat() gets its messages from api/messages/thread.php and draws them
+    //     with CHAT.render (chat.js). "current" is the open chat: 'general' or a report number.
+    //   - Every 10 seconds both are loaded again, so replies from the Guidance Office appear by themselves.
     (async () => {
       const me = await LIA.start();
       const convosEl = document.getElementById('convos');

@@ -1,8 +1,15 @@
 // Staff: the "REPORT CASE NO. #" details window (like the prototype), shared by
-// Manage Reports, Report Records and Messages. It also holds the case actions:
-// accept, start investigation, for intervention, for referral (asks where), resolve, reject (with a reason),
-// archive, restore. Print / Save as PDF only show once a report is accepted (not while it waits for approval).
-// The student's personal details only show after the staff member types their password (showStudent).
+// Manage Reports, Report Records and Messages.
+//
+//   CASE.open(report, onChange)        the details window (Message, Print, Save as PDF, Close;
+//                                      Archive / Restore in Report Records). It never changes the status.
+//   CASE.statusChoices(report)         the status changes allowed next, for the "Update status" list
+//                                      in Manage Reports (the server allows the same ones)
+//   CASE.act(report, action, button)   asks for confirmation (or a reason / an office), then sends the
+//                                      change to admin/reports.php. Returns true if it worked.
+//   CASE.showStudent(...)              the reporter's details, only after the staff member types their password
+//   CASE.reporterType / reporterLabel  small helpers for the tables
+// Print / Save as PDF only show once a report is accepted (not while it waits for approval).
 
 const CASE = (() => {
   const reporterType = (r) => (r.anonymous ? 'Anonymous' : r.reporter?.accountType === 'student' ? 'Identified student' : 'Guest');

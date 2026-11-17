@@ -1,6 +1,13 @@
 <?php
-// Login sessions, saved in the database (table: php_sessions) because
+// Sign-in sessions, saved in the database (table: php_sessions) because
 // Render wipes its disk on every restart/deploy.
+//
+// HOW A SESSION WORKS
+//   - Signing in calls sign_in_user() / sign_in_admin(), which puts the account id into $_SESSION.
+//   - PHP gives the browser a cookie (LIASESSID) holding only a long random id, never the password.
+//   - On every later request the browser sends the cookie back; PHP looks up that id and fills
+//     $_SESSION again. current_user() / require_admin() (accounts.php) read the id from there.
+//   - The class below tells PHP to keep the session data in the php_sessions table instead of files.
 
 require_once __DIR__ . '/db.php';
 

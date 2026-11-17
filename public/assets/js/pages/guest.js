@@ -1,4 +1,9 @@
-// Create a guest account: Terms -> Email -> Code -> Done.
+// Create a guest account (guest.html): Terms -> Email -> Code -> Done.
+// The four steps are four <section data-panel="1..4"> in the HTML; goTo(n) shows one and hides the rest.
+//   Step 1: read the Terms (the text is copied from terms.html) and agree.
+//   Step 2: email + phone -> api/guest/send_code.php emails a 6-digit code.
+//   Step 3: the code -> api/guest/verify.php creates the account and signs it in.
+//   Step 4: shows the new Guest ID and password once.
 
 const panels = [...document.querySelectorAll('[data-panel]')];
 const dots = [...document.querySelectorAll('.wizard-steps li')];

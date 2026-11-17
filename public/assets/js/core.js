@@ -5,6 +5,33 @@
    - LIA.start(...)    checks who is signed in and draws the top bar,
                        side menu, mobile tab bar and SOS button
    - helpers for dates, toasts (small pop-up messages) and modals
+
+   HOW THIS FILE WORKS
+   Everything is inside one function that runs immediately:
+       const LIA = (() => { ...private code...; return { api, esc, ... }; })();
+   Code inside it cannot be seen from outside, except the names listed in the
+   "return { ... }" at the bottom. Those become LIA.api, LIA.esc, and so on.
+   (This is called the "module pattern". It keeps helper names like TZ or
+   loading from clashing with names in the page scripts.)
+
+   HOW A PAGE USES IT (for example public/app/report.html + pages/report.js)
+     1. The HTML loads core.js first, then its own script.
+     2. The page script runs:  const me = await LIA.start();
+        start() asks the server who is signed in (api/auth/me.php). If no one is,
+        it opens the sign-in page. Otherwise it draws the top bar and menus and
+        returns the account, e.g. me.account.fullName.
+     3. The page loads its data:  const { reports } = await LIA.api('reports/mine.php');
+     4. It builds HTML from the data with template strings, always passing
+        database text through LIA.esc(...) so it is shown as text, never run as code.
+     5. Buttons send changes:  await LIA.api('reports/create.php', { body: formData });
+        If the server says no, api() throws an Error with the server's message,
+        which the page shows with LIA.toast(...) or LIA.showFormError(...).
+
+   SECTIONS (search for "// ----------" to jump between them)
+     Icons · Safe text · Loading line · Talking to the backend · Dates · Chat times ·
+     Report status words · Toasts · Modals · Forms · Change password · Sign-in fields ·
+     Grade and section · Locations · Hotlines · SOS · Page shell (menus) · Profile pictures ·
+     Sorting tables · Back to top · Pages ("< 1 >") · Menu counters · SOS sound and strip · start()
    ===================================================================== */
 
 const LIA = (() => {
@@ -13,11 +40,12 @@ const LIA = (() => {
   document.querySelectorAll('[data-version]').forEach((el) => { el.textContent = VERSION; });
 
   // ---------- Icons (simple line drawings, 24x24) ----------
+  // Each icon is the inside of an <svg>. icon('home') returns the whole <svg> as HTML text,
+  // so it can be put into any template string. The lines are drawn with CSS (.icon in lia.css).
   const ICONS = {
     menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
     home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
     flag: '<path d="M5 21V4M5 4h12l-2.5 4L17 12H5"/>',
-    list: '<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>',
     chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.2A8 8 0 1 1 21 12z"/>',
     user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     book: '<path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5 2.5 2.5 0 0 0 6.5 24"/><path d="M8 7h8M8 11h6"/>',
@@ -37,13 +65,10 @@ const LIA = (() => {
     send: '<path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/>',
     key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M14 9l2 2"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-    mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
     eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
     eyeOff: '<path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3 3.9M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
     lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 17-5-5-9 8"/>',
-    pin: '<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
-    star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
     arrowLeft: '<path d="M19 12H5M12 19l-7-7 7-7"/>',
     chevronLeft: '<path d="m15 18-6-6 6-6"/>',
     chevronRight: '<path d="m9 18 6-6-6-6"/>',
@@ -66,11 +91,10 @@ const LIA = (() => {
     ));
   }
 
-  // ---------- Talking to the backend ----------
-  // api('reports/mine.php')                     -> GET
-  // api('reports/create.php', { body: form })   -> POST (form = FormData or object)
   // ---------- Loading line at the top of the page ----------
   // Shows while the page starts and while any request is waiting for the server.
+  // busyCount counts how many requests are still waiting: the line only finishes when it is back to 0,
+  // so two requests at the same time don't make it jump.
   const loading = (() => {
     let bar = null, busyCount = 0, creep = null;
     const el = () => {
@@ -96,11 +120,17 @@ const LIA = (() => {
   })();
   if (document.body.dataset.area) loading.start(); // signed-in pages: line runs until LIA.start() is done
 
+  // ---------- Talking to the backend ----------
+  // api('reports/mine.php')                     -> GET
+  // api('reports/create.php', { body: form })   -> POST (form = FormData or object)
+  // It returns the server's JSON reply (for example { success: true, reports: [...] }).
+  // If the reply has success: false, it throws an Error whose message is the server's message.
   async function api(path, options = {}) {
     loading.start();
     try { return await apiRequest(path, options); } finally { loading.done(); }
   }
 
+  // The actual request. fetch() is the browser's built-in way to call a URL without leaving the page.
   async function apiRequest(path, options = {}) {
     const init = { method: options.body ? 'POST' : 'GET', headers: {}, credentials: 'same-origin' };
     if (options.body) {
@@ -141,6 +171,7 @@ const LIA = (() => {
     return data;
   }
 
+  // The session ended (or no one is signed in): open the right sign-in page.
   function goToSignIn() {
     const staff = document.body.dataset.area === 'admin';
     location.href = staff ? '/staff.html' : '/index.html';
@@ -148,6 +179,8 @@ const LIA = (() => {
 
   // ---------- Dates ----------
   // The database sends times in UTC; show them in Philippine time.
+  // toDate() turns the text the server sends ("2026-11-17 10:43:53.0297+00", "2026-11-17", ...)
+  // into a JavaScript Date. The fmt...() functions then format it in Asia/Manila time.
   function toDate(value) {
     if (!value) return null;
     let s = String(value).trim().replace(' ', 'T');
@@ -204,6 +237,7 @@ const LIA = (() => {
     return d.toLocaleDateString('en-PH', { timeZone: TZ, month: 'short', day: 'numeric', ...(sameYear ? {} : { year: 'numeric' }) });
   }
 
+  // "just now", "5 min ago", "2 hr ago", "3 days ago", then the date (used for SOS alerts)
   function timeAgo(value) {
     const d = toDate(value);
     if (!d) return '';
@@ -214,6 +248,7 @@ const LIA = (() => {
     if (s < 7 * 86400) return Math.floor(s / 86400) + (s < 2 * 86400 ? ' day ago' : ' days ago');
     return fmtDate(value);
   }
+  // Whole days until a date (rounded up), e.g. how long a guest account has left
   function daysLeft(value) {
     const d = toDate(value);
     return d ? Math.ceil((d.getTime() - Date.now()) / 86400000) : null;
@@ -223,6 +258,8 @@ const LIA = (() => {
   }
 
   // ---------- Report status, in words students understand ----------
+  // The database keeps one status name ("Pending"...). Students and staff see different words for it,
+  // and cls is the CSS class that gives the chip (the small coloured label) its colour.
   const STATUS = {
     'Pending': { cls: 'pending', student: 'Waiting for review', staff: 'New' },
     'Active': { cls: 'active', student: 'Accepted · in progress', staff: 'Active' },
@@ -232,6 +269,7 @@ const LIA = (() => {
     'Resolved': { cls: 'resolved', student: 'Resolved', staff: 'Resolved' },
     'Rejected': { cls: 'rejected', student: 'Not accepted', staff: 'Rejected' },
   };
+  // chip('Pending') -> <span class="chip pending">Waiting for review</span>; chip('Pending', 'staff') says "New"
   function chip(status, who = 'student') {
     const s = STATUS[status] || { cls: 'rejected', student: status, staff: status };
     return `<span class="chip ${s.cls}">${esc(s[who])}</span>`;
@@ -239,6 +277,8 @@ const LIA = (() => {
   const ROLE = { victim: 'Victim', witness: 'Witness', other: 'Other' };
 
   // ---------- Toasts ----------
+  // A small message at the bottom of the screen that disappears by itself after about 4 seconds.
+  // toast('Saved.') is green; toast('Something went wrong.', 'error') is red.
   function toast(message, type = 'ok') {
     let box = document.querySelector('.toasts');
     if (!box) {
@@ -257,6 +297,9 @@ const LIA = (() => {
 
   // ---------- Modals ----------
   // openModal({ title, body (HTML), foot (HTML), wide, className, onOpen(el), dismissable })
+  // A window over the page. Any button with data-close closes it. onOpen(el, close) runs right after it
+  // appears, so the page can wire up the buttons inside it. It returns close(), to close it from code.
+  // dismissable = false: no X button, and Escape or clicking outside does not close it.
   function openModal({ title, body, foot = '', wide = false, className = '', onOpen, dismissable = true }) {
     const wrap = document.createElement('div');
     wrap.className = 'modal-wrap';
@@ -291,6 +334,8 @@ const LIA = (() => {
     onOpen?.(wrap, close);
     return close;
   }
+  // Keyboard users: pressing Tab inside a window goes around the window's buttons and never
+  // escapes to the page behind it.
   function trapFocus(e, root) {
     const items = [...root.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])')]
       .filter((el) => el.offsetParent !== null);
@@ -300,6 +345,9 @@ const LIA = (() => {
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   }
 
+  // "Are you sure?" window. Use it like:  if (!await LIA.confirmBox({ ... })) return;
+  // It answers true when the confirm button is pressed, and false when the window is closed any
+  // other way (Cancel, X, Escape). The MutationObserver notices the window being removed.
   function confirmBox({ title, text, confirmLabel, danger = false }) {
     return new Promise((resolve) => {
       let answered = false;
@@ -318,6 +366,7 @@ const LIA = (() => {
   }
 
   // ---------- Forms ----------
+  // Shows a red message at the top of a form (an empty message removes it).
   function showFormError(form, message) {
     let box = form.querySelector('.form-error');
     if (!message) { box?.remove(); return; }
@@ -335,6 +384,8 @@ const LIA = (() => {
     const r = box.getBoundingClientRect();
     if (r.top < area.top + 4 || r.bottom > area.bottom) box.scrollIntoView({ block: 'start', behavior: 'instant' });
   }
+  // Runs task() while the button is disabled and shows a spinner, so it can't be pressed twice.
+  // Example: await LIA.busy(saveButton, () => LIA.api('...', { body }));
   async function busy(button, task) {
     button.disabled = true;
     button.classList.add('is-busy');
@@ -356,6 +407,7 @@ const LIA = (() => {
       });
     });
   }
+  // Copies text to the clipboard (e.g. the new guest ID) and says so with a toast.
   async function copyText(text, label = 'Copied') {
     try { await navigator.clipboard.writeText(text); toast(label); }
     catch (e) { toast('Could not copy. Select the text and copy it instead.', 'error'); }
@@ -442,6 +494,8 @@ const LIA = (() => {
       }
     });
   }
+  // Fills the Grade Level dropdown (7 to 12) and, if there is a Section box, makes it capitals-only.
+  // grade and section are the values to show at the start (e.g. the student's current ones).
   function gradeSectionFields(gradeSelect, sectionInput, grade = null, section = null) {
     gradeSelect.innerHTML = '<option value="">Select grade level...</option>' +
       [7, 8, 9, 10, 11, 12].map((g) => `<option value="${g}">Grade ${g}</option>`).join('');
@@ -455,6 +509,7 @@ const LIA = (() => {
   // ---------- Locations (Submit Report and SOS) ----------
   // The places are in /assets/locations.json (the server checks the same file).
   // "Others" (type the place) is always the last choice.
+  // The file is downloaded only once per page: "??=" keeps the first download and reuses it.
   let locationsPromise = null;
   function locations() {
     locationsPromise ??= fetch('/assets/locations.json').then((r) => r.json())
@@ -481,6 +536,8 @@ const LIA = (() => {
   const telLinks = (h) => h.numbers.map(([shown, dial]) => `<a href="tel:${dial}">${esc(shown)}</a>`).join(' / ');
 
   // ---------- SOS ----------
+  // The red SOS button (students and guests): a window asking where they are and what is happening,
+  // sent to api/sos/create.php. Staff see it at once on Manage Reports (and hear the SOS sound).
   async function openSos() {
     const places = await locations();
     openModal({
@@ -536,6 +593,8 @@ const LIA = (() => {
   }
 
   // ---------- Page shell ----------
+  // The parts every signed-in page shares: top bar, side menu, phone tab bar, footer.
+  // The menus are made from these lists, so adding a page means adding one line here.
   const USER_NAV = [
     { id: 'home', href: '/app/home.html', icon: 'home', label: 'Home' },
     { id: 'report', href: '/app/report.html', icon: 'flag', label: 'Submit Report' },
@@ -564,12 +623,6 @@ const LIA = (() => {
     return acct.role === 'advocate' ? '/admin/cases.html' : acct.role === 'principal' || acct.role === 'counselor' ? '/admin/index.html' : '/admin/home.html';
   }
 
-  function initials(name) {
-    if (/^Guest\b/.test(String(name))) return 'G';
-    const parts = String(name || '?').replace(/\([^)]*\)/g, '').split(/\s+/).filter((w) => /^[A-Za-z]/.test(w));
-    if (!parts.length) return '?';
-    return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
-  }
 
   // ---------- Profile pictures ----------
   // Every account shows a drawn picture instead of letters. The picture depends on the kind of
@@ -686,11 +739,14 @@ const LIA = (() => {
       <button type="button" class="pager-btn" data-page="${page + 1}" ${page >= pages ? 'disabled' : ''} aria-label="Next page">${icon('chevronRight')}</button>` : '';
   }
 
+  // One menu link. current = the page that is open (marked with aria-current, which the CSS highlights).
+  // Links with a "count" get a small number bubble that setCount() fills in.
   function navLink(item, current) {
     return `<a class="nav-link" href="${item.href}" ${item.id === current ? 'aria-current="page"' : ''}>
       ${icon(item.icon)}<span>${esc(item.label)}</span>${item.count ? `<span class="count" data-count="${item.count}" hidden></span>` : ''}</a>`;
   }
 
+  // Draws the top bar, side menu, tab bar (phones) and footer around the page's own <main>.
   function buildShell(me) {
     const area = document.body.dataset.area;
     const current = document.body.dataset.page;
@@ -751,10 +807,7 @@ const LIA = (() => {
       tabs.innerHTML = USER_NAV.map((i) => `<a href="${i.href}" ${i.id === current ? 'aria-current="page"' : ''}>${icon(i.icon)}${esc(i.label)}</a>`).join('');
       document.body.append(tabs);
       document.getElementById('sosSide').addEventListener('click', openSos);
-
-
     }
-
 
     // Green footer at the bottom of student pages and the staff Home page (like the prototype)
     if ((!isAdmin && current !== 'messages') || (isAdmin && current === 'home')) {
@@ -805,6 +858,8 @@ const LIA = (() => {
     });
   }
 
+  // Puts a number in the menu bubbles, e.g. setCount('cases', 3). 0 hides the bubble.
+  // calm = true shows it in a quieter colour (e.g. new reports), otherwise red (e.g. active SOS).
   function setCount(name, n, calm = false) {
     document.querySelectorAll(`[data-count="${name}"]`).forEach((el) => {
       const text = n > 99 ? '99+' : String(n);
@@ -836,6 +891,9 @@ const LIA = (() => {
   const BEEP_LENGTH = 0.35;     // how long each beep lasts
   const BEEP_GAP = 0.25;        // silence between the three beeps
   const ROUND_GAP = 0.9;        // silence before the second "beep - beep - beep"
+  // Builds the sound with the Web Audio API: each tone is an oscillator (a pure 880 Hz note) whose
+  // volume (gain) is raised and lowered at exact times. t moves forward after each beep and gap.
+  // Returns false when the browser has not allowed sound yet.
   function beep() {
     const ctx = soundPlayer();
     if (!ctx) return false;
@@ -867,6 +925,9 @@ const LIA = (() => {
   const HEARD = 'lia-sos-heard';
   const heardSos = () => { try { return new Set(JSON.parse(sessionStorage.getItem(HEARD) || '[]')); } catch (e) { return new Set(); } };
   const saveHeard = (ids) => { try { sessionStorage.setItem(HEARD, JSON.stringify([...ids])); } catch (e) {} };
+  // Runs every 20 seconds on staff pages (and right after any action): asks admin/counts.php for the
+  // numbers in the menu and the active SOS alerts, then updates the bubbles and the red strip, and
+  // beeps once for each SOS alert this tab has not beeped for yet.
   async function watchStaffCounts() {
     try {
       const counts = await api('admin/counts.php');
@@ -926,8 +987,11 @@ const LIA = (() => {
       me = await api('auth/me.php', { allow401: true });
     } catch (e) {
       goToSignIn();
-      return new Promise(() => {}); // stop here while the browser leaves
+      // A promise that never finishes: the page script waiting on "await LIA.start()" simply stops
+      // here while the browser opens the sign-in page.
+      return new Promise(() => {});
     }
+    // A student opened a staff page (or the other way round): send them to their own home page
     if ((area === 'admin') !== (me.role === 'admin')) {
       location.href = me.role === 'admin' ? staffHome(me.account) : '/app/home.html';
       return new Promise(() => {});
@@ -971,9 +1035,10 @@ const LIA = (() => {
     return me;
   }
 
+  // The public toolbox: these are the only names other scripts can use, as LIA.name
   return {
     VERSION, api, esc, icon, toast, openModal, confirmBox, showFormError, busy, wirePasswordToggles, copyText,
-    changePasswordModal, start, initials, avatar, setAvatar, chip, pager, STATUS, ROLE, staffHome, noAutofill, gradeSectionFields, fillLocations,
+    changePasswordModal, start, avatar, setAvatar, chip, pager, STATUS, ROLE, staffHome, noAutofill, gradeSectionFields, fillLocations,
     caseNo, toDate, fmtDate, fmtDateTime, fmtTime, dayLabel, shortWhen, timeAgo, daysLeft, todayInManila, sosSound: () => { unlockSound(); return beep(); },
   };
 })();
