@@ -60,6 +60,7 @@
       const withStudents = ['counselor', 'advocate'].includes(me.account.role);
       const convosEl = document.getElementById('convos');
       const log = document.getElementById('log');
+      const jump = CHAT.jumpButton(log); // round arrow button: back to the latest message
       const form = document.getElementById('chatForm');
       const split = document.getElementById('split');
       const back = document.getElementById('back');
@@ -189,10 +190,11 @@
         if (sig === lastSig) return;
         const wasUnread = people.find((p) => p.adminId === person.adminId)?.unread;
         lastSig = sig;
+        const after = jump.before('staff-' + person.adminId);
         log.innerHTML = messages.length
           ? CHAT.render(messages, { caseCard: () => '', who: (m) => m.staffName })
           : `<div class="empty"><strong>No messages yet</strong><span>Write the first message to ${LIA.esc(person.name)} below.</span></div>`;
-        log.scrollTop = log.scrollHeight;
+        after(); // stays where you were reading, or goes to the latest message
         if (wasUnread) loadList(); // opening the chat marked them read
       }
 
@@ -236,10 +238,11 @@
           const sig = thread.key + (thread.closed ? ':closed' : '') + JSON.stringify(messages.map((m) => [m.id, m.text, m.deleted, m.edited]));
           if (sig === lastSig) return;
           lastSig = sig;
+          const after = jump.before(thread.key);
           log.innerHTML = messages.length
             ? CHAT.render(messages, { caseCard, closed: !!thread.closed, who: () => (thread.anonymous ? 'Reporter' : thread.name) })
             : '<div class="empty"><strong>No messages yet</strong><span>Write the first message below.</span></div>';
-          log.scrollTop = log.scrollHeight;
+          after(); // stays where you were reading, or goes to the latest message
         } catch (e) { LIA.toast(e.message, 'error'); }
       }
 

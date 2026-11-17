@@ -47,6 +47,8 @@ const LIA = (() => {
     arrowLeft: '<path d="M19 12H5M12 19l-7-7 7-7"/>',
     chevronLeft: '<path d="m15 18-6-6 6-6"/>',
     chevronRight: '<path d="m9 18 6-6-6-6"/>',
+    chevronDown: '<path d="m6 9 6 6 6-6"/>',
+    chevronUp: '<path d="m18 15-6-6-6 6"/>',
     dots: '<circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/>',
     edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>',
     trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
@@ -658,6 +660,22 @@ const LIA = (() => {
     });
   }
 
+  // ---------- "Back to top" ----------
+  // On long pages (Home, guides, tables, dashboard...), a "Back to top" button appears at the bottom
+  // right once you have scrolled down more than one screen. Pages that do not scroll never show it.
+  function backToTop() {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'to-top';
+    btn.hidden = true;
+    btn.innerHTML = `${icon('chevronUp')}<span>Back to top</span>`;
+    btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    document.body.append(btn);
+    const update = () => { btn.hidden = window.scrollY < window.innerHeight; };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  }
+
   // ---------- Pages: a simple "<  1  >" in the center ----------
   // nav: the <nav class="pager"> element. The arrow buttons carry data-page (the page to open).
   function pager(nav, page, pages) {
@@ -943,6 +961,7 @@ const LIA = (() => {
     });
     labelTables();
     sortableTables();
+    backToTop();
     let labelSoon = 0;
     new MutationObserver(() => { if (!labelSoon) labelSoon = requestAnimationFrame(() => { labelSoon = 0; labelTables(); sortableTables(); }); })
       .observe(document.querySelector('main'), { childList: true, subtree: true });

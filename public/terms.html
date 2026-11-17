@@ -181,7 +181,15 @@
       </article>
     </div>
   </main>
+  <button type="button" class="to-top" id="toTop" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg><span>Back to top</span></button>
   <script>
+    // "Back to top" at the bottom right, once you have scrolled down more than one screen
+    const toTop = document.getElementById('toTop');
+    toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    const updateToTop = () => { toTop.hidden = window.scrollY < window.innerHeight; };
+    window.addEventListener('scroll', updateToTop, { passive: true });
+    updateToTop();
+
     // Back: return to the page you came from (sign-in page, sign-up, or a page inside LIA)
     document.getElementById('backBtn').addEventListener('click', (e) => {
       if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {

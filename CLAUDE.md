@@ -109,6 +109,10 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
   (`email_help_lines()`, `email_notices()`, `email_greeting()`, `email_when()`). Report form: "Include My Identity" first and
   default, no read-only name fields (a note says what staff see); "knows the person" is Yes/No radio buttons.
   Permanent account request: "Send request" (#sendRequest) is disabled until the consent box is checked.
+  Chats: round arrow at the bottom center when scrolled up more than 300px (`CHAT.jumpButton(log)` in chat.js;
+  `jump.before(chatKey)` before redrawing, call the returned function after); new messages no longer pull a reader
+  down (the arrow gets a dot); sending goes to the bottom. "Back to top" pill at the bottom right after scrolling down
+  one screen on every signed-in page (`backToTop()` in core.js) and on terms.html (above the bottom menu on phones).
   `showFormError()` jumps to the message (no sliding) below the top bar; toasts only fade. Case window has no status
   buttons (only Message / Print / Save as PDF / Close, and Archive/Restore in Records); statuses change in Manage Reports
   tables (`CASE.statusChoices(r)` fills "Update status"). Row buttons use `.row-actions` (2 per line, odd last one full

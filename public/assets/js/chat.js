@@ -197,6 +197,7 @@ const CHAT = (() => {
           if (attach.file) LIA.toast(res.message);
           textarea.value = '';
           attach.clear();
+          log._liaJump?.toEndNext(); // you sent a message: show it at the bottom
         }
         await reload();
       } catch (err) { LIA.toast(err.message, 'error'); }
@@ -204,5 +205,66 @@ const CHAT = (() => {
     return { stopEditing, isEditing: () => editing !== null };
   }
 
-  return { render, composer };
+  // Like Messenger: when you scroll up far in a chat, a round arrow button appears at the bottom
+  // center; it takes you back to the latest message. New messages that arrive while you are reading
+  // older ones do not pull you down; the button gets a dot instead.
+  // Use: const jump = CHAT.jumpButton(log);
+  //      const after = jump.before(chatKey);  log.innerHTML = ...;  after();
+  //   (chatKey says which chat is open; a different chat always starts at the latest message)
+  const SHOW_AFTER_PX = 300; // how far up you must scroll before the button shows
+  function jumpButton(log) {
+    const box = log.closest('.chat') || log.parentElement;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chat-jump';
+    btn.hidden = true;
+    btn.setAttribute('aria-label', 'Go to the latest messages');
+    btn.title = 'Go to the latest messages';
+    btn.innerHTML = `${LIA.icon('chevronDown')}<span class="chat-jump-dot" hidden></span>`;
+    box.append(btn);
+    const dot = btn.querySelector('.chat-jump-dot');
+    const fromBottom = () => log.scrollHeight - log.scrollTop - log.clientHeight;
+    const update = () => {
+      const show = fromBottom() > SHOW_AFTER_PX || (!dot.hidden && fromBottom() > 40);
+      if (show) {
+        // sits just above the bottom of the message area (the message box is below it)
+        btn.style.bottom = Math.max(12, box.getBoundingClientRect().bottom - log.getBoundingClientRect().bottom + 14) + 'px';
+      } else {
+        dot.hidden = true;
+      }
+      btn.hidden = !show;
+    };
+    log.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    btn.addEventListener('click', () => {
+      dot.hidden = true;
+      log.scrollTo({ top: log.scrollHeight, behavior: 'smooth' });
+    });
+    let lastKey = null;
+    let toEnd = false;
+    const api = {
+      toEndNext() { toEnd = true; },
+      before(key) {
+        const stay = key === lastKey && !toEnd && fromBottom() > 80; // reading older messages in the same chat
+        const top = log.scrollTop;
+        const height = log.scrollHeight;
+        lastKey = key;
+        toEnd = false;
+        return () => {
+          if (stay) {
+            log.scrollTop = top;
+            if (log.scrollHeight > height) dot.hidden = false; // something new arrived below
+          } else {
+            dot.hidden = true;
+            log.scrollTop = log.scrollHeight;
+          }
+          update();
+        };
+      },
+    };
+    log._liaJump = api;
+    return api;
+  }
+
+  return { render, composer, jumpButton };
 })();

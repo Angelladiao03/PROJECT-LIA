@@ -43,6 +43,7 @@
       const me = await LIA.start();
       const convosEl = document.getElementById('convos');
       const log = document.getElementById('log');
+      const jump = CHAT.jumpButton(log); // round arrow button: back to the latest message
       const form = document.getElementById('chatForm');
       const split = document.getElementById('split');
       const back = document.getElementById('back');
@@ -146,6 +147,7 @@
           const sig = current + (res.closed ? ':closed' : '') + JSON.stringify(messages.map((m) => [m.id, m.text, m.deleted, m.edited]));
           if (sig === lastSig) return;
           lastSig = sig;
+          const after = jump.before(current);
           log.innerHTML = messages.length
             ? CHAT.render(messages, {
                 closed: !!res.closed,
@@ -153,7 +155,7 @@
                 caseCard: (c) => `<a class="case-card" href="/app/account.html#report-${c.reportNo}">${LIA.icon('folder')}<span><b>Your report ${LIA.esc(LIA.caseNo(c))}</b>${LIA.esc(c.category)} · ${LIA.esc(LIA.STATUS[c.status]?.student || c.status)}</span></a>`,
               })
             : `<div class="empty"><strong>No messages yet</strong><span>${current === 'general' ? 'Send your question or concern to the Guidance Office.' : 'Send a question about this report or provide additional details.'} A staff member will respond here.</span></div>`;
-          log.scrollTop = log.scrollHeight;
+          after(); // stays where you were reading, or goes to the latest message
           if (threads.find((x) => x.case === current)?.unread) loadList(); // opening the chat marked them read
         } catch (e) { LIA.toast(e.message, 'error'); }
       }
