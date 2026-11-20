@@ -3,6 +3,7 @@
 // To students and guests:
 //   - when one of their reports changes status (accepted, under investigation, resolved, not accepted)
 //   - when guidance messages stay unread for 1 hour ("3 unread messages")
+// To anyone (students and staff) whose email was changed: a notice to the OLD email.
 // To guidance staff (only staff who added an email address in My Account > Edit Profile):
 //   - a new report: the guidance advocate(s) of the report's grade level
 //   - an SOS alert: every guidance counselor and every guidance advocate
@@ -58,6 +59,21 @@ function notify_report_update(int $reportNo, string $action, ?string $reason = n
             ],
         ]
     );
+}
+
+// After an email change: tell the OLD email, in case someone else made the change.
+// Only part of the new email is shown (mask_email), e.g. "an**************01@gmail.com".
+function notify_email_changed(?string $oldEmail, string $newEmail, string $greeting, string $audience): void
+{
+    if ($oldEmail === null || $oldEmail === '') return; // a staff member adding an email for the first time
+    send_email($oldEmail, '[LagroInAction] Email Address Changed', [
+        'title' => 'Your Email Address Was Changed',
+        'greeting' => $greeting,
+        'lines' => ['This is to inform you that the email address of your LagroInAction account was changed. Emails from LagroInAction will now be sent to the new address.'],
+        'details' => ['New Email' => mask_email($newEmail), 'Date Changed' => email_when()],
+        'after' => ['If you did not make this change, please inform the Guidance Office of Lagro High School immediately.'],
+        'audience' => $audience,
+    ]);
 }
 
 // ---------- Emails to guidance staff ----------

@@ -22,7 +22,8 @@
     document.getElementById('whoType').textContent = isGuest ? 'Guest account' : 'Student account';
     const fact = (k, v) => v ? `<dt>${LIA.esc(k)}:</dt><dd>${LIA.esc(v)}</dd>` : '';
     document.getElementById('facts').innerHTML = isGuest
-      ? fact('Guest ID', a.guestId) + fact('Email', a.email) + fact('Created', LIA.fmtDate(a.createdAt))
+      ? fact('Guest ID', a.guestId) + fact('Email', a.email) + fact('Contact Number', a.contactNumber)
+        + fact('Created', LIA.fmtDate(a.createdAt))
         + fact('Expires', a.expiresAt ? `${LIA.fmtDate(a.expiresAt)} (extended while a report or request is in progress)` : '')
       : fact('Username', a.username) + fact('Grade & Section', a.gradeSection) + fact('Adviser', a.adviser)
         + fact('Email', a.email) + fact('Contact Number', a.contactNumber); // students sign in with their username (no guest ID)
@@ -40,9 +41,16 @@
   document.querySelectorAll('.stat-icon[data-icon]').forEach((el) => { el.innerHTML = LIA.icon(el.dataset.icon); });
 
   // Edit Profile (permanent student accounts)
+  // Boxes that cannot be changed here are read-only and grey (class "locked"):
+  //   - Section: set when the account was approved
+  //   - Email: changed with "Change", which sends a code to the new email (LIA.changeEmailModal)
+  //   - Contact Number: only while the 7-day wait after the last change is not over
+  // a.emailChangeAllowedAt / a.contactChangeAllowedAt say when the next change is allowed (null = now).
+  const waitText = (what, when) => `You can change your ${what} again on ${LIA.fmtDateTime(when)}.`;
   const editBtn = document.getElementById('editProfile');
   editBtn.hidden = isGuest;
   editBtn.addEventListener('click', () => {
+    const contactWait = a.contactChangeAllowedAt;
     LIA.openModal({
       title: 'Edit Profile',
       body: `
@@ -50,18 +58,40 @@
           <div class="field"><label for="pUsername">Username</label><input class="input" id="pUsername" name="username" maxlength="24" value="${LIA.esc(a.username)}"></div>
           <div class="form-row">
             <div class="field"><label for="pGrade">Grade Level</label><select class="input" id="pGrade" name="gradeLevel"></select></div>
-            <div class="field"><label for="pSection">Section</label><input class="input" id="pSection" value="${LIA.esc(a.section || '')}" readonly aria-describedby="pSectionHint">
+            <div class="field"><label for="pSection">Section</label><input class="input locked" id="pSection" value="${LIA.esc(a.section || '')}" readonly aria-describedby="pSectionHint">
               <p class="hint" id="pSectionHint">Set when your account was approved.</p></div>
           </div>
           <div class="field"><label for="pAdviser">Adviser</label><input class="input" id="pAdviser" name="adviser" maxlength="150" value="${LIA.esc(a.adviser)}"></div>
-          <div class="field"><label for="pContact">Contact Number</label><input class="input" id="pContact" name="contactNumber" inputmode="numeric" maxlength="11" value="${LIA.esc(a.contactNumber)}"></div>
-          <p class="small muted" style="margin:0">To change your full name, email or section, please message the Guidance Office.</p>
+          <div class="field"><label for="pEmail">Email</label>
+            <div class="input-with-btn"><input class="input locked" id="pEmail" type="email" value="${LIA.esc(a.email || '')}" readonly aria-describedby="pEmailHint">
+              <button class="btn btn-quiet" type="button" id="pChangeEmail">Change</button></div>
+            <p class="hint" id="pEmailHint"></p></div>
+          <div class="field"><label for="pContact">Contact Number</label>
+            <input class="input${contactWait ? ' locked' : ''}" id="pContact" name="contactNumber" inputmode="numeric" maxlength="11" value="${LIA.esc(a.contactNumber)}" ${contactWait ? 'readonly' : ''} aria-describedby="pContactHint">
+            <p class="hint" id="pContactHint">${LIA.esc(contactWait ? waitText('contact number', contactWait) : 'After a change, the contact number can be changed again after 7 days.')}</p></div>
+          <p class="small muted" style="margin:0">To change your full name or section, please message the Guidance Office.</p>
         </form>`,
       foot: `<button class="btn btn-quiet" data-close>Cancel</button><button class="btn" form="profileForm" type="submit">Save changes</button>`,
       onOpen: (el, close) => {
         const form = el.querySelector('#profileForm');
         LIA.gradeSectionFields(form.gradeLevel, null, a.gradeLevel);
         form.contactNumber.addEventListener('input', () => { form.contactNumber.value = form.contactNumber.value.replace(/\D/g, '').slice(0, 11); });
+
+        // Email: shows the current email; "Change" is locked during the 7-day wait
+        const changeEmail = el.querySelector('#pChangeEmail');
+        const showEmail = () => {
+          el.querySelector('#pEmail').value = a.email || '';
+          changeEmail.disabled = !!a.emailChangeAllowedAt;
+          el.querySelector('#pEmailHint').textContent = a.emailChangeAllowedAt
+            ? waitText('email', a.emailChangeAllowedAt)
+            : 'To change it, a code will be sent to the new email.';
+        };
+        showEmail();
+        changeEmail.addEventListener('click', () => LIA.changeEmailModal({
+          endpoint: 'account/email.php',
+          current: a.email,
+          onDone: (account) => { a = account; drawProfile(); showEmail(); },
+        }));
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
           try {

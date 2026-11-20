@@ -150,6 +150,15 @@ input.input, select.input { height: 46px; }
 }
 textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
 .input:focus { outline: none; border-color: var(--green-bright); background: #fff; box-shadow: 0 0 0 3px rgba(0, 168, 89, 0.3); }
+/* A read-only box that cannot be typed in (Section, Email, a contact number during the 7-day wait):
+   grey, so it does not look like something to fill in. Used together with the readonly attribute. */
+.input.locked, .input.locked:focus { background: #eef2ef; color: var(--muted); border-color: var(--line); box-shadow: none; cursor: default; }
+/* A box with a button beside it (Email + "Change") */
+.input-with-btn { display: flex; gap: 8px; align-items: center; }
+.input-with-btn .input { flex: 1; min-width: 0; }
+.input-with-btn .btn { flex: none; min-height: 46px; }
+/* "Send a New Code" / "Use a Different Email" in the Change Email window */
+.email-step-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 .counter { font-size: 0.8rem; color: var(--muted); text-align: right; }
 
 .choice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }

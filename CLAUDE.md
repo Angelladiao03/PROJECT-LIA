@@ -123,6 +123,15 @@ Ladiao III, Angel O.; Ocampo, Sheldrick John E.
   tables with pages sort their own data (class `sortable`: Records, activity log with server `sort`/`dir`). Pager is a
   centered "‹ 1 ›" (`LIA.pager(nav, page, pages)`), "Showing ..." under it. Activity log 10 per page. SOS strip height is
   re-measured with ResizeObserver. Terms page rewritten (contents list, summary, Back button; TERMS_VERSION draft-2026-11-17).
+- alpha.8 (Nov 21 2026): guest My Account shows the contact number. Staff email bug fixed (`require_admin()` now
+  selects `admin_email`, `email_changed_at`). Email changes need a 6-digit code sent to the NEW email (purpose 'email'):
+  students `api/account/email.php`, staff `api/admin/email.php` (action=send|verify; shared `send_email_change_code()` /
+  `check_email_change_code()` in accounts.php, session key `emailChange` binds the code to the account), then
+  `notify_email_changed()` tells the old email; staff audit `staff.email`; the profile actions no longer change emails.
+  Email and student contact number: once every 7 days (`CHANGE_WAIT_DAYS`, `next_change_allowed()`,
+  `stop_if_changed_recently()`; `users.email_changed_at`, `users.contact_changed_at`, `admin_profile.email_changed_at`;
+  pages get `emailChangeAllowedAt` / `contactChangeAllowedAt`). Boxes that can't be typed in are `readonly` + class
+  `locked` (grey). Guests still have no Edit Profile.
 - Purpose note from the team: LIA is for tracking reports, updates and case management. It does not
   solve cases or replace the guidance sessions themselves.
 - Settings via `setting()` in `includes/config.php`: env vars on Render (`DATABASE_URL`,

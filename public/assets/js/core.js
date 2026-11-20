@@ -36,7 +36,7 @@
 
 const LIA = (() => {
   // The version shown on the sign-in pages. Change it here when you tag a new version.
-  const VERSION = 'v1.0.0-alpha.7';
+  const VERSION = 'v1.0.0-alpha.8';
   document.querySelectorAll('[data-version]').forEach((el) => { el.textContent = VERSION; });
 
   // ---------- Icons (simple line drawings, 24x24) ----------
@@ -454,6 +454,84 @@ const LIA = (() => {
             onDone?.(fd.get('newPassword'));
           } catch (err) { showFormError(form, err.message); }
         });
+      },
+    });
+  }
+
+  // ---------- Change email (with a 6-digit code) ----------
+  // One window, two steps:
+  //   1. Type the new email and press "Send Code": the server emails a 6-digit code to the NEW email.
+  //   2. Type the code and press "Verify and Change": the server checks it and saves the new email.
+  // endpoint: 'account/email.php' (students) or 'admin/email.php' (staff). Both take action=send|verify.
+  // onDone(account) runs after the change, so the page can show the new email.
+  function changeEmailModal({ endpoint, current, onDone }) {
+    let sentTo = null; // the new email the code was sent to (null = still on step 1)
+    openModal({
+      title: current ? 'Change Email' : 'Add Email',
+      body: `
+        <form id="emailForm" novalidate>
+          ${current ? `<div class="field"><label for="emCurrent">Current Email</label><input class="input locked" id="emCurrent" value="${esc(current)}" readonly></div>` : ''}
+          <div class="field"><label for="emNew">New Email</label>
+            <input class="input" id="emNew" name="email" type="email" maxlength="150" autocomplete="email" required></div>
+          <div id="emCodeStep" hidden>
+            <p class="small" id="emSent" aria-live="polite"></p>
+            <div class="field"><label for="emCode">6-digit Code</label>
+              <input class="input" id="emCode" name="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></div>
+            <div class="email-step-btns">
+              <button class="btn btn-quiet btn-sm" type="button" id="emResend">Send a New Code</button>
+              <button class="btn btn-quiet btn-sm" type="button" id="emOther">Use a Different Email</button>
+            </div>
+          </div>
+          <p class="hint">To confirm that the new email is yours, a code will be sent to it. The email can be changed once every 7 days, and ${current ? 'your current email will be informed of the change' : 'it will receive the notification emails'}.</p>
+        </form>`,
+      foot: `<button class="btn btn-quiet" data-close>Cancel</button><button class="btn" form="emailForm" type="submit" id="emSubmit">Send Code</button>`,
+      onOpen: (el, close) => {
+        const form = el.querySelector('#emailForm');
+        const emailBox = el.querySelector('#emNew');
+        const codeBox = el.querySelector('#emCode');
+        const submit = el.querySelector('#emSubmit');
+        codeBox.addEventListener('input', () => { codeBox.value = codeBox.value.replace(/\D/g, '').slice(0, 6); });
+
+        // Show step 1 (type the email) or step 2 (type the code). During step 2 the email box is
+        // read-only, because the code belongs to that email.
+        const showStep = (codeStep) => {
+          el.querySelector('#emCodeStep').hidden = !codeStep;
+          emailBox.readOnly = codeStep;
+          emailBox.classList.toggle('locked', codeStep);
+          submit.textContent = codeStep ? 'Verify and Change' : 'Send Code';
+          if (!codeStep) { sentTo = null; codeBox.value = ''; }
+        };
+        const sendCode = async (button) => {
+          const email = emailBox.value.trim();
+          if (!email) return showFormError(form, 'Enter the new email address.');
+          const res = await busy(button, () => api(endpoint, { body: { action: 'send', email } }));
+          sentTo = email;
+          showFormError(form, '');
+          showStep(true);
+          el.querySelector('#emSent').innerHTML = res.devCode
+            ? `Testing mode (no email service set up): the code is <b>${esc(res.devCode)}</b>.`
+            : esc(res.message);
+          codeBox.focus();
+        };
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          try {
+            if (!sentTo) return await sendCode(submit);
+            if (codeBox.value.length !== 6) return showFormError(form, 'Enter the 6-digit code from the email.');
+            const res = await busy(submit, () => api(endpoint, { body: { action: 'verify', email: sentTo, code: codeBox.value } }));
+            close();
+            toast(res.message);
+            onDone?.(res.account);
+          } catch (err) {
+            if (err.data?.restart) showStep(false); // the code step was lost (e.g. signed in again): start over
+            showFormError(form, err.message);
+          }
+        });
+        el.querySelector('#emResend').addEventListener('click', async (e) => {
+          try { await sendCode(e.currentTarget); } catch (err) { showFormError(form, err.message); }
+        });
+        el.querySelector('#emOther').addEventListener('click', () => { showStep(false); showFormError(form, ''); emailBox.focus(); });
       },
     });
   }
@@ -1038,7 +1116,7 @@ const LIA = (() => {
   // The public toolbox: these are the only names other scripts can use, as LIA.name
   return {
     VERSION, api, esc, icon, toast, openModal, confirmBox, showFormError, busy, wirePasswordToggles, copyText,
-    changePasswordModal, start, avatar, setAvatar, chip, pager, STATUS, ROLE, staffHome, noAutofill, gradeSectionFields, fillLocations,
+    changePasswordModal, changeEmailModal, start, avatar, setAvatar, chip, pager, STATUS, ROLE, staffHome, noAutofill, gradeSectionFields, fillLocations,
     caseNo, toDate, fmtDate, fmtDateTime, fmtTime, dayLabel, shortWhen, timeAgo, daysLeft, todayInManila, sosSound: () => { unlockSound(); return beep(); },
   };
 })();

@@ -166,6 +166,7 @@ Emails the system sends:
 |---|---|
 | Guest sign-up | `[LagroInAction] Verification Code`, then `[LagroInAction] Guest Account Registration Successful` (with the guest ID, never the password) |
 | Forgot password | `[LagroInAction] Password Reset Request` (button + link), then `[LagroInAction] Password Changed` |
+| Changing an email (students, staff) | `[LagroInAction] Verification Code` to the NEW email, then `[LagroInAction] Email Address Changed` to the old one |
 | Student account approved / declined | `[LagroInAction] Student Account Request Approved` / `... Not Approved` (with the reason) |
 | Staff change a report's status | `[LagroInAction] Update on Report #2026-0001` (new status only; no report details) |
 | Guidance messages unread for 1 hour | `[LagroInAction] Unread Messages from the Guidance Office` (count only; once per message) |
@@ -173,7 +174,10 @@ Emails the system sends:
 | An SOS alert is sent | `[LagroInAction] URGENT: SOS Alert Received` to the Guidance Counselor and every advocate (location and time only) |
 
 Staff receive emails only after they add an email address in **My Account → Edit Profile**
-(`admin_profile.admin_email`). Staff emails are sent after the student's page has its reply
+(`admin_profile.admin_email`). Students and staff change an email with a 6-digit code sent to the new
+email (`api/account/email.php`, `api/admin/email.php`, `LIA.changeEmailModal()` in core.js). An email
+and a student's contact number can each be changed once every 7 days (`CHANGE_WAIT_DAYS` in
+includes/accounts.php; `email_changed_at`, `contact_changed_at` columns). Staff emails are sent after the student's page has its reply
 (`after_response()` in `includes/json.php`), so submitting a report or an SOS never waits for email.
 
 All emails use one layout (`email_html()` in `includes/mailer.php`): a dark green header with the school seal,

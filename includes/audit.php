@@ -44,6 +44,7 @@ function audit_label(string $action): string
         'staff_message.delete' => 'Deleted a staff chat message',
         'student.view_info' => 'Viewed the student details',
         'staff.profile' => 'Updated their profile',
+        'staff.email' => 'Changed their email for notifications',
         'staff.password' => 'Changed their password',
         'staff.sign_in' => 'Signed in',
         'staff.sign_out' => 'Signed out',

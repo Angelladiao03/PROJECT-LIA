@@ -269,12 +269,33 @@
               <div class="field"><label for="pName">Full Name</label><input class="input" id="pName" name="fullName" maxlength="150" value="${LIA.esc(a.displayName)}"></div>
               <div class="field"><label for="pUser">Username</label><input class="input" id="pUser" name="username" maxlength="24" value="${LIA.esc(a.username)}">
                 <p class="hint">8 to 24 letters, numbers, dots or underscores. You sign in with it.</p></div>
-              <div class="field"><label for="pEmail">Email for Notifications <span class="muted">(optional)</span></label><input class="input" id="pEmail" name="email" type="email" maxlength="150" autocomplete="email" value="${LIA.esc(a.email || '')}">
-                <p class="hint">${LIA.esc(EMAIL_HINT[a.role] || 'Leave this empty if you do not need notification emails.')}</p></div>
+              <div class="field"><label for="pEmail">Email for Notifications <span class="muted">(optional)</span></label>
+                <div class="input-with-btn"><input class="input locked" id="pEmail" type="email" readonly placeholder="Not set" aria-describedby="pEmailHint">
+                  <button class="btn btn-quiet" type="button" id="pChangeEmail"></button></div>
+                <p class="hint" id="pEmailHint"></p></div>
             </form>`,
           foot: '<button class="btn btn-quiet" data-close>Cancel</button><button class="btn" form="profileForm" type="submit">Save changes</button>',
           onOpen: (el, close) => {
             const form = el.querySelector('#profileForm');
+
+            // Email for notifications: read-only here. "Add" / "Change" opens a window that sends a code
+            // to the new email (LIA.changeEmailModal). It is locked during the 7-day wait after a change.
+            const changeEmail = el.querySelector('#pChangeEmail');
+            const showEmail = () => {
+              el.querySelector('#pEmail').value = a.email || '';
+              changeEmail.textContent = a.email ? 'Change' : 'Add';
+              changeEmail.disabled = !!a.emailChangeAllowedAt;
+              el.querySelector('#pEmailHint').textContent = a.emailChangeAllowedAt
+                ? `You can change your email again on ${LIA.fmtDateTime(a.emailChangeAllowedAt)}.`
+                : (EMAIL_HINT[a.role] || 'Notification emails are sent to this address.') + ' A code is sent to the new email to confirm it.';
+            };
+            showEmail();
+            changeEmail.addEventListener('click', () => LIA.changeEmailModal({
+              endpoint: 'admin/email.php',
+              current: a.email,
+              onDone: (account) => { a = account; draw(); showEmail(); },
+            }));
+
             form.addEventListener('submit', async (e) => {
               e.preventDefault();
               const fd = new FormData(form);

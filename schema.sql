@@ -165,7 +165,7 @@ ALTER TABLE sos_alerts ADD COLUMN IF NOT EXISTS user_id       INT REFERENCES use
 ALTER TABLE messages   ADD COLUMN IF NOT EXISTS user_id       INT REFERENCES users(user_id);
 
 -- alpha.3 additions
-ALTER TABLE email_codes ADD COLUMN IF NOT EXISTS purpose     VARCHAR(10) NOT NULL DEFAULT 'signup'; -- 'signup' or 'reset'
+ALTER TABLE email_codes ADD COLUMN IF NOT EXISTS purpose     VARCHAR(10) NOT NULL DEFAULT 'signup'; -- 'signup', 'reset' or 'email' (changing the email)
 ALTER TABLE messages    ADD COLUMN IF NOT EXISTS read_at     TIMESTAMPTZ; -- when the student read a staff message
 ALTER TABLE messages    ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ; -- when we emailed "you have unread messages"
 ALTER TABLE messages    ADD COLUMN IF NOT EXISTS report_no   INT REFERENCES reports(report_no); -- a report case attached by staff
@@ -390,6 +390,16 @@ UPDATE users SET section = UPPER(section),
 UPDATE activation_requests SET section = UPPER(section),
                  grade_section = CASE WHEN grade_level IS NOT NULL THEN 'Grade ' || grade_level || ' - ' || UPPER(section) ELSE grade_section END
  WHERE section IS NOT NULL AND section <> UPPER(section);
+
+-- =====================================================================
+-- alpha.8 additions (email changes with a code, 7-day waits)
+-- =====================================================================
+
+-- Changing the email (only with a 6-digit code sent to the new email; email_codes.purpose = 'email')
+-- and the contact number: each at most once every 7 days. These remember when the last change was.
+ALTER TABLE users         ADD COLUMN IF NOT EXISTS email_changed_at   TIMESTAMPTZ;
+ALTER TABLE users         ADD COLUMN IF NOT EXISTS contact_changed_at TIMESTAMPTZ;
+ALTER TABLE admin_profile ADD COLUMN IF NOT EXISTS email_changed_at   TIMESTAMPTZ;
 
 -- =====================================================================
 -- Test accounts: run reset_test_data.sql (it ERASES everything first).

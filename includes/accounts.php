@@ -125,8 +125,10 @@ function require_admin(string ...$roles): array
     }
     start_session();
     if (!empty($_SESSION['adminId'])) {
+        // admin_email and email_changed_at are needed by My Account (the email for notifications)
         $stmt = db()->prepare(
-            'SELECT admin_id, admin_username, admin_fullname, admin_password, staff_role, grade_level
+            'SELECT admin_id, admin_username, admin_fullname, admin_password, staff_role, grade_level,
+                    admin_email, email_changed_at
              FROM admin_profile WHERE admin_id = ?'
         );
         $stmt->execute([(int) $_SESSION['adminId']]);
@@ -173,6 +175,7 @@ function public_staff(array $admin): array
         'roleLabel' => staff_role_label($admin),
         'gradeLevel' => $admin['grade_level'] !== null ? (int) $admin['grade_level'] : null,
         'email' => $admin['admin_email'] ?? null, // for notification emails (new reports, SOS)
+        'emailChangeAllowedAt' => next_change_allowed($admin['email_changed_at'] ?? null), // null = can change now
     ];
 }
 
@@ -205,6 +208,9 @@ function public_account(array $user): array
         'displayName' => !$isGuest && $user['full_name'] ? $user['full_name'] : 'Guest',
         'createdAt' => $user['created_at'],
         'expiresAt' => $user['expires_at'],
+        // When the email / contact number may be changed again (null = now). See CHANGE_WAIT_DAYS.
+        'emailChangeAllowedAt' => next_change_allowed($user['email_changed_at'] ?? null),
+        'contactChangeAllowedAt' => next_change_allowed($user['contact_changed_at'] ?? null),
     ];
 }
 
@@ -282,7 +288,7 @@ function contact_in_use(string $number, ?int $exceptUserId = null): bool
     return false;
 }
 
-// ---------- 6-digit email codes (sign-up and password reset) ----------
+// ---------- 6-digit email codes (sign-up, password reset, changing the email) ----------
 
 const CODE_VALID_MINUTES = 10;
 const MAX_CODE_ATTEMPTS = 5;
@@ -333,4 +339,74 @@ function check_email_code(string $email, string $code, string $purpose): array
         json_error("The code is incorrect. $left " . ($left === 1 ? 'attempt' : 'attempts') . ' remaining.');
     }
     return $row;
+}
+
+// ---------- Changing the email or the contact number ----------
+// - The email changes only after the person types the 6-digit code that was sent to the NEW email,
+//   which proves the new email is really theirs. The old email then gets a notice about the change.
+// - The email and the contact number can each be changed once every 7 days (CHANGE_WAIT_DAYS).
+//   users.email_changed_at / users.contact_changed_at / admin_profile.email_changed_at remember when.
+// Used by api/account/email.php (students), api/admin/email.php (staff) and api/account/profile.php.
+
+const CHANGE_WAIT_DAYS = 7;
+
+// When the next change is allowed (e.g. "2026-11-27T15:04:00+00:00"), or null if it is allowed now.
+function next_change_allowed(?string $changedAt): ?string
+{
+    if ($changedAt === null || $changedAt === '') return null;
+    $next = (new DateTime($changedAt))->modify('+' . CHANGE_WAIT_DAYS . ' days');
+    return $next > new DateTime() ? $next->format(DATE_ATOM) : null;
+}
+
+// Stops the request when the last change was less than 7 days ago, e.g. $what = 'email'.
+function stop_if_changed_recently(?string $changedAt, string $what): void
+{
+    $next = next_change_allowed($changedAt);
+    if ($next !== null) {
+        json_error("Your $what can be changed only once every " . CHANGE_WAIT_DAYS . ' days. You can change it again on '
+            . email_when($next) . '.', 429, ['allowedAt' => $next]);
+    }
+}
+
+// Step 1 of changing an email: send a code to the new email.
+// $who says whose change it is ("user:12" or "staff:3"); it is kept in the session, so the code
+// only works for the same account in step 2. $audience picks the help lines of the email.
+function send_email_change_code(string $who, string $newEmail, string $audience): never
+{
+    $code = issue_email_code($newEmail, 'email');
+    start_session();
+    $_SESSION['emailChange'] = ['who' => $who, 'email' => $newEmail];
+
+    $sent = send_email($newEmail, '[LagroInAction] Verification Code', [ // the code is never in the subject
+        'title' => 'Verify Your New Email Address',
+        'lines' => ['We received a request to change the email address of a LagroInAction account to this address. Please use the verification code below to confirm the change.'],
+        'code' => $code,
+        'after' => ['This code is valid for ' . CODE_VALID_MINUTES . ' minutes. For your security, do not share this code with anyone, including guidance staff. If you did not request this change, you may disregard this email; nothing will be changed.'],
+        'audience' => $audience,
+    ]);
+    if (!$sent) {
+        if (is_development()) {
+            // Testing on your own computer without an email service: show the code.
+            json_success('Email service is not set up, so here is your code (development mode only).', ['devCode' => $code]);
+        }
+        json_error('We could not send the email right now. Try again in a few minutes.', 503);
+    }
+    json_success("We sent a 6-digit code to $newEmail. Check the inbox and the spam folder.");
+}
+
+// Step 2 of changing an email: check the code. Returns the code's row; the caller saves the new
+// email, marks the code used and calls forget_email_change().
+function check_email_change_code(string $who, string $newEmail, string $code): array
+{
+    start_session();
+    $pending = $_SESSION['emailChange'] ?? null;
+    if (!$pending || $pending['who'] !== $who || $pending['email'] !== $newEmail) {
+        json_error('Send a verification code to the new email first.', 400, ['restart' => true]);
+    }
+    return check_email_code($newEmail, $code, 'email');
+}
+
+function forget_email_change(): void
+{
+    unset($_SESSION['emailChange']);
 }

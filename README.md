@@ -9,7 +9,7 @@
   Lagro High School · Schools Division Office of Quezon City · National Capital Region
 </p>
 
-<p align="center"><i>Version 1.0.0-alpha.7</i></p>
+<p align="center"><i>Version 1.0.0-alpha.8</i></p>
 
 ---
 
@@ -135,6 +135,200 @@ LIA handles sensitive information about minors and was built in line with the **
 
 The system is evaluated according to the **ISO/IEC 25010** software quality model: functional suitability,
 reliability, usability, and security.
+
+## How the system works
+
+This section explains how LIA is organized, so that the team and future maintainers can study, maintain, and
+extend the system. Every file in the project also begins with a comment that explains what it does.
+
+### The three layers
+
+```
+  Browser                           Server                                Database
+  (what people see)                 (PHP on Render)                       (PostgreSQL on Neon)
+  ───────────────────────           ──────────────────────────            ──────────────────────────
+  HTML pages    structure           public/api/   endpoints               tables such as users,
+  lia.css       appearance  ─────►  includes/     shared rules  ─────►    reports, sos_alerts,
+  JavaScript    behavior    ◄─────  (replies in JSON)           ◄─────    messages, and audit_log
+```
+
+- **Browser.** HTML gives each page its structure, one stylesheet (`lia.css`) decides how every page looks, and
+  JavaScript fills the page with data and responds to clicks. The browser never connects to the database directly.
+- **Server.** Each action has its own PHP file, called an *endpoint*; for example, `public/api/reports/create.php`
+  saves a new report. An endpoint checks who is signed in and what that person may do, checks every field, reads or
+  changes the database, and replies in **JSON**, a plain-text data format such as
+  `{"success": true, "message": "Report submitted."}`. Code that many endpoints share is kept in `includes/`.
+- **Database.** PostgreSQL keeps the accounts, reports, SOS alerts, messages, and the audit log. `schema.sql`
+  creates every table and can be run again safely, because it only adds what is missing.
+
+### What happens when a student submits a report
+
+1. The browser opens `public/app/report.html`, which loads `lia.css`, `core.js`, and `pages/report.js`.
+2. `LIA.start()` in `core.js` asks `api/auth/me.php` who is signed in. If no one is signed in, the browser is sent
+   to the sign-in page; otherwise, the top bar, the menu, and the SOS button are drawn around the page.
+3. The student completes the form and selects **Submit**. `report.js` sends the form to the server with
+   `LIA.api('reports/create.php', ...)`.
+4. On the server, `create.php` first loads `includes/bootstrap.php`, which loads every shared helper. It then
+   confirms that the request came from LIA's own pages (`require_method`), confirms that a student is signed in
+   (`require_user`), checks each field, and saves the report with a *prepared statement*, so that typed text can
+   never change the database command.
+5. The server replies in JSON, and the page shows the confirmation. Only after the reply is sent does the server
+   email the guidance advocate of the student's grade level, if the advocate has added an email address
+   (`after_response` in `includes/json.php`), so that the student does not wait for the email.
+6. On every staff page, `core.js` asks `api/admin/counts.php` every 20 seconds for the numbers in the staff menu,
+   so the new report is counted without reloading the page.
+
+Staff requests follow the same steps, with three additions: staff endpoints use `require_admin(...)`, which also
+checks the staff role; guidance advocates are limited to their assigned grade level (`staff_sees_grade()`); and
+every staff action is written to the audit log (`audit()`), which is never edited or deleted.
+
+### File structure
+
+```
+PROJECT-LIA/
+├── README.md                     this file: about the system, its features, and how it works
+├── CLAUDE.md                     development notes and the changes in each version
+├── docs/
+│   ├── SETUP.md                  setting up the database, running locally, deploying, and sending emails
+│   └── HOW-IT-WORKS.md           a guide to reading the code, with examples
+├── schema.sql                    creates and updates the database tables (safe to run again)
+├── reset_test_data.sql           ERASES all data and adds made-up test accounts (development only)
+├── Dockerfile                    how Render builds and runs the website (PHP 8.5 with Apache)
+├── docker/apache-lia.conf        web server settings: caching and security headers
+├── .gitignore, .dockerignore     files kept out of GitHub and out of the Render build
+│
+├── includes/                     private PHP code shared by the endpoints (cannot be opened from a browser)
+│   ├── bootstrap.php             loads every file below; each endpoint begins by loading this file
+│   ├── config.php                reads the settings: environment variables on Render, config.local.php locally
+│   ├── config.local.example.php  a template for config.local.php (the real file is never committed)
+│   ├── db.php                    the connection to PostgreSQL
+│   ├── session.php               sign-in sessions, saved in the database
+│   ├── accounts.php              who is signed in, staff roles and grade levels, guest expiry, sign-in lockout,
+│   │                             and email changes with the 7-day waiting period
+│   ├── passwords.php             password hashing and checking
+│   ├── validation.php            checks for typed input, and the lists of categories, grade levels, and places
+│   ├── json.php                  JSON replies, error replies, and work done after the reply is sent
+│   ├── mailer.php                sends emails through Brevo, in one formal layout
+│   ├── notify.php                notification emails: report updates, new reports, SOS alerts, unread-message
+│   │                             reminders, and email changes
+│   ├── messages.php              conversations by report and general: sending, editing, deleting, closing, reopening
+│   ├── attachments.php           files sent in messages: allowed types, size limit, and a real file-type check
+│   └── audit.php                 the audit log of staff actions
+│
+└── public/                       everything the browser can open
+    ├── index.html                student and guest sign-in (the version number links to the staff sign-in)
+    ├── staff.html                staff sign-in
+    ├── guest.html                create a guest account: Terms → email and mobile number → code → done
+    ├── reset.html                forgot password: request a link by email, then choose a new password
+    ├── terms.html                Terms of Use and Privacy Notice
+    │
+    ├── app/                      pages for students and guests
+    │   ├── home.html             the anti-bullying law, posters, articles, videos, and hotlines
+    │   ├── report.html           Submit Report form
+    │   ├── messages.html         conversations with the Guidance Office (one per report, plus a general one)
+    │   ├── account.html          My Account: profile, password, permanent account request, and report history
+    │   └── guide.html            what counts as bullying, and what to do
+    │
+    ├── admin/                    pages for school personnel
+    │   ├── home.html             staff home page (the same resources as the student home page)
+    │   ├── index.html            Dashboard (Guidance Counselor and Principal)
+    │   ├── cases.html            Manage Reports: new reports, active cases, and SOS alerts
+    │   ├── records.html          Report Records: resolved and rejected reports
+    │   ├── messages.html         conversations about reports, with students, and between staff
+    │   ├── accounts.html         Registration Requests for permanent student accounts
+    │   └── account.html          staff My Account: profile, notification email, password, and activity logs
+    │
+    ├── assets/
+    │   ├── css/lia.css           every style in one file (colors and sizes are defined at the top)
+    │   ├── js/core.js            shared by every page: talking to the server, the top bar and menus, the SOS
+    │   │                         button, pop-up windows, table sorting, page numbers, and the version number
+    │   ├── js/chat.js            shared by both Messages pages: message bubbles, attachments, edit and delete
+    │   ├── js/print.js           the "Print or Save as PDF" window (records, conversations, Dashboard summary)
+    │   ├── js/pdf.js             creates PDF files in the browser without an outside library
+    │   ├── js/pages/             the script of each page (pages not listed keep their script at the bottom
+    │   │   │                     of the HTML file)
+    │   │   ├── sign-in.js        index.html
+    │   │   ├── guest.js          guest.html
+    │   │   ├── reset.js          reset.html
+    │   │   ├── home.js           app/home.html and admin/home.html
+    │   │   ├── report.js         app/report.html
+    │   │   ├── account.js        app/account.html
+    │   │   ├── admin-dashboard.js  admin/index.html
+    │   │   ├── admin-manage.js   admin/cases.html
+    │   │   └── admin-case.js     the report details window (Manage Reports, Report Records, and Messages)
+    │   ├── locations.json        the places in the Location lists (Submit Report and SOS)
+    │   ├── referrals.json        partner offices for referrals, with their contact details (staff only)
+    │   └── img/                  the school seal, posters, and site icon
+    │
+    └── api/                      the endpoints: each file is one action that the pages can request
+        ├── auth/
+        │   ├── me.php            who is signed in (every signed-in page asks this first)
+        │   ├── login.php         student and guest sign-in
+        │   ├── staff_login.php   staff sign-in
+        │   ├── logout.php        sign out
+        │   ├── reset_send.php    forgot password, step 1: email a one-time link
+        │   └── reset_confirm.php forgot password, step 2: save the new password
+        ├── guest/
+        │   ├── send_code.php     guest sign-up: email a 6-digit code
+        │   └── verify.php        guest sign-up: check the code and create the account
+        ├── account/              a student's or guest's own account
+        │   ├── profile.php       Edit Profile (students)
+        │   ├── email.php         change the email (students), confirmed with a code sent to the new address
+        │   ├── password.php      change the password
+        │   └── activation.php    request a permanent student account
+        ├── reports/
+        │   ├── create.php        submit a report
+        │   └── mine.php          the signed-in person's own reports
+        ├── sos/create.php        send an SOS alert
+        ├── messages/
+        │   ├── thread.php        a student's or guest's conversations with the Guidance Office
+        │   └── file.php          download a file attached to a message
+        ├── admin/                school personnel only (each file checks the staff member and their role)
+        │   ├── reports.php       reports: accept, change status, refer, reject, archive, and case history
+        │   ├── sos.php           SOS alerts: dispatch and mark as responded
+        │   ├── messages.php      conversations with students and guests
+        │   ├── staff_chat.php    messages between staff members
+        │   ├── activations.php   approve or decline permanent account requests
+        │   ├── student.php       a student's personal details (after the staff member re-enters their password)
+        │   ├── stats.php         Dashboard totals (no names or case details)
+        │   ├── counts.php        the numbers in the staff menu and the SOS alert strip
+        │   ├── activity.php      activity logs
+        │   ├── account.php       staff My Account: profile and password
+        │   └── email.php         add or change the staff notification email, confirmed with a code
+        └── system/reminders.php  sends the unread-message reminder emails (for an optional scheduler)
+```
+
+### The database
+
+| Table | What it keeps |
+|---|---|
+| `users` | student and guest accounts |
+| `admin_profile` | staff accounts (one per person), with each role and grade level |
+| `activation_requests` | requests for permanent student accounts (the ID photo is removed after the decision) |
+| `reports` | incident reports and their status |
+| `sos_alerts` | SOS alerts and their status |
+| `messages`, `message_edits` | conversations with the Guidance Office, and earlier versions of edited messages |
+| `staff_messages`, `staff_message_edits` | conversations between staff members, and earlier versions of edited messages |
+| `audit_log` | every staff action: who did what, and when |
+| `email_codes`, `password_resets` | email codes and password-reset links (only their hashes are saved) |
+| `login_attempts` | wrong passwords, used to stop password guessing |
+| `email_outbox` | a record of sent emails (the address and subject only, never the contents) |
+| `php_sessions` | who is signed in |
+| `app_state` | small values the server remembers, such as when the reminders last ran |
+
+### Settings and secrets
+
+Passwords and keys, such as the database address and the Brevo email key, are never written in the code. On
+Render, they are set as environment variables; on a developer's own computer, they are placed in
+`includes/config.local.php`, which is listed in `.gitignore` so that it is never uploaded to GitHub. Both are read by
+`includes/config.php`.
+
+### Learning more
+
+- [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md) explains the code step by step, including where to make common
+  changes and the programming terms used in the code.
+- [docs/SETUP.md](docs/SETUP.md) explains how to set up the database, run LIA on a computer, deploy it to Render,
+  and set up emails.
 
 ## The team
 

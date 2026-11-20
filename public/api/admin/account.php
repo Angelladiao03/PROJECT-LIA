@@ -1,8 +1,8 @@
 <?php
 // Staff: My Account (every staff role).
 // GET                                                          -> your account
-// POST action=profile  fullName, username, email                -> edit your profile
-//      (email is optional: it receives notification emails about new reports and SOS alerts)
+// POST action=profile  fullName, username                       -> edit your profile
+//      (the email for notifications is changed separately, with a code: api/admin/email.php)
 // POST action=password currentPassword, newPassword, confirmPassword -> change your password
 // Your role and grade level are set by the system administrator, not here.
 
@@ -20,17 +20,13 @@ $action = input('action');
 if ($action === 'profile') {
     $fullName = input('fullName');
     $username = input('username');
-    $email = strtolower(input('email'));
     if ($fullName === '' || too_long($fullName, 150)) json_error('Enter your full name.');
     if ($error = username_error($username)) json_error($error);
-    if ($email !== '' && (too_long($email, 150) || !filter_var($email, FILTER_VALIDATE_EMAIL))) {
-        json_error('Enter a valid email address, like name@gmail.com, or leave it empty.');
-    }
     $stmt = db()->prepare('SELECT 1 FROM admin_profile WHERE LOWER(admin_username) = LOWER(?) AND admin_id <> ?');
     $stmt->execute([$username, $adminId]);
     if ($stmt->fetch()) json_error('That username is taken. Choose another.');
-    db()->prepare('UPDATE admin_profile SET admin_fullname = ?, admin_username = ?, admin_email = ? WHERE admin_id = ?')
-        ->execute([$fullName, $username, $email === '' ? null : $email, $adminId]);
+    db()->prepare('UPDATE admin_profile SET admin_fullname = ?, admin_username = ? WHERE admin_id = ?')
+        ->execute([$fullName, $username, $adminId]);
     audit($adminId, 'staff.profile', 'staff', $adminId);
     json_success('Profile updated.', ['account' => public_staff(require_admin())]);
 }

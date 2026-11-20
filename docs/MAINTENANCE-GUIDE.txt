@@ -1,0 +1,505 @@
+===========================================================================================
+  LAGROINACTION (LIA) - MAINTENANCE GUIDE
+  How to change the version, reset the database, and update the system
+  Written for: Team Innovators, Lagro High School            Current version: 1.0.0-alpha.8
+===========================================================================================
+
+This guide lists the common maintenance tasks, step by step, with the exact file to open
+for each one. For how the code works, read README.md ("How the system works") and
+docs/HOW-IT-WORKS.md. For first-time setup, read docs/SETUP.md.
+
+Tip: every file in the project starts with a comment that explains what it does. When you
+look for something, open VS Code and press Ctrl + Shift + F to search the whole project.
+
+
+CONTENTS
+  1. Golden rules (read first)
+  2. Changing the version number
+  3. The database: updating, resetting, and backing up
+  4. Staff accounts (add, change role, forgotten password)
+  5. Changing what the website shows
+  6. Changing rules and limits (the numbers in the code)
+  7. Settings and secrets (environment variables)
+  8. Running LIA on your own computer
+  9. Publishing a change (GitHub Desktop and Render)
+ 10. Checklist after every change
+ 11. Releasing: beta testing and the official version
+ 12. Troubleshooting
+
+
+-------------------------------------------------------------------------------------------
+1. GOLDEN RULES (READ FIRST)
+-------------------------------------------------------------------------------------------
+
+  a. Use made-up test data only. Never put real student information in a test database.
+  b. Never commit includes/config.local.php. It holds the database password. It is already
+     listed in .gitignore; do not remove it from there.
+  c. Never write passwords, API keys, or connection strings in the code or in chat.
+  d. Never delete reports, SOS alerts, messages, or the audit log. Reports are archived;
+     guest accounts expire. The audit log is the record of every staff action.
+  e. Test on the Neon "dev" branch and on your own computer first. Change the live site
+     (Neon main branch and Render) only after the change works.
+  f. Some lists exist in two places (the page and the server). When this guide says
+     "change both", change both, or the form and the server will disagree.
+  g. Each staff member has their own account. Never share one account between people.
+
+
+-------------------------------------------------------------------------------------------
+2. CHANGING THE VERSION NUMBER
+-------------------------------------------------------------------------------------------
+
+2.1 How the version number is read
+
+      v1.0.0-alpha.8
+       | | |   |
+       | | |   +-- pre-release label: "alpha" = still being built and tested; .8 = the 8th
+       | | +------ PATCH: small fixes
+       | +-------- MINOR: new features that do not break anything
+       +---------- MAJOR: big changes
+
+    A common way to continue (Semantic Versioning):
+      v1.0.0-alpha.9, alpha.10, ...   more features and fixes while building
+      v1.0.0-beta.1                   all features done; the system is being evaluated
+      v1.0.0-rc.1                     "release candidate": final checks before use
+      v1.0.0                          the finished version used by the school
+      v1.0.1                          a fix after that;  v1.1.0  a new feature after that
+
+    What to do before a beta and before the official release: see section 11.
+
+2.2 Steps (example: from alpha.8 to alpha.9)
+
+    Step 1. public/assets/js/core.js
+            Near the top, find:     const VERSION = 'v1.0.0-alpha.8';
+            Change it to:           const VERSION = 'v1.0.0-alpha.9';
+            This is the number shown in the corner of the sign-in pages (index.html,
+            guest.html, reset.html, staff.html). It is written only here; the pages read it.
+
+    Step 2. README.md
+            Near the top, find:     <p align="center"><i>Version 1.0.0-alpha.8</i></p>
+            Change the number.
+
+    Step 3. CLAUDE.md (the development notes)
+            Add a new line under the earlier versions, for example:
+              - alpha.9 (Dec 1 2026): what was added, changed, or fixed.
+            This is the history of the project, so keep it short but clear.
+
+    Step 4. schema.sql (ONLY if the database changed in this version)
+            Add the new SQL just ABOVE the final "Test accounts" note at the end of the file,
+            under its own heading, like the earlier versions:
+              -- =====================================================================
+              -- alpha.9 additions (short description)
+              -- =====================================================================
+            Always write additions that are safe to run again:
+              ALTER TABLE ... ADD COLUMN IF NOT EXISTS ...
+              CREATE TABLE IF NOT EXISTS ...
+              CREATE INDEX IF NOT EXISTS ...
+            Then run schema.sql on the Neon dev branch, test, and later on the main branch
+            (see section 3.1).
+
+    Step 5. Check: run LIA on your computer (section 8) and open the sign-in page. The
+            corner must show the new version. Then publish (section 9) with a summary such
+            as "v1.0.0-alpha.9: <what changed>".
+
+    Optional. Mark the version in GitHub: in GitHub Desktop, open the History tab,
+            right-click the commit, choose "Create Tag...", type v1.0.0-alpha.9, then
+            Push origin. This lets you find the exact code of each version later.
+
+
+-------------------------------------------------------------------------------------------
+3. THE DATABASE: UPDATING, RESETTING, AND BACKING UP
+-------------------------------------------------------------------------------------------
+
+The database is PostgreSQL on Neon. Neon has two branches for LIA:
+  - dev   for testing (used by your own computer through includes/config.local.php)
+  - main  for the live website (used by Render through DATABASE_URL)
+SQL is run in Neon -> SQL Editor. Always check which branch is selected before you run.
+
+3.1 Updating the tables (after a schema change, or when a new version adds columns)
+      1. Neon -> SQL Editor -> choose the branch (dev first).
+      2. Open schema.sql, copy ALL of it, paste it, and click Run.
+    This is safe to run many times: it only adds what is missing and never deletes data.
+    Do it on main too, BEFORE you push code that needs the new columns.
+
+3.2 Resetting to test data (dev branch ONLY)
+      WARNING: reset_test_data.sql ERASES EVERYTHING (accounts, reports, SOS alerts,
+      messages, and logs) and cannot be undone. Never run it on main once real students
+      use LIA.
+      1. Neon -> SQL Editor -> choose the dev branch.
+      2. Run schema.sql first (3.1), so every table and column exists.
+      3. Copy ALL of reset_test_data.sql, paste it, and click Run.
+    It creates these made-up accounts (password = username + "123"):
+      Student             studentaccount      / studentaccount123   (Grade 10 - SECTION A)
+      Guest               guestaccount        / guestaccount123     (sign in on the Guest tab)
+      Guidance Counselor  guidancecounselor   / guidancecounselor123
+      Principal           principal           / principal123
+      Advocates           grade7advocate ... grade12advocate  / grade7advocate123 ...
+    These passwords are public (they are written in the file), so they must never exist on
+    the live database.
+
+3.3 Making a backup before a big change
+    In Neon, create a new branch from main before a risky change. A branch is a copy of the
+    data at that moment, so you can compare or go back to it.
+
+3.4 Looking at data safely
+    Reading is safe:
+      SELECT case_id, report_status, category FROM reports ORDER BY report_no DESC LIMIT 20;
+    Changing is not: UPDATE and DELETE change real records and bypass the audit log.
+    Prefer doing changes through the website, where every staff action is recorded.
+
+
+-------------------------------------------------------------------------------------------
+4. STAFF ACCOUNTS
+-------------------------------------------------------------------------------------------
+
+Staff accounts are added in Neon -> SQL Editor (there is no sign-up page for staff).
+Use each person's own details. The values below are examples only.
+
+4.1 Add a staff member (one per person)
+      INSERT INTO admin_profile (admin_username, admin_password, admin_fullname, staff_role, grade_level)
+      VALUES ('reyes.guidance', 'TemporaryPass123', 'Ms. Reyes', 'advocate', 10);
+
+    staff_role:   counselor | advocate | principal   (security: not used yet)
+    grade_level:  7 to 12 for advocates; NULL for the counselor and the principal
+    The temporary password is turned into a secure hash the first time the person signs
+    in. Ask them to sign in right away and change it in My Account -> Change Password, and
+    to add their email in My Account so they receive report and SOS emails.
+
+4.2 Change a staff member's role or grade level
+      UPDATE admin_profile SET staff_role = 'advocate', grade_level = 9
+       WHERE admin_username = 'reyes.guidance';
+
+4.3 A staff member forgot their password
+    The staff sign-in page has no "forgot password" link. Someone with Neon access sets a
+    temporary password, and the staff member changes it right after signing in:
+      UPDATE admin_profile SET admin_password = 'NewTemporaryPass123'
+       WHERE admin_username = 'reyes.guidance';
+
+4.4 A staff member leaves
+    Do not delete the account: their actions are in the audit log and must stay linked to
+    their name. Change the password (4.3) to a long random one that no one knows.
+
+4.5 Students and guests
+    They reset their own password with "Forgot password" on the sign-in page (a link is
+    sent to their email). After 5 wrong passwords, an account is locked for 15 minutes;
+    waiting is enough.
+
+
+-------------------------------------------------------------------------------------------
+5. CHANGING WHAT THE WEBSITE SHOWS
+-------------------------------------------------------------------------------------------
+
+5.1 Locations (Submit Report and SOS lists)
+      File:  public/assets/locations.json
+      Add a name in quotes, with a comma between names. "Others" is added automatically;
+      do not add it. The page and the server both read this one file.
+      If the Location list becomes empty, the file has a typo (usually a missing comma or
+      quote).
+
+5.2 Referral offices (Manage Reports -> For Referral)
+      File:  public/assets/referrals.json
+      Copy one { "name": "...", "contact": "..." } block, put a comma between blocks, and
+      change the text. "Other" is added automatically.
+
+5.3 Bullying categories - change all three:
+      includes/validation.php   REPORT_CATEGORIES        (what the server accepts)
+      public/app/report.html    the <option> list         (what the form shows)
+      public/app/guide.html     the description of each category
+    Reports already saved keep their old category name.
+
+5.4 Crisis hotlines
+      File:  public/assets/js/core.js
+      - HOTLINES list (search "const HOTLINES"): side menu and footer.
+      - The SOS window text in openSos() (search "1553"): the numbers are also written there.
+
+5.5 Posters, articles, and videos on the Home page - change BOTH home pages:
+      public/app/home.html     (students and guests)
+      public/admin/home.html   (staff)
+    Poster:  put the image in public/assets/img/ (for example poster-4.jpg), then copy one
+             <figure class="poster"> ... </figure> block and change the image path, the alt
+             text, and the credit.
+    Article: copy one <article class="article"> ... </article> block and change the title,
+             author line, summary, and link.
+    Video:   copy  <div class="video card" data-youtube="iFlrCuSyhvU"></div>  and replace
+             the ID. The ID is the part after "v=" in a YouTube link
+             (youtube.com/watch?v=THIS_PART).
+
+5.6 Terms of Use and Privacy Notice
+      File:  public/terms.html  (the text inside <article id="terms"> ... </article>)
+      The guest sign-up window reads this same text, so you only change it here.
+      When the content changes, give it a new version in two places:
+        - includes/accounts.php   const TERMS_VERSION = 'draft-2026-11-17';
+        - public/terms.html       the lines that show "draft-2026-11-17"
+      New guest accounts record which version they accepted. Once the adviser and the
+      Guidance Office approve the final text, remove the "Draft version" notice in
+      terms.html. (Republic Act No. 10173, the Data Privacy Act, applies.)
+
+5.7 Colors
+      Website:  public/assets/css/lia.css -> the :root { ... } block at the top
+                (for example --green, --orange). Changing a color there changes it everywhere.
+      Emails:   includes/mailer.php (emails cannot use the stylesheet, so their colors are
+                written inside the email layout).
+
+5.8 Email wording
+      Layout, footer, and school address:  includes/mailer.php  (MAIL_SCHOOL_ADDRESS)
+      Notification emails:                 includes/notify.php
+      Code and password-reset emails:      search the subject, e.g. "Verification Code"
+                                           or "Password Reset Request"
+    Rule: emails must never contain report details or message contents.
+
+5.9 Menus and pages
+      File:  public/assets/js/core.js
+      USER_NAV / USER_EXTRA  student and guest menu
+      ADMIN_NAV              staff menu, with "roles" (which staff roles see each page)
+    If you hide a page from a role in ADMIN_NAV, the server must also refuse that role:
+    every staff endpoint begins with require_admin('counselor', 'advocate', ...).
+
+5.10 Printouts
+      public/assets/js/print.js  SCHOOL  (the school line on printed records)
+
+
+-------------------------------------------------------------------------------------------
+6. CHANGING RULES AND LIMITS (THE NUMBERS IN THE CODE)
+-------------------------------------------------------------------------------------------
+
+  What                                          File                             Name
+  --------------------------------------------  -------------------------------  ---------------------------
+  Guest account validity (30 days)              includes/accounts.php            GUEST_LIFETIME_DAYS
+  Wait between email / contact changes (7 days) includes/accounts.php            CHANGE_WAIT_DAYS
+  Wrong passwords before lock (5)               includes/accounts.php            MAX_FAILED_LOGINS
+  Lock time (15 minutes)                        includes/accounts.php            LOGIN_LOCK_MINUTES
+  Email code valid for (10 minutes)             includes/accounts.php            CODE_VALID_MINUTES
+  Tries per email code (5)                      includes/accounts.php            MAX_CODE_ATTEMPTS
+  Sign-out after no activity (1 hour)           includes/session.php             SESSION_LIFETIME_SECONDS
+  Username length (8 to 24)                     includes/validation.php          USERNAME_MIN_LENGTH,
+                                                                                 USERNAME_MAX_LENGTH
+  Mobile number length (11)                     includes/validation.php          CONTACT_NUMBER_LENGTH
+  Section length (40)                           includes/validation.php          SECTION_MAX_LENGTH
+  Unread-message reminder after (60 minutes)    includes/notify.php              REMINDER_AFTER_MINUTES
+  Reminder check every (10 minutes)             includes/notify.php              REMINDER_CHECK_EVERY_MINUTES
+  Activity log entries per page (10)            public/api/admin/activity.php    PER_PAGE  (change both)
+                                                public/admin/account.html        PER_PAGE
+  Report Records per page (10)                  public/admin/records.html        PER_PAGE
+  SOS sound timing                              public/assets/js/core.js         BEEP_LENGTH, BEEP_GAP,
+                                                                                 ROUND_GAP
+  Message attachment size (5 MB)                includes/attachments.php         ATTACH_MAX_BYTES (change both)
+                                                public/assets/js/chat.js         MAX_BYTES
+
+  Wording that mentions a number (for example "7 days") may also appear on a page or in an
+  email. After changing a number, search the project for the old wording.
+
+
+-------------------------------------------------------------------------------------------
+7. SETTINGS AND SECRETS (ENVIRONMENT VARIABLES)
+-------------------------------------------------------------------------------------------
+
+  Settings are read by includes/config.php from:
+    - Render -> your service -> Environment   (the live website)
+    - includes/config.local.php                (your own computer; never committed)
+
+  DATABASE_URL      the Neon connection string (dev on your computer, main on Render)
+  APP_ENV           "development" on your computer only. Do NOT set it on Render.
+                    In development, email codes are shown on screen when no email
+                    service is set up.
+  BREVO_API_KEY     the key for sending emails through Brevo
+  MAIL_FROM_EMAIL   the verified sender address in Brevo
+  MAIL_FROM_NAME    LagroInAction
+  APP_URL           (optional) the website address, used in password-reset links
+  CRON_KEY          (optional) for an outside scheduler that runs the reminders
+  PORT              10000 (Render)
+
+  To create config.local.php: copy includes/config.local.example.php, rename the copy to
+  config.local.php, and fill in the values. Changing a value on Render restarts the site.
+
+
+-------------------------------------------------------------------------------------------
+8. RUNNING LIA ON YOUR OWN COMPUTER
+-------------------------------------------------------------------------------------------
+
+  1. Install PHP 8.5 with pdo_pgsql, mbstring, and openssl enabled (see docs/SETUP.md).
+  2. Create includes/config.local.php with the Neon dev branch (section 7).
+  3. In the VS Code terminal, inside the project folder, run:
+        php -S localhost:8000 -t public
+  4. Open http://localhost:8000 in a browser. Press Ctrl + C in the terminal to stop.
+  5. Sign in with the test accounts from section 3.2.
+
+
+-------------------------------------------------------------------------------------------
+9. PUBLISHING A CHANGE (GITHUB DESKTOP AND RENDER)
+-------------------------------------------------------------------------------------------
+
+  1. If the database changed, run schema.sql on the Neon main branch first (section 3.1).
+  2. Open GitHub Desktop -> Changes tab. Read the list of changed files. Make sure
+     includes/config.local.php is NOT in the list.
+  3. Write a clear summary, for example: "v1.0.0-alpha.9: add new referral office".
+  4. Click "Commit to main", then "Push origin".
+  5. Render rebuilds the website automatically (a few minutes). You can watch it in
+     Render -> your service -> Events and Logs.
+  6. Open the live website and check the change (section 10).
+
+  To undo a published change: in GitHub Desktop -> History, right-click the commit ->
+  "Revert Changes in Commit", then Push origin. This adds a new commit that cancels the
+  old one, so the history is kept.
+
+
+-------------------------------------------------------------------------------------------
+10. CHECKLIST AFTER EVERY CHANGE
+-------------------------------------------------------------------------------------------
+
+  [ ] The sign-in page opens and shows the right version number.
+  [ ] Student, guest, and staff test accounts can sign in.
+  [ ] A test report can be submitted, and staff can see it in Manage Reports.
+  [ ] The page you changed works on a phone-sized screen too (in the browser, press F12,
+      then the phone icon).
+  [ ] There are no red errors in the browser console (F12 -> Console).
+  [ ] Only the files you meant to change appear in GitHub Desktop.
+  [ ] CLAUDE.md has a line about the change (and the version, if it changed).
+
+
+-------------------------------------------------------------------------------------------
+11. RELEASING: BETA TESTING AND THE OFFICIAL VERSION
+-------------------------------------------------------------------------------------------
+
+11.1 Beta testing (v1.0.0-beta.1)
+
+    In beta testing, respondents and the Guidance Office use the finished system on the live
+    website and evaluate it. It is still a test: nothing real is reported yet.
+
+    Before the beta
+    [ ] 1. Finish the features. During the beta, make only fixes (beta.2, beta.3, ...); new
+           features wait until after the evaluation.
+    [ ] 2. Change the version to v1.0.0-beta.1 (section 2), then publish (section 9).
+    [ ] 3. Prepare the live database (Neon main branch):
+           - Run schema.sql (section 3.1).
+           - It must hold no real student information. If it still has old entries from
+             development, you may clear it ONE last time with reset_test_data.sql (3.2).
+             After that, sign in to each test staff account and change its password in
+             My Account, because the test passwords are written in the file.
+           - Create one staff account for each staff tester, with their own password (4.1).
+    [ ] 4. Check Render -> Environment (section 7): BREVO_API_KEY and MAIL_FROM_EMAIL are
+           set, APP_URL is the website address, and APP_ENV is NOT set (codes must be sent
+           by email, never shown on screen).
+    [ ] 5. Staff testers add their email in My Account, so they receive report and SOS emails.
+    [ ] 6. Go through the checklist in section 10 on the live website, including one guest
+           sign-up with an email address you own, to confirm that the emails arrive.
+    [ ] 7. On Render's free plan, the website sleeps after 15 minutes without visitors and
+           takes about one minute to wake up. Open it a few minutes before each session.
+
+    Instructions for testers (give these in writing)
+      - The website address and the testing period.
+      - Use made-up names and made-up incidents only. Reports during the beta are not acted
+        on by the Guidance Office.
+      - Tell the staff testers before any test SOS alert is sent, so that no one treats it
+        as a real emergency.
+      - In a real emergency, call 911 or 122, or go to the Guidance Office. Do not use the
+        beta system for real incidents.
+      - How to report a problem: the page, what they did, what happened, and a screenshot.
+
+    During the beta
+      - Keep a list of problems: date, page, what happened, and who found it.
+      - Fix them on your computer with the dev branch, then publish as beta.2, beta.3, ...
+        (sections 2 and 9), with a line in CLAUDE.md for each.
+      - Check Render -> Logs and the email_outbox table for errors (section 12).
+
+    After the beta
+      - Keep the beta database as the record of the evaluation. It is NOT used as the
+        official database (11.2, step 4).
+      - Tag the last beta version in GitHub Desktop (section 2.2, Optional).
+
+11.2 The official release (v1.0.0)
+
+    The official version is used by actual students, so real personal information will be
+    stored. Do these steps in order.
+
+    Approvals (before anything else)
+    [ ] 1. The adviser, the Guidance Office, and the school administration approve the use
+           of LIA, following the procedures of the school and DepEd.
+    [ ] 2. The final Terms of Use and Privacy Notice are approved (Republic Act No. 10173,
+           the Data Privacy Act). Then (section 5.6):
+           - put the approved text in public/terms.html;
+           - remove the "Draft version" notice in terms.html;
+           - change TERMS_VERSION in includes/accounts.php and the version lines in
+             terms.html to a final version without "draft", for example '2027-01-15'.
+    [ ] 3. Decide what the Security Personnel role will do. Until then, do not create
+           security accounts.
+
+    A clean database
+    [ ] 4. Start with a database that has never held test data: in Neon, create a new,
+           empty database for the official version (for example, a new Neon project), and
+           run schema.sql on it (3.1). Never run reset_test_data.sql on it.
+    [ ] 5. Create one account for each real staff member (4.1). Each person signs in,
+           changes the temporary password, and adds their email in My Account. No test
+           accounts exist in the official database.
+
+    The website
+    [ ] 6. Change the version to v1.0.0 (section 2).
+    [ ] 7. Before switching, test the final code fully on the dev branch (section 10).
+           Do not submit test reports on the official database.
+    [ ] 8. Render -> Environment: set DATABASE_URL to the new official database, and check
+           the other settings (section 7). Saving redeploys the website.
+    [ ] 9. Publish (section 9). On the live website, check only that the pages open and
+           that each staff member can sign in.
+    [ ] 10. Tag v1.0.0 in GitHub Desktop (section 2.2, Optional).
+
+    Hosting and email
+    [ ] 11. Render's free plan sleeps after 15 minutes without visitors and takes about one
+            minute to wake up. Because an SOS alert must arrive at once, ask the school to
+            consider a paid Render instance, which stays awake.
+            (Setting up the optional reminder scheduler with CRON_KEY, described in
+            docs/SETUP.md, calls the website every 10 minutes and so also keeps a free
+            service awake. A full month awake uses about 744 of the 750 free hours, so this
+            works only if LIA is the only free service in the Render workspace.)
+    [ ] 12. Use a school email address as the Brevo sender if possible; fewer emails go to
+            spam. The Brevo free plan sends up to 300 emails a day.
+
+    Handover and launch
+    [ ] 13. Access: only the people who maintain LIA have access to Neon, Render, Brevo, and
+            GitHub. Before the team graduates, agree with the school who will keep the
+            system running, and hand over these accounts. Give passwords privately; never
+            write them in the project.
+    [ ] 14. Hold an orientation for students and staff: how to report, what anonymity means,
+            and that the SOS button does not replace 911 or 122.
+    [ ] 15. Before every later update, make a backup branch in Neon (3.3).
+
+    After the official release
+      - Never run reset_test_data.sql on the official database.
+      - Fixes become v1.0.1, v1.0.2, ...; new features become v1.1.0 (section 2.1).
+      - Test every change on the dev branch first, and keep CLAUDE.md up to date.
+
+
+-------------------------------------------------------------------------------------------
+12. TROUBLESHOOTING
+-------------------------------------------------------------------------------------------
+
+  The page still looks old after a change
+    Press Ctrl + F5 to reload without the browser's saved copy.
+
+  "No database configured"
+    includes/config.local.php is missing, or DATABASE_URL is empty (section 7).
+
+  An error about a missing column or table
+    schema.sql was not run on that Neon branch after the latest change (section 3.1).
+
+  Email codes do not arrive
+    Check BREVO_API_KEY and MAIL_FROM_EMAIL on Render, and check the spam folder. Every
+    email the system tries to send is listed in the email_outbox table, with the error if
+    it failed:
+      SELECT * FROM email_outbox ORDER BY email_id DESC LIMIT 20;
+
+  A staff member does not receive report or SOS emails
+    They must add their email in My Account. Advocates receive new-report emails only for
+    their own grade level.
+
+  The Location or referral list is empty
+    locations.json or referrals.json has a typo (section 5.1 and 5.2).
+
+  The live website shows an error after a push
+    Render -> your service -> Logs shows the error. If needed, revert the commit
+    (section 9) while you fix it.
+
+  The SOS sound does not play on a staff page
+    Browsers only allow sound after the first click on the page. Click anywhere on the
+    page, or click "Turn on sound" on the red SOS strip.
+
+===========================================================================================
+  End of guide. Keep it updated whenever you add a new setting, file, or procedure.
+===========================================================================================
